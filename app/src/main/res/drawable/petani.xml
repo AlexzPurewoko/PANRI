@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+	<level-list
+		xmlns:android="http://schemas.android.com/apk/res/android">
+		
+		<!-- petani melek mulut tertutup -->
+		<item
+			android:maxLevel="1"
+			android:drawable="@drawable/petani_2"/>
+		
+		<!-- petani melek mulut terbuka kecil -->
+		<item
+			android:maxLevel="2"
+			android:drawable="@drawable/petani_3"/>
+		
+		<!-- petani melek mulut terbuka lebar -->
+		<item
+			android:maxLevel="3"
+			android:drawable="@drawable/petani_4"/>
+		
+		<!-- petani merem mulut tertutup -->
+		<item
+			android:maxLevel="4"
+			android:drawable="@drawable/petani_1"/>
+		
+	</level-list>
+		

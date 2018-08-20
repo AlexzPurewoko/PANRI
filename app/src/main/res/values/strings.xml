@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">PANRI</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Android Studio</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_settings">Settings</string>
+	
+<!-- activity main -->
+	<!-- section card options -->
+		<string name="actmain_string_startdiagnose">MULAI DIAGNOSIS</string>
+		<string name="actmain_string_howto">CARA MENANGGULANGI</string>
+		<string name="actmain_string_aboutpenyakit">INFO PENYAKIT</string>
+	<!---->
+	<!-- section textbox -->
+		<string name="actmain_string_speechfarmer_1">SELAMAT DATANG DI PANRI, SEBUAH APLIKASI YANG DAPAT MEMUDAHKAN ANDA MENGETAHUI JENIS PENYAKIT PADA PADI ANDA.</string>
+		<string name="actmain_string_speechfarmer_2">KLIK "MULAI DIAGNOSIS" UNTUK MULAI MENCARI TAHU JENIS PENYAKIT PADI ANDA DENGAN MEMILIH GEJALA YANG SUDAH DISEDIAKAN.</string>
+	<!---->
+	<!-- section dialog exit -->
+		<string name="actmain_string_dialogexit_desc">APAKAH ANDA INGIN KELUAR?</string>
+		<string name="actmain_string_dialogexit_btnyes">YA!</string>
+		<string name="actmain_string_dialogexit_btnno">TIDAK!</string>
+	<!-- -->
+</resources>
