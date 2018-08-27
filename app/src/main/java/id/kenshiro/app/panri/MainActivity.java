@@ -38,6 +38,7 @@ import android.support.v7.app.AlertDialog;
 import android.graphics.Color;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.content.Intent;
 
 public class MainActivity extends AppCompatActivity
 implements NavigationView.OnNavigationItemSelectedListener
@@ -193,7 +194,8 @@ implements NavigationView.OnNavigationItemSelectedListener
 			imgKedip.cancel(true);
 
 	}
-	private void setCardTouchEvent(){
+	private void setCardTouchEvent(final Class<?>[] cls){
+		
 		for(int x = 0; x < mListCard.size(); x++){
 			final int y = x;
 			mListCard.get(x).setOnClickListener(
@@ -204,6 +206,10 @@ implements NavigationView.OnNavigationItemSelectedListener
 					{
 						// TODO: Implement this method
 						Toast.makeText(MainActivity.this, "Selected CardView position = "+y, Toast.LENGTH_LONG).show();
+						if(cls != null){
+							//MainActivity.this.finish();
+							startActivity(new Intent(MainActivity.this, cls[y]));
+						}
 					}
 					
 					
@@ -219,6 +225,11 @@ implements NavigationView.OnNavigationItemSelectedListener
 			{R.drawable.ic_actmain_howto, R.string.actmain_string_howto},
 			{R.drawable.ic_actmain_aboutpenyakit, R.string.actmain_string_aboutpenyakit}
 		};
+		Class<?>[] listClass = {
+			DiagnoseActivity.class,
+			null,
+			null
+		};
 		mListCard = new ArrayList<CardView>();
 		// add a cardView
 		for(int x = 0; x < listConfOp.length; x++){
@@ -231,7 +242,7 @@ implements NavigationView.OnNavigationItemSelectedListener
 			txtOpC.setText(listConfOp[x][1]);
 			mListCard.get(x).addView(content);
 		}
-		setCardTouchEvent();
+		setCardTouchEvent(listClass);
 		// fill into LinearLayout
 		for(int x = 0; x < mListCard.size(); x++){
 			mListOp.addView(mListCard.get(x));
