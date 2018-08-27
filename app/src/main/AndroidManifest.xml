@@ -4,7 +4,7 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
 		android:resizeableActivity = "true">
@@ -20,7 +20,7 @@
         </activity>
 		<activity
 			android:name="id.kenshiro.app.panri.DiagnoseActivity"
-			android:label="@string/app_name" 
+			android:label="@string/diagnose_name"
 			android:theme="@style/AppTheme.NoActionBar">
 			<intent-filter>
                 <action android:name="android.intent.action.MAIN" />

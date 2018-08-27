@@ -14,6 +14,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.text.SpannableString;
+
+import com.mylexz.utils.MylexzActivity;
+import com.mylexz.utils.SystemBarTintManager;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
 import android.graphics.Typeface;
 import android.widget.LinearLayout;
@@ -40,7 +43,7 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.content.Intent;
 
-public class MainActivity extends AppCompatActivity
+public class MainActivity extends MylexzActivity
 implements NavigationView.OnNavigationItemSelectedListener
 {
 	Toolbar toolbar;
@@ -207,7 +210,7 @@ implements NavigationView.OnNavigationItemSelectedListener
 						// TODO: Implement this method
 						Toast.makeText(MainActivity.this, "Selected CardView position = "+y, Toast.LENGTH_LONG).show();
 						if(cls != null){
-							//MainActivity.this.finish();
+							MainActivity.this.finish();
 							startActivity(new Intent(MainActivity.this, cls[y]));
 						}
 					}
