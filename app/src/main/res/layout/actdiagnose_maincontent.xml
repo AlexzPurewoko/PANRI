@@ -3,7 +3,8 @@
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto"
 	android:layout_height="match_parent"
-	android:layout_width="match_parent">
+	android:layout_width="match_parent"
+	android:fitsSystemWindows="true">
 	<android.support.design.widget.AppBarLayout
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
@@ -25,12 +26,12 @@
 		android:layout_below="@id/actdiagnose_mainid_appbarlay">
 		<include layout="@layout/actmain_section_petani_desc"/>
 		<!-- any list contents is here -->
-		<android.support.v7.widget.RecyclerView
+		<RelativeLayout
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
-			android:scrollbars="vertical"
-			android:layout_below="@id/actmain_id_sectpetani_layout"
-			android:id="@+id/actdiagnose_id_contentrecycler"/>
+			android:id="@+id/actdiagnose_id_layoutcontainer"
+			android:background="#af878787"/>
+
 		<!-- -->
 	</RelativeLayout>
 	<!-- end of main content -->

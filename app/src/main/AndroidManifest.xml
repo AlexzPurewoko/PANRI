@@ -28,6 +28,17 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
 		</activity>
-    </application>
+        <activity
+            android:name="id.kenshiro.app.panri.GalleryActivity"
+            android:label="Gallery"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
 
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+    </application>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 </manifest>

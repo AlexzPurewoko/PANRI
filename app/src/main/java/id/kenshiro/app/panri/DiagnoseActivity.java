@@ -1,21 +1,28 @@
 package id.kenshiro.app.panri;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import id.kenshiro.app.panri.adapter.AdapterRecycler;
+import id.kenshiro.app.panri.helper.ListCiriCiriPenyakit;
+import id.kenshiro.app.panri.helper.ListNamaPenyakit;
 
 public class DiagnoseActivity extends MylexzActivity
 {
@@ -23,6 +30,9 @@ public class DiagnoseActivity extends MylexzActivity
 	private Toolbar toolbar;
 	private List<AdapterRecycler.DataPerItems> data;
 	private RecyclerView mListView;
+	private SQLiteDatabase sqlDB;
+	private HashMap<Integer, ListNamaPenyakit> listNamaPenyakitHashMap;
+	private HashMap<Integer, ListCiriCiriPenyakit> listCiriCiriPenyakitHashMap;
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -30,7 +40,122 @@ public class DiagnoseActivity extends MylexzActivity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.actdiagnose_maincontent);
 		setMyActionBar();
-		setData();
+		//setData();
+		setDB();
+		loadListPenyakit();
+		loadAllDataCiri();
+		tampilFirstDataCiri();
+	}
+
+	private void tampilFirstDataCiri() {
+		data = new ArrayList<AdapterRecycler.DataPerItems>();
+		for(int x = 0; x < listCiriCiriPenyakitHashMap.size(); x++){
+			ListCiriCiriPenyakit penyakit = listCiriCiriPenyakitHashMap.get(x+1);
+			if(penyakit.isUsefirst_flags())
+				data.add(new AdapterRecycler.DataPerItems(penyakit.getCiri()));
+		}
+		for(int x = 0; x < data.size(); x++)
+			Log.i("MainActivity", String.format("position %d text %s.", x, data.get(x).items));
+		mListView = (RecyclerView) findViewById(R.id.actdiagnose_id_contentrecycler);
+		mListView.setHasFixedSize(true);
+		mListView.setLayoutManager(new LinearLayoutManager(this));
+		AdapterRecycler recycler = new AdapterRecycler(data);
+		recycler.setOnItemClickListener((a,b)->{
+			Toast.makeText(DiagnoseActivity.this, "selected at position "+b, Toast.LENGTH_LONG).show();
+		});
+		mListView.setAdapter(recycler);
+
+	}
+
+	private void loadAllDataCiri() {
+		listCiriCiriPenyakitHashMap = new HashMap<Integer, ListCiriCiriPenyakit>();
+		// input ciri ciri penyakit
+		Cursor curr = sqlDB.rawQuery("select ciri from ciriciri", null);
+		curr.moveToFirst();
+		while(!curr.isAfterLast()) {
+			String ciri = curr.getString(0);
+			listCiriCiriPenyakitHashMap.put(curr.getPosition()+1, new ListCiriCiriPenyakit(ciri, false, false));
+			curr.moveToNext();
+		}
+		curr.close();
+		System.gc();
+		///////////////////////////
+		// input usefirst flags
+		curr = sqlDB.rawQuery("select usefirst from ciriciri", null);
+		curr.moveToFirst();
+		while(!curr.isAfterLast()) {
+			String ciri = curr.getString(0);
+			listCiriCiriPenyakitHashMap.get(curr.getPosition()+1).setUsefirst_flags(Boolean.parseBoolean(ciri));
+			curr.moveToNext();
+		}
+		curr.close();
+		System.gc();
+		///////////////////////////
+		// input ask flags
+		curr = sqlDB.rawQuery("select ask from ciriciri", null);
+		curr.moveToFirst();
+		while(!curr.isAfterLast()) {
+			String ciri = curr.getString(0);
+			listCiriCiriPenyakitHashMap.get(curr.getPosition()+1).setAsk_flags(Boolean.parseBoolean(ciri));
+			curr.moveToNext();
+		}
+		curr.close();
+		System.gc();
+		///////////////////////////
+		// input listused flags
+		curr = sqlDB.rawQuery("select listused from ciriciri", null);
+		curr.moveToFirst();
+		while(!curr.isAfterLast()) {
+			String ciri = curr.getString(0);
+			listCiriCiriPenyakitHashMap.get(curr.getPosition()+1).setListused_flags(ciri);
+			curr.moveToNext();
+		}
+		curr.close();
+		System.gc();
+		///////////////////////////
+		// input pointo flags
+		curr = sqlDB.rawQuery("select pointo from ciriciri", null);
+		curr.moveToFirst();
+		while(!curr.isAfterLast()) {
+			String ciri = curr.getString(0);
+			listCiriCiriPenyakitHashMap.get(curr.getPosition()+1).setPointo_flags(ciri);
+			curr.moveToNext();
+		}
+		curr.close();
+		System.gc();
+		//////////////////////////
+		//////////////////////////////////////// load successfully
+	}
+
+	private void loadListPenyakit() {
+		listNamaPenyakitHashMap = new HashMap<Integer, ListNamaPenyakit>();
+		Cursor curr = sqlDB.rawQuery("select nama from penyakit", null);
+		curr.moveToFirst();
+		while(!curr.isAfterLast()) {
+			String nama = curr.getString(0);
+			listNamaPenyakitHashMap.put(curr.getPosition()+1, new ListNamaPenyakit(nama, null));
+			curr.moveToNext();
+		}
+		curr.close();
+		System.gc();
+		curr = sqlDB.rawQuery("select latin from penyakit", null);
+		curr.moveToFirst();
+		while(!curr.isAfterLast()) {
+			String latin = curr.getString(0);
+			listNamaPenyakitHashMap.get(curr.getPosition()+1).setLatin(latin);
+			curr.moveToNext();
+		}
+		curr.close();
+		System.gc();
+	}
+	private void setDB() {
+		sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/databases/database_penyakitpadi.db", null);
+	}
+
+	@Override
+	protected void onDestroy() {
+		sqlDB.close();
+		super.onDestroy();
 	}
 
 	private void setData() {
@@ -40,7 +165,8 @@ public class DiagnoseActivity extends MylexzActivity
 		data.add(new AdapterRecycler.DataPerItems("Roman Av"));
 		data.add(new AdapterRecycler.DataPerItems("Anggi Mundita"));
 		data.add(new AdapterRecycler.DataPerItems("Catur lagi kentut"));
-
+		for(int x = 0; x < data.size(); x++)
+		    Log.i("MainActivity", String.format("position %d text %s.", x, data.get(x).items));
 		mListView = (RecyclerView) findViewById(R.id.actdiagnose_id_contentrecycler);
 		mListView.setHasFixedSize(true);
 		mListView.setLayoutManager(new LinearLayoutManager(this));
@@ -63,7 +189,8 @@ public class DiagnoseActivity extends MylexzActivity
 		setSupportActionBar(toolbar);
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		getSupportActionBar().setDisplayShowHomeEnabled(true);
-
+		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+			getWindow().setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark));
 	}
 
 	@Override
@@ -74,4 +201,6 @@ public class DiagnoseActivity extends MylexzActivity
 		overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
 		return true;
 	}
+
+
 }

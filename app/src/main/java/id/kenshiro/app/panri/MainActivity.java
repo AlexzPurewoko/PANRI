@@ -21,8 +21,10 @@ import com.mylexz.utils.text.style.CustomTypefaceSpan;
 import android.graphics.Typeface;
 import android.widget.LinearLayout;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import id.kenshiro.app.panri.adapter.CustomViewPager;
 import id.kenshiro.app.panri.adapter.FadePageViewTransformer;
@@ -32,6 +34,8 @@ import android.widget.Button;
 import android.widget.Toast;
 import android.support.v4.view.PagerAdapter;
 import id.kenshiro.app.panri.adapter.CustomPageViewTransformer;
+import id.kenshiro.app.panri.helper.CheckAndMoveDB;
+
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.TextView;
@@ -78,6 +82,7 @@ implements NavigationView.OnNavigationItemSelectedListener
 	{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setDB();
         setMyActionBar();
 		setInitialPagerData();
 		setInitialTextInds();
@@ -94,15 +99,33 @@ implements NavigationView.OnNavigationItemSelectedListener
 		startTask();
     }
 
+	private void setDB() {
+		try {
+			new CheckAndMoveDB(this, "database_penyakitpadi.db").upgradeDB();
+		} catch (IOException e) {
+			LOGE("MainActivity","ERROR WHEN HANDLING checkAndMoveDB()", e);
+		}
+	}
 
+	@Override
+	protected void onResume() {
+		super.onResume();
+		startTask();
+	}
 
-    private void setMyActionBar()
+	@Override
+	protected void onPause() {
+		stopTask();
+		super.onPause();
+	}
+
+	private void setMyActionBar()
 	{
 		// TODO: Implement this method
 		toolbar = (Toolbar) findViewById(R.id.toolbar);
 		SpannableString strTitle = new SpannableString(getTitle());
 		Typeface tTitle = Typeface.createFromAsset(getAssets(), "Gecko_PersonalUseOnly.ttf");
-		strTitle.setSpan(new CustomTypefaceSpan(tTitle), 0, getTitle().length() - 1, 0);
+		strTitle.setSpan(new CustomTypefaceSpan(tTitle), 0, getTitle().length(), 0);
 		toolbar.setTitle(strTitle);
         setSupportActionBar(toolbar);
 	}
@@ -184,6 +207,8 @@ implements NavigationView.OnNavigationItemSelectedListener
     }
 	private void startTask()
 	{
+		imgSw = new ImageAutoSwipe();
+		imgKedip = new ImgPetaniKedip();
 		imgSw.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 		imgKedip.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
@@ -195,27 +220,23 @@ implements NavigationView.OnNavigationItemSelectedListener
 			imgFarmerTalk.cancel(true);
 		if (imgKedip != null)
 			imgKedip.cancel(true);
+		imgSw = null;
+		imgFarmerTalk = null;
+		imgKedip = null;
+		System.gc();
 
 	}
 	private void setCardTouchEvent(final Class<?>[] cls){
 		
 		for(int x = 0; x < mListCard.size(); x++){
 			final int y = x;
-			mListCard.get(x).setOnClickListener(
-				new View.OnClickListener(){
-
-					@Override
-					public void onClick(View p1)
-					{
-						// TODO: Implement this method
-						Toast.makeText(MainActivity.this, "Selected CardView position = "+y, Toast.LENGTH_LONG).show();
-						if(cls != null){
-							MainActivity.this.finish();
-							startActivity(new Intent(MainActivity.this, cls[y]));
-						}
+			mListCard.get(x).setOnClickListener((v)->
+				{
+					if(cls != null){
+						MainActivity.this.finish();
+						startActivity(new Intent(MainActivity.this, cls[y]));
+						overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
 					}
-					
-					
 				}
 			);
 		}
@@ -243,6 +264,7 @@ implements NavigationView.OnNavigationItemSelectedListener
 			imgOpC.setImageResource(listConfOp[x][0]);
 			txtOpC.setTypeface(Typeface.createFromAsset(getAssets(), "Gill_SansMT.ttf"), Typeface.BOLD_ITALIC);
 			txtOpC.setText(listConfOp[x][1]);
+			mListCard.get(x).setContentPadding(10,10,10,10);
 			mListCard.get(x).addView(content);
 		}
 		setCardTouchEvent(listClass);
@@ -275,7 +297,7 @@ implements NavigationView.OnNavigationItemSelectedListener
 		mTextPetaniDesc = (Button) findViewById(R.id.actmain_id_section_petani_btn);
 		imgPetani = (ImageView) findViewById(R.id.actmain_id_section_petani_img);
 		mTextPetaniDesc.setTextColor(Color.BLACK);
-		mTextPetaniDesc.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.BOLD);
+		mTextPetaniDesc.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.NORMAL);
 		mTextPetaniDesc.setOnClickListener(new View.OnClickListener(){
 				@Override
 				public void onClick(View p1)
@@ -287,7 +309,6 @@ implements NavigationView.OnNavigationItemSelectedListener
 		imgPetani.setImageResource(R.drawable.petani);
 		imgPetani.setImageLevel(4);
 		mTextPetaniDesc.setText(TextPetaniDesc[mPosTxtPetani]);
-		imgKedip = new ImgPetaniKedip();
 	}
 	private void setInitialTextInds()
 	{
@@ -303,9 +324,10 @@ implements NavigationView.OnNavigationItemSelectedListener
         indicators = (LinearLayout) findViewById(R.id.actmain_id_layoutIndicators);
         mImageSelector = (CustomViewPager) findViewById(R.id.actmain_id_viewpagerimg);
         //add your items here
-	    mListResImage.add(R.drawable.notification_tile_bg);
-	    mListResImage.add(android.support.design.R.drawable.notification_icon_background);
-	    mListResImage.add(R.drawable.side_nav_bar);
+	    mListResImage.add(R.drawable.viewpager_area_1);
+	    mListResImage.add(R.drawable.viewpager_area_2);
+	    mListResImage.add(R.drawable.viewpager_area_3);
+	    mListResImage.add(R.drawable.viewpager_area_4);
         //////////
 	    mImageControllerFragment = new ImageFragmentAdapter(this, getSupportFragmentManager(), mListResImage);
 	    mImageSelector.setAdapter(mImageControllerFragment);
@@ -368,7 +390,6 @@ implements NavigationView.OnNavigationItemSelectedListener
 
         }
         mDots[0].setBackgroundResource(R.drawable.indicator_selected_item_oval);
-		imgSw = new ImageAutoSwipe();
     }
 
 	@Override

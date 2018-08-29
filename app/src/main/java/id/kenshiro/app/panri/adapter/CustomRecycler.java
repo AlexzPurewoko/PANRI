@@ -25,6 +25,7 @@ public class CustomRecycler extends RecyclerView {
         if(e.getAction() == MotionEvent.ACTION_UP){
 
         }
+        return true;
     }
 
     @Override
