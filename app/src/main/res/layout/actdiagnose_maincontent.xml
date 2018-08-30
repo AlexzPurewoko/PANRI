@@ -22,14 +22,15 @@
 	<!-- main content is here -->
 	<RelativeLayout
 		android:layout_width="match_parent"
-		android:layout_height="match_parent"
-		android:layout_below="@id/actdiagnose_mainid_appbarlay">
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/actdiagnose_mainid_appbarlay">
 		<include layout="@layout/actmain_section_petani_desc"/>
 		<!-- any list contents is here -->
 		<RelativeLayout
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
 			android:id="@+id/actdiagnose_id_layoutcontainer"
+			android:layout_below="@id/actmain_id_sectpetani_layout"
 			android:background="#af878787"/>
 
 		<!-- -->

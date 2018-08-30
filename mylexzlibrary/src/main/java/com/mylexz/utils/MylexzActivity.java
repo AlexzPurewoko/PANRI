@@ -12,6 +12,8 @@ import java.util.List;
 import com.mylexz.utils.Logger;
 import android.content.pm.ApplicationInfo;
 import android.util.Log;
+import android.widget.Toast;
+
 import com.mylexz.utils.LogPriority;
 
 public class MylexzActivity extends AppCompatActivity
@@ -24,6 +26,9 @@ public class MylexzActivity extends AppCompatActivity
 	private int mLogMode = 0;
 	SystemBarTintManager systemTint = null;
 	private int mCurrentPosNDATA = 0;
+	protected void TOAST(int time, String format, Object... args){
+		Toast.makeText(this, String.format(format, args), time).show();
+	}
 	// for app logging
 	protected void setLoggingMode(int log_modes){
 		if(log_modes == LOGMODE_FILE){

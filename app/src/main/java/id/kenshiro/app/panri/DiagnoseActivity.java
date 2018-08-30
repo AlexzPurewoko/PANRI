@@ -11,6 +11,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import com.mylexz.utils.MylexzActivity;
@@ -21,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import id.kenshiro.app.panri.adapter.AdapterRecycler;
+import id.kenshiro.app.panri.helper.DiagnoseActivityHelper;
 import id.kenshiro.app.panri.helper.ListCiriCiriPenyakit;
 import id.kenshiro.app.panri.helper.ListNamaPenyakit;
 
@@ -33,6 +35,7 @@ public class DiagnoseActivity extends MylexzActivity
 	private SQLiteDatabase sqlDB;
 	private HashMap<Integer, ListNamaPenyakit> listNamaPenyakitHashMap;
 	private HashMap<Integer, ListCiriCiriPenyakit> listCiriCiriPenyakitHashMap;
+	private DiagnoseActivityHelper diagnoseActivityHelper;
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -44,10 +47,22 @@ public class DiagnoseActivity extends MylexzActivity
 		setDB();
 		loadListPenyakit();
 		loadAllDataCiri();
-		tampilFirstDataCiri();
+		//tampilFirstDataCiri();
+		loadLayoutAndShow();
 	}
 
-	private void tampilFirstDataCiri() {
+    private void loadLayoutAndShow() {
+	    diagnoseActivityHelper = new DiagnoseActivityHelper(this, this.listNamaPenyakitHashMap, this.listCiriCiriPenyakitHashMap);
+	    diagnoseActivityHelper.setOnPenyakitHaveSelected((a, b, c, d, e)->{
+	        String penyakit = c.get(d).getName();
+	        TOAST(Toast.LENGTH_LONG, "Padi Anda terdiagnosa penyakit %s sebesar %s.", penyakit, String.valueOf(e));
+	        a.setVisibility(View.GONE);
+	        b.setVisibility(View.GONE);
+        });
+	    diagnoseActivityHelper.buildAndShow();
+    }
+
+    private void tampilFirstDataCiri() {
 		data = new ArrayList<AdapterRecycler.DataPerItems>();
 		for(int x = 0; x < listCiriCiriPenyakitHashMap.size(); x++){
 			ListCiriCiriPenyakit penyakit = listCiriCiriPenyakitHashMap.get(x+1);

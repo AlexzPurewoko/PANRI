@@ -35,6 +35,13 @@ public class AdapterRecycler extends RecyclerView.Adapter {
                 LinearLayout.LayoutParams.WRAP_CONTENT
         ));
         layout.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams rootParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        rootParams.gravity = Gravity.CENTER;
+        rootElement.setLayoutParams(rootParams);
+
         rootElement.addView(layout);
         rootElement.setCardElevation(8f);
         rootElement.setContentPadding(16,16,16,16);
