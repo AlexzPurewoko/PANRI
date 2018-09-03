@@ -13,14 +13,23 @@
 		<string name="actmain_string_startdiagnose">MULAI DIAGNOSIS</string>
 		<string name="actmain_string_howto">CARA MENANGGULANGI</string>
 		<string name="actmain_string_aboutpenyakit">INFO PENYAKIT</string>
+	<string name="actmain_string_diagnosagambar">DIAGNOSA GAMBAR</string>
 	<!---->
 	<!-- section textbox -->
-		<string name="actmain_string_speechfarmer_1">SELAMAT DATANG DI PANRI, SEBUAH APLIKASI YANG DAPAT MEMUDAHKAN ANDA MENGETAHUI JENIS PENYAKIT PADA PADI ANDA.</string>
+	<string name="actmain_string_speechfarmer_1">SELAMAT DATANG DI PANRI, SEBUAH APLIKASI YANG DAPAT MEMUDAHKAN ANDA MENENTUKAN JENIS PENYAKIT PADA PADI ANDA.</string>
 		<string name="actmain_string_speechfarmer_2">KLIK "MULAI DIAGNOSIS" UNTUK MULAI MENCARI TAHU JENIS PENYAKIT PADI ANDA DENGAN MEMILIH GEJALA YANG SUDAH DISEDIAKAN.</string>
+	<string name="actmain_string_speechfarmer_3">KLIK "DIAGNOSIS GAMBAR" UNTUK MEMULAI MENCARI TAHU PENYAKIT PADI ANDA DENGAN MENCOCOKKAN DENGAN GAMBAR YANG SUDAH DISEDIAKAN</string>
+	<string name="actmain_string_speechfarmer_4">MENU "INFO PENYAKIT" ADALAH MENU YANG DAPAT DIGUNAKAN UNTUK MENGETAHUI BEBERAPA PENYAKIT - PENYAKIT PADA TANAMAN PADI</string>
+	<string name="actmain_string_speechfarmer_5">UNTUK MENGETAHUI CARA MENGOBATI PENYAKIT PADI ANDA, ANDA BISA KLIK MENU "CARA MENANGGULANGI"</string>
 	<!---->
 	<!-- section dialog exit -->
 		<string name="actmain_string_dialogexit_desc">APAKAH ANDA INGIN KELUAR?</string>
 		<string name="actmain_string_dialogexit_btnyes">YA!</string>
 		<string name="actmain_string_dialogexit_btnno">TIDAK!</string>
+	<string name="actdiagnose_string_klikcaramenanggulangi">KLIK UNTUK CARA MENANGGULANGI</string>
+	<string name="actdiagnose_string_klikbalikdiagnosa">KLIK DISINI UNTUK DIAGNOSA LAGI</string>
+	<string name="acthowto_string_title">Cara Menanggulangi</string>
+	<string name="actinfo_string_title">Info Penyakit</string>
+	<string name="actimgdiagnose_string_title">Diagnosa Gambar</string>
 	<!-- -->
 </resources>

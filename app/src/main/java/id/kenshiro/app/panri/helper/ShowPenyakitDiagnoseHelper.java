@@ -2,33 +2,46 @@ package id.kenshiro.app.panri.helper;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Point;
 import android.graphics.Typeface;
 import android.support.annotation.NonNull;
+import android.support.v4.view.ViewPager;
 import android.support.v7.widget.CardView;
+import android.view.Gravity;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.mylexz.utils.MylexzActivity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import id.kenshiro.app.panri.R;
+import id.kenshiro.app.panri.adapter.CustomPageViewTransformer;
+import id.kenshiro.app.panri.adapter.CustomViewPager;
+import id.kenshiro.app.panri.adapter.FadePageViewTransformer;
+import id.kenshiro.app.panri.adapter.ImageAssetsFragmentAdapter;
+import id.kenshiro.app.panri.adapter.ImageFragmentAdapter;
+import id.kenshiro.app.panri.adapter.ImageGridViewAdapter;
 
 public class ShowPenyakitDiagnoseHelper {
     private MylexzActivity activity;
     private SQLiteDatabase sqLiteDatabase;
     private static final String path_to_asset = "file:///android_asset/";
+    private static final String image_default_dirs = "data_hama/foto";
     // load layout elements
     private RelativeLayout mRootView, mContentView;
     private WebView gejala, umum, caraatasi;
     private TextView judul, latin;
     private CardView klikBawah;
     private TextView klikBawahText;
-    private ScrollView mContent1, mContent2; // 2 & 3 position
+    private LinearLayout mContent1, mContent2; // 1 & 2 position
+    private ImageGridViewAdapter imageViewPenyakit;
     // data elements
     private DataPath dataPath;
     private int countBtn = 0;
@@ -46,13 +59,57 @@ public class ShowPenyakitDiagnoseHelper {
         mRootView.addView(mContentView);
     }
     public void show(int keyId){
+        setPenyakitText(keyId);
         selectContentOnDB(keyId);
+        setImagePager(keyId);
         mContentView.setVisibility(View.VISIBLE);
         mContent1.setVisibility(View.VISIBLE);
         mContent2.setVisibility(View.GONE);
         umum.loadUrl(path_to_asset+""+dataPath.getUmum_path());
         gejala.loadUrl(path_to_asset+""+dataPath.getGejala_path());
         caraatasi.loadUrl(path_to_asset+""+dataPath.getCara_atasi_path());
+    }
+
+    private void setImagePager(int keyId) {
+        List<String> mListResImage = new ArrayList<String>();
+        LinearLayout indicators = (LinearLayout) mContentView.findViewById(R.id.actmain_id_layoutIndicators);
+        //add your items here
+        Cursor cursor = sqLiteDatabase.rawQuery("select count_img from gambar_penyakit where no=" + keyId, null);
+        cursor.moveToFirst();
+        int count = Integer.parseInt(cursor.getString(0));
+        cursor.close();
+
+        cursor = sqLiteDatabase.rawQuery("select path_gambar from gambar_penyakit where no=" + keyId, null);
+        cursor.moveToFirst();
+        String[] s = cursor.getString(0).split(",");
+        cursor.close();
+        for (int x = 0; x < count; x++) {
+            mListResImage.add(image_default_dirs + "/" + s[x] + ".jpg");
+        }
+
+        //////////
+        Point p = new Point();
+        activity.getWindowManager().getDefaultDisplay().getSize(p);
+        imageViewPenyakit = new ImageGridViewAdapter(activity, mListResImage, p, R.id.actgallery_id_gridimage, null);
+        imageViewPenyakit.setColumnCount(2);
+        imageViewPenyakit.buildAndShow();
+    }
+
+    private void setPenyakitText(int keyId) {
+        Cursor cursor = sqLiteDatabase.rawQuery("select nama from penyakit where no=" + keyId, null);
+        cursor.moveToFirst();
+        judul.setText(cursor.getString(0));
+        cursor.close();
+        System.gc();
+        cursor = sqLiteDatabase.rawQuery("select latin from penyakit where no=" + keyId, null);
+        cursor.moveToFirst();
+        String lt = cursor.getString(0);
+        if (lt != null)
+            latin.setText(lt);
+        else
+            latin.setVisibility(View.GONE);
+        cursor.close();
+        System.gc();
     }
 
     private void selectContentOnDB(int keyId) {
@@ -95,12 +152,14 @@ public class ShowPenyakitDiagnoseHelper {
         judul = (TextView) mContentView.findViewById(R.id.actdiagnose_id_judulpenyakit);
         latin = (TextView) mContentView.findViewById(R.id.actdiagnose_id_namalatin);
         /// sets into Comic SAns
-        judul.setTypeface(Typeface.createFromAsset(activity.getAssets(), "Comic_Sans_MS3.ttf"));
-        latin.setTypeface(Typeface.createFromAsset(activity.getAssets(), "Comic_Sans_MS3.ttf"));
+        judul.setTypeface(Typeface.createFromAsset(activity.getAssets(), "Comic_Sans_MS3.ttf"), Typeface.BOLD);
+        latin.setTypeface(Typeface.createFromAsset(activity.getAssets(), "Comic_Sans_MS3.ttf"), Typeface.ITALIC);
+        judul.setGravity(Gravity.CENTER);
+        latin.setGravity(Gravity.CENTER);
 
         // prepare ScrollView
-        mContent1 = (ScrollView) mContentView.getChildAt(2);
-        mContent2 = (ScrollView) mContentView.getChildAt(3);
+        mContent1 = (LinearLayout) mContentView.findViewById(R.id.actdiagnose_id_results1);
+        mContent2 = (LinearLayout) mContentView.findViewById(R.id.actdiagnose_id_results2);
 
         /// sets the visibility
         mContent2.setVisibility(View.GONE);

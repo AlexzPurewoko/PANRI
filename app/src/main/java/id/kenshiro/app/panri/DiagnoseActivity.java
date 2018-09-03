@@ -1,17 +1,19 @@
 package id.kenshiro.app.panri;
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Typeface;
 import android.os.Build;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
 import android.util.Log;
+import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.mylexz.utils.MylexzActivity;
@@ -25,6 +27,8 @@ import id.kenshiro.app.panri.adapter.AdapterRecycler;
 import id.kenshiro.app.panri.helper.DiagnoseActivityHelper;
 import id.kenshiro.app.panri.helper.ListCiriCiriPenyakit;
 import id.kenshiro.app.panri.helper.ListNamaPenyakit;
+import id.kenshiro.app.panri.helper.ShowPenyakitDiagnoseHelper;
+import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 
 public class DiagnoseActivity extends MylexzActivity
 {
@@ -36,6 +40,7 @@ public class DiagnoseActivity extends MylexzActivity
 	private HashMap<Integer, ListNamaPenyakit> listNamaPenyakitHashMap;
 	private HashMap<Integer, ListCiriCiriPenyakit> listCiriCiriPenyakitHashMap;
 	private DiagnoseActivityHelper diagnoseActivityHelper;
+	private ShowPenyakitDiagnoseHelper showPenyakitDiagnoseHelper;
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -53,12 +58,22 @@ public class DiagnoseActivity extends MylexzActivity
 
     private void loadLayoutAndShow() {
 	    diagnoseActivityHelper = new DiagnoseActivityHelper(this, this.listNamaPenyakitHashMap, this.listCiriCiriPenyakitHashMap);
+		showPenyakitDiagnoseHelper = new ShowPenyakitDiagnoseHelper(this, sqlDB, (RelativeLayout) this.findViewById(R.id.actdiagnose_id_layoutcontainer));
 	    diagnoseActivityHelper.setOnPenyakitHaveSelected((a, b, c, d, e)->{
 	        String penyakit = c.get(d).getName();
 	        TOAST(Toast.LENGTH_LONG, "Padi Anda terdiagnosa penyakit %s sebesar %s.", penyakit, String.valueOf(e));
 	        a.setVisibility(View.GONE);
 	        b.setVisibility(View.GONE);
+
+			// switching into the next
+			showPenyakitDiagnoseHelper.show(d);
         });
+		showPenyakitDiagnoseHelper.build();
+		showPenyakitDiagnoseHelper.setOnHaveFinalRequests((mContentView) -> {
+			mContentView.setVisibility(View.GONE);
+			// back into begin diagnostics
+			diagnoseActivityHelper.showAgain();
+		});
 	    diagnoseActivityHelper.buildAndShow();
     }
 
@@ -168,6 +183,26 @@ public class DiagnoseActivity extends MylexzActivity
 	}
 
 	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		int repeat = event.getRepeatCount();
+		int maxRepeat = 2;
+		if (keyCode == KeyEvent.KEYCODE_BACK) {
+			if (!diagnoseActivityHelper.setOnPushBackButtonPressed(true)) {
+				if (repeat == maxRepeat) {
+					SwitchIntoMainActivity.switchToMain(this);
+					return true;
+				} else {
+					TOAST(Toast.LENGTH_SHORT, "Tekan tombol %d x untuk kembali", maxRepeat - repeat);
+					return false;
+				}
+			}
+			return false;
+		}
+		//else if(keyCode == )
+		return super.onKeyDown(keyCode, event);
+	}
+
+	@Override
 	protected void onDestroy() {
 		sqlDB.close();
 		super.onDestroy();
@@ -203,19 +238,33 @@ public class DiagnoseActivity extends MylexzActivity
 		toolbar.setTitle(strTitle);
 		setSupportActionBar(toolbar);
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		//getSupportActionBar().setHomeButtonEnabled(true);
+		//getActionBar().setDisplayShowHomeEnabled(true);
 		getSupportActionBar().setDisplayShowHomeEnabled(true);
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
 			getWindow().setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark));
 	}
 
+	/*@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2
+				&& item.getTitleCondensed() != null) {
+			item.setTitleCondensed(item.getTitleCondensed().toString());
+		}
+		switch(item.getItemId()){
+			case android.R.id.home:
+				TOAST(Toast.LENGTH_SHORT, "onSupportClicked()!");
+				return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+
 	@Override
 	public boolean onSupportNavigateUp() {
 		// back into main activity
-		this.finish();
-		startActivity(new Intent(this, MainActivity.class));
-		overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+		TOAST(Toast.LENGTH_SHORT, "onSupportClicked()!");
+        // SwitchIntoMainActivity.switchToMain(this);
 		return true;
-	}
-
+	}*/
 
 }

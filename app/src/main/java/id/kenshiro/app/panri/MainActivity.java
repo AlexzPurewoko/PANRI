@@ -35,6 +35,7 @@ import android.widget.Toast;
 import android.support.v4.view.PagerAdapter;
 import id.kenshiro.app.panri.adapter.CustomPageViewTransformer;
 import id.kenshiro.app.panri.helper.CheckAndMoveDB;
+import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 
 import android.os.AsyncTask;
 import android.util.Log;
@@ -65,7 +66,10 @@ implements NavigationView.OnNavigationItemSelectedListener
 	private Button mTextPetaniDesc;
 	private int[] TextPetaniDesc = {
 		R.string.actmain_string_speechfarmer_1,
-		R.string.actmain_string_speechfarmer_2
+			R.string.actmain_string_speechfarmer_2,
+			R.string.actmain_string_speechfarmer_3,
+			R.string.actmain_string_speechfarmer_4,
+			R.string.actmain_string_speechfarmer_5
 	};
 	private int mPosTxtPetani = 0;
 	private static boolean mPetaniIsKedip = false;
@@ -232,10 +236,8 @@ implements NavigationView.OnNavigationItemSelectedListener
 			final int y = x;
 			mListCard.get(x).setOnClickListener((v)->
 				{
-					if(cls != null){
-						MainActivity.this.finish();
-						startActivity(new Intent(MainActivity.this, cls[y]));
-						overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+					if (cls[y] != null) {
+						SwitchIntoMainActivity.switchTo(this, cls[y], null);
 					}
 				}
 			);
@@ -246,13 +248,15 @@ implements NavigationView.OnNavigationItemSelectedListener
 		int[][] listConfOp = {
 			// { @Res to Image Drawable, @Res to text}
 			{R.drawable.ic_actmain_diagnose, R.string.actmain_string_startdiagnose},
+				{R.drawable.ic_actmain_imgdiagnose, R.string.actmain_string_diagnosagambar},
 			{R.drawable.ic_actmain_howto, R.string.actmain_string_howto},
 			{R.drawable.ic_actmain_aboutpenyakit, R.string.actmain_string_aboutpenyakit}
 		};
 		Class<?>[] listClass = {
 			DiagnoseActivity.class,
-			null,
-			null
+				DiagnosaGambarActivity.class,
+				HowToResolveActivity.class,
+				InfoPenyakitActivity.class
 		};
 		mListCard = new ArrayList<CardView>();
 		// add a cardView

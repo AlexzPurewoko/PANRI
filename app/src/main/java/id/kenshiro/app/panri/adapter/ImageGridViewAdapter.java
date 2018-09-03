@@ -3,7 +3,9 @@ package id.kenshiro.app.panri.adapter;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Point;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.IdRes;
+import android.support.annotation.Nullable;
 import android.support.annotation.Px;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -13,6 +15,8 @@ import android.widget.LinearLayout;
 
 import com.mylexz.utils.MylexzActivity;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import id.kenshiro.app.panri.MainActivity;
@@ -20,6 +24,7 @@ import id.kenshiro.app.panri.R;
 
 public class ImageGridViewAdapter {
     private List<Integer> listLocationResImages;
+    private List<String> listLocationAssetsImages;
     private List<LinearLayout> listRow;
     private List<ImageView> imageViewList;
     private Point screenSize;
@@ -35,6 +40,7 @@ public class ImageGridViewAdapter {
     private int marginBottom = 20;
     private int marginLeft = 15;
     private int marginRight = 15;
+    private int mode = 0;
 
     public ImageGridViewAdapter(MylexzActivity ctx, List<Integer> listLocationResImages, Point screenSize, @IdRes int resRootLayout){
         this.ctx = ctx;
@@ -42,6 +48,15 @@ public class ImageGridViewAdapter {
         this.screenSize = screenSize;
         this.resRootLayout = resRootLayout;
         imageItemSize = new Point(0,0);
+    }
+
+    public ImageGridViewAdapter(MylexzActivity ctx, List<String> listLocationAssetsImages, Point screenSize, @IdRes int resRootLayout, @Nullable String flags) {
+        this.ctx = ctx;
+        mode = 1;
+        this.listLocationAssetsImages = listLocationAssetsImages;
+        this.screenSize = screenSize;
+        this.resRootLayout = resRootLayout;
+        imageItemSize = new Point(0, 0);
     }
     public void setColumnCount(int columnCount){
         this.columnCount = columnCount;
@@ -98,7 +113,16 @@ public class ImageGridViewAdapter {
                 params1.rightMargin = marginRight;
                 params1.leftMargin = marginLeft;
                 img.setLayoutParams(params1);
-                img.setImageResource(listLocationResImages.get(items));
+                if (mode == 1) {
+                    try {
+                        InputStream is = ctx.getAssets().open(listLocationAssetsImages.get(items));
+                        img.setImageDrawable(Drawable.createFromStream(is, null));
+                        is.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else
+                    img.setImageResource(listLocationResImages.get(items));
                 img.setMaxHeight(imageItemSize.y);
                 img.setMaxWidth(imageItemSize.x);
                 img.setScaleType(ImageView.ScaleType.FIT_XY);
@@ -119,7 +143,10 @@ public class ImageGridViewAdapter {
         this.onItemClickListener = onItemClickListener;
     }
     public int getItemCount(){
-        return listLocationResImages.size();
+        if (mode == 0)
+            return listLocationResImages.size();
+        else
+            return listLocationAssetsImages.size();
     }
     public interface OnItemClickListener {
         public void onItemClick(View v, int position);

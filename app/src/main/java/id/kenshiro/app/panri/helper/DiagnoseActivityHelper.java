@@ -42,8 +42,10 @@ public class DiagnoseActivityHelper{
     private int count_position_data = 0;
     private int key_data_position = 0;
     private int savedItemDataPosition = 0;
+    private int saved_btn_yesno_modes = 0;
+    private int view_mode_saved = 0;
     // for temporary list
-    private List<Integer> temp_list_nums;
+    private List<Integer> temp_list_nums, saved_temp_list_nums;
     private List<AdapterRecycler.DataPerItems> data;
 
     private OnPenyakitHaveSelected onPenyakitHaveSelected = null;
@@ -57,6 +59,70 @@ public class DiagnoseActivityHelper{
         buildLayout();
         selectFirstTampil();
     }
+
+    public void showAgain() {
+        // set it visible into mListFirstPage
+        mListFirstPage.setVisibility(View.VISIBLE);
+        mAskLayout.setVisibility(View.GONE);
+        selectFirstTampil();
+    }
+
+    // return false if its content is firstItem another is true
+    public boolean setOnPushBackButtonPressed(boolean on) {
+        // if viewmodes is 0 indicates its first page
+        if (!on) return false;
+        if (view_mode_saved == 0 || counter == 0)
+            return false;
+        else if (counter == 1) {
+            counter--;
+            selectFirstTampil();
+            return true;
+        } else {
+            if (view_mode_saved == ListCiriCiriPenyakit.MODE_BIND) {
+                // load previous lists
+                counter--;
+                count_when_accept--;
+                temp_list_nums = saved_temp_list_nums;
+                // change the content of data
+                data = new ArrayList<AdapterRecycler.DataPerItems>();
+                for (int x = 0; x < temp_list_nums.size(); x++) {
+                    data.add(new AdapterRecycler.DataPerItems(listCiriCiriPenyakitHashMap.get(temp_list_nums.get(x)).getCiri()));
+                }
+                // apply these changes into RecyclerView
+                dataAdapter = new AdapterRecycler(data);
+                dataAdapter.setOnItemClickListener((a, b) -> {
+                    count_position_data = temp_list_nums.size();
+                    // call this function itself
+                    this.onItemCardTouch(b);
+                });
+                mListFirstPage.setAdapter(dataAdapter);
+                mListFirstPage.setVisibility(View.VISIBLE);
+                mAskLayout.setVisibility(View.GONE);
+                mRootView.setGravity(Gravity.TOP | Gravity.CENTER);
+                System.gc();
+                return true;
+            } else if (view_mode_saved == ListCiriCiriPenyakit.MODE_SEQUENCE) {
+                counter--;
+                switch (saved_btn_yesno_modes) {
+                    case ON_BTN_YES_CLICKED:
+                        count_when_accept--;
+                        break;
+                    case ON_BTN_NO_CLICKED:
+                        count_when_decline--;
+                        break;
+                    default:
+                }
+                String ciri = listCiriCiriPenyakitHashMap.get(temp_list_nums.get(count_position_data = savedItemDataPosition)).getCiri();
+                mDescCiri.setText(ciri);
+                mListFirstPage.setVisibility(View.GONE);
+                mAskLayout.setVisibility(View.VISIBLE);
+                System.gc();
+                return true;
+            }
+            return false;
+        }
+    }
+
 
     public void setOnPenyakitHaveSelected(OnPenyakitHaveSelected onPenyakitHaveSelected) {
         this.onPenyakitHaveSelected = onPenyakitHaveSelected;
@@ -125,6 +191,8 @@ public class DiagnoseActivityHelper{
         // if these condition is never we change its content view
 
         // if view_modes is VIEW_BIND the content is will be displayed as list
+        view_mode_saved = ListCiriCiriPenyakit.MODE_BIND;
+        saved_temp_list_nums = temp_list_nums;
         if(view_modes == ListCiriCiriPenyakit.MODE_BIND){
             // load another lists
             temp_list_nums = listCiriCiriPenyakitHashMap.get(itemPosition).listused_flags;
@@ -195,9 +263,10 @@ public class DiagnoseActivityHelper{
             view_modes = listCiriCiriPenyakitHashMap.get(itemPosition).listused_mode_flags;
         }
         itemPosition = temp_list_nums.get(count_position_data);
-
-        // if reached the end
-
+        view_mode_saved = ListCiriCiriPenyakit.MODE_SEQUENCE;
+        savedItemDataPosition = count_position_data - 1;
+        saved_temp_list_nums = temp_list_nums;
+        saved_btn_yesno_modes = conditionBTN;
         if(view_modes == ListCiriCiriPenyakit.MODE_SEQUENCE) {
             // handling into the next ciri - ciri if possible
             if (count_position_data >= temp_list_nums.size()) {

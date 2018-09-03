@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Toast;
 
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import id.kenshiro.app.panri.adapter.ImageGridViewAdapter;
+import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 
 public class GalleryActivity extends MylexzActivity {
     Toolbar toolbar;
@@ -72,4 +74,26 @@ public class GalleryActivity extends MylexzActivity {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
             getWindow().setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark));
     }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        int repeat = event.getRepeatCount();
+        int maxRepeat = 2;
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if (repeat == maxRepeat) {
+                SwitchIntoMainActivity.switchToMain(this);
+            } else {
+                TOAST(Toast.LENGTH_SHORT, "Tekan tombol %d untuk kembali", maxRepeat - repeat);
+            }
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onNavigateUp() {
+        SwitchIntoMainActivity.switchToMain(this);
+        return true;
+    }
+
 }
