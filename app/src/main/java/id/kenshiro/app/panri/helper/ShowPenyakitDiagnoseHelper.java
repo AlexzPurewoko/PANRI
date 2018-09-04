@@ -39,12 +39,12 @@ public class ShowPenyakitDiagnoseHelper {
     private WebView gejala, umum, caraatasi;
     private TextView judul, latin;
     private CardView klikBawah;
-    private TextView klikBawahText;
+    public TextView klikBawahText;
     private LinearLayout mContent1, mContent2; // 1 & 2 position
     private ImageGridViewAdapter imageViewPenyakit;
     // data elements
     private DataPath dataPath;
-    private int countBtn = 0;
+    public int countBtn = 0;
     private final int maxCount = 2;
     View.OnClickListener onClickListener;
     public ShowPenyakitDiagnoseHelper(@NonNull MylexzActivity activity, @NonNull SQLiteDatabase sqLiteDatabase, @NonNull RelativeLayout mRootView){
@@ -70,9 +70,20 @@ public class ShowPenyakitDiagnoseHelper {
         caraatasi.loadUrl(path_to_asset+""+dataPath.getCara_atasi_path());
     }
 
+    public RelativeLayout getmContentView() {
+        return mContentView;
+    }
+
+    public LinearLayout getmContent1() {
+        return mContent1;
+    }
+
+    public LinearLayout getmContent2() {
+        return mContent2;
+    }
+
     private void setImagePager(int keyId) {
         List<String> mListResImage = new ArrayList<String>();
-        LinearLayout indicators = (LinearLayout) mContentView.findViewById(R.id.actmain_id_layoutIndicators);
         //add your items here
         Cursor cursor = sqLiteDatabase.rawQuery("select count_img from gambar_penyakit where no=" + keyId, null);
         cursor.moveToFirst();
@@ -90,7 +101,8 @@ public class ShowPenyakitDiagnoseHelper {
         //////////
         Point p = new Point();
         activity.getWindowManager().getDefaultDisplay().getSize(p);
-        imageViewPenyakit = new ImageGridViewAdapter(activity, mListResImage, p, R.id.actgallery_id_gridimage, null);
+        if (imageViewPenyakit == null)
+            imageViewPenyakit = new ImageGridViewAdapter(activity, mListResImage, p, R.id.actgallery_id_gridimage, null);
         imageViewPenyakit.setColumnCount(2);
         imageViewPenyakit.buildAndShow();
     }

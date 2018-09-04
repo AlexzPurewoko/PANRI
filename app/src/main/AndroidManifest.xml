@@ -22,12 +22,7 @@
 		<activity
 			android:name="id.kenshiro.app.panri.DiagnoseActivity"
 			android:label="@string/diagnose_name"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:parentActivityName="id.kenshiro.app.panri.MainActivity">
-            <!-- Parent activity meta-data to support 4.0 and lower -->
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="id.kenshiro.app.panri.MainActivity" />
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -38,12 +33,7 @@
         <activity
             android:name="id.kenshiro.app.panri.HowToResolveActivity"
             android:label="@string/acthowto_string_title"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:parentActivityName="id.kenshiro.app.panri.MainActivity">
-            <!-- Parent activity meta-data to support 4.0 and lower -->
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="id.kenshiro.app.panri.MainActivity" />
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

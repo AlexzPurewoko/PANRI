@@ -41,10 +41,12 @@
                         android:layout_marginLeft="10dp"
                         android:layout_marginRight="10dp"
                         android:layout_marginTop="10dp"
+                        android:layout_marginBottom="4dp"
                         android:textAlignment="center"
                         android:textAllCaps="true"
                         android:textColor="@color/colorPrimary"
                         android:textSize="18sp"
+                        android:gravity="center"
                         android:textStyle="bold" />
 
                     <TextView
@@ -54,11 +56,12 @@
                         android:layout_below="@id/actdiagnose_id_judulpenyakit"
                         android:layout_marginLeft="10dp"
                         android:layout_marginRight="10dp"
-                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
                         android:textAlignment="center"
                         android:textAllCaps="true"
                         android:textColor="@color/colorPrimary"
                         android:textSize="14sp"
+                        android:gravity="center"
                         android:textStyle="italic" />
                 </LinearLayout>
             </android.support.v7.widget.CardView>

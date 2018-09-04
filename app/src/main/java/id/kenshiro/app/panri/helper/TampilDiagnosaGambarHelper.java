@@ -1,0 +1,356 @@
+package id.kenshiro.app.panri.helper;
+
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.os.Build;
+import android.support.v4.view.ViewPager;
+import android.support.v7.widget.CardView;
+import android.text.Html;
+import android.view.Gravity;
+import android.view.View;
+import android.webkit.WebView;
+import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
+
+import com.mylexz.utils.MylexzActivity;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import id.kenshiro.app.panri.R;
+import id.kenshiro.app.panri.adapter.AdapterRecycler;
+import id.kenshiro.app.panri.adapter.CustomViewPager;
+import id.kenshiro.app.panri.adapter.FadePageViewTransformer;
+import id.kenshiro.app.panri.adapter.ImageFragmentAdapter;
+
+public class TampilDiagnosaGambarHelper {
+    private RelativeLayout mRootView;
+    private SQLiteDatabase sqlDB;
+    private MylexzActivity activity;
+    private LinearLayout mChildView;
+    private ScrollView mContentView;
+    private List<DataCiriPenyakit> dataCiriPenyakitList;
+    private AdapterRecycler.OnItemClickListener onItemClickListener;
+
+    private static final int ON_BTN_YA = 0x6;
+    private static final int ON_BTN_TIDAK = 0x6f;
+    private int mSizeList = 0;
+    private int mPositionList = 0;
+    private CardView content;
+    private OnItemListener onItemListener;
+
+    public TampilDiagnosaGambarHelper(MylexzActivity activity, RelativeLayout mRootView, SQLiteDatabase sqlDB) {
+        this.mRootView = mRootView;
+        this.sqlDB = sqlDB;
+        this.activity = activity;
+    }
+
+    public void buildAndShow() {
+        createAndApplyContentLayout();
+        getDataFromDB();
+        buildContent();
+    }
+
+    public void setOnItemListener(OnItemListener onItemListener) {
+        this.onItemListener = onItemListener;
+    }
+
+    public void hideContentView() {
+        mContentView.setVisibility(View.GONE);
+    }
+
+    public void showContentView() {
+        mContentView.setVisibility(View.VISIBLE);
+    }
+
+    public void setOnItemClickListener(AdapterRecycler.OnItemClickListener onItemClickListener) {
+        this.onItemClickListener = onItemClickListener;
+    }
+
+    private void buildContent() {
+        mSizeList = dataCiriPenyakitList.size();
+        //Load CardView
+        content = (CardView) activity.getLayoutInflater().inflate(R.layout.adapter_imgdiagnose, mRootView, false);
+        TextView judul = content.findViewById(R.id.actimgdiagnose_judulpenyakit);
+        CustomViewPager customViewPager = content.findViewById(R.id.actimgdiagnose_id_viewpagerimg);
+        LinearLayout indicators = content.findViewById(R.id.actimgdiagnose_id_layoutIndicators);
+        WebView ciriP = content.findViewById(R.id.actimgdiagnose_ciriciri);
+        Button btnYa = content.findViewById(R.id.actimgdiagnose_buttonya);
+        Button btnTidak = content.findViewById(R.id.actimgdiagnose_buttontidak);
+
+        // sets the judul
+        setJudulText(judul, mPositionList);
+
+        // sets the largeImage
+        setViewPagerImage(customViewPager, mPositionList, indicators);
+
+        // sets the TextView CiriP
+        setCiriPenyakitText(ciriP, mPositionList);
+
+        // sets the button
+        setBtn(btnYa, btnTidak, mPositionList);
+
+        // add and apply into view
+        mChildView.addView(content);
+    }
+
+    public void setItemPosition(int position) {
+        this.mPositionList = position;
+    }
+
+    public void updateContentAfter() {
+        if (mPositionList < mSizeList) {
+            mContentView.pageScroll(0);
+            TextView judul = content.findViewById(R.id.actimgdiagnose_judulpenyakit);
+            CustomViewPager customViewPager = content.findViewById(R.id.actimgdiagnose_id_viewpagerimg);
+            LinearLayout indicators = content.findViewById(R.id.actimgdiagnose_id_layoutIndicators);
+            WebView ciriP = content.findViewById(R.id.actimgdiagnose_ciriciri);
+            // sets the judul
+            setJudulText(judul, mPositionList);
+
+            // sets the largeImage
+            indicators.removeAllViewsInLayout();
+            setViewPagerImage(customViewPager, mPositionList, indicators);
+
+            // sets the TextView CiriP
+            setCiriPenyakitText(ciriP, mPositionList);
+        } else if (onItemListener != null)
+            onItemListener.onIsAfterLastListPosition(mContentView, mPositionList, mSizeList);
+    }
+
+    private void onClickBtn(int whichType, int x) {
+        switch (whichType) {
+            case ON_BTN_TIDAK: {
+                mPositionList++;
+                updateContentAfter();
+                if (onItemListener != null)
+                    onItemListener.onBtnTidakClicked(mContentView, mPositionList);
+            }
+            break;
+            case ON_BTN_YA:
+                if (onItemListener != null)
+                    onItemListener.onBtnYaClicked(mContentView, mPositionList);
+                break;
+        }
+    }
+
+    private void setBtn(Button btnYa, Button btnTidak, int x) {
+        btnYa.setTypeface(Typeface.createFromAsset(activity.getAssets(), "Gill_SansMT.ttf"), Typeface.BOLD);
+        btnYa.setTextColor(Color.WHITE);
+        btnTidak.setTypeface(Typeface.createFromAsset(activity.getAssets(), "Gill_SansMT.ttf"), Typeface.BOLD);
+        btnTidak.setTextColor(Color.WHITE);
+
+        btnYa.setOnClickListener(v -> {
+            onClickBtn(ON_BTN_YA, mPositionList);
+        });
+        btnTidak.setOnClickListener(v -> {
+            onClickBtn(ON_BTN_TIDAK, mPositionList);
+        });
+    }
+
+    private void setBtnMulai(Button btnMulai, final int x) {
+        btnMulai.setTypeface(Typeface.createFromAsset(activity.getAssets(), "Gill_SansMT.ttf"), Typeface.BOLD);
+        btnMulai.setTextColor(Color.WHITE);
+        btnMulai.setOnClickListener((v) -> {
+            if (onItemClickListener != null)
+                onItemClickListener.onClick(mContentView, x);
+        });
+    }
+
+    private void setCiriPenyakitText(WebView ciriP, int x) {
+        String html = dataCiriPenyakitList.get(x).listCiriHtml;
+        ciriP.loadData(html, null, "utf-8");
+        /*
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+            ciriP.setText(Html.fromHtml(html, 0));
+        else
+            ciriP.setText(Html.fromHtml(html));
+            */
+    }
+
+    private void setViewPagerImage(CustomViewPager customViewPager, int x, LinearLayout indicators) {
+        List<Integer> listGambar = dataCiriPenyakitList.get(x).listGambarId;
+        final int mDotCount = listGambar.size();
+        LinearLayout[] mDots = new LinearLayout[mDotCount];
+        ImageFragmentAdapter mImageControllerFragment = new ImageFragmentAdapter(activity, activity.getSupportFragmentManager(), listGambar);
+        customViewPager.setAdapter(mImageControllerFragment);
+        customViewPager.setCurrentItem(0);
+        customViewPager.setOnClickListener(v -> {
+            int curr_img = customViewPager.getCurrentItem();
+            customViewPager.setPageTransformer(true, new FadePageViewTransformer());
+            if (++curr_img == listGambar.size())
+                curr_img = 0;
+            customViewPager.setCurrentItem(curr_img);
+            System.gc();
+        });
+        customViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int i, float v, int i1) {
+
+            }
+
+            @Override
+            public void onPageSelected(int i) {
+                for (int y = 0; y < mDotCount; y++) {
+                    mDots[y].setBackgroundResource(R.drawable.indicator_unselected_item_oval);
+                }
+                mDots[i].setBackgroundResource(R.drawable.indicator_selected_item_oval);
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int i) {
+                int pos = customViewPager.getCurrentItem();
+                // if reaching last and state is DRAGGING, back into first
+                if (pos == listGambar.size() - 1 && i == ViewPager.SCROLL_STATE_DRAGGING)
+                    customViewPager.setCurrentItem(0, true);
+            }
+        });
+        // set the indicators
+        for (int y = 0; y < mDotCount; y++) {
+            mDots[y] = new LinearLayout(activity);
+            mDots[y].setBackgroundResource(R.drawable.indicator_unselected_item_oval);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            params.setMargins(0, 0, 4, 4);
+            mDots[y].setGravity(Gravity.RIGHT | Gravity.BOTTOM | Gravity.END);
+            indicators.addView(mDots[y], params);
+
+        }
+        mDots[0].setBackgroundResource(R.drawable.indicator_selected_item_oval);
+    }
+
+    private void setJudulText(TextView judul, int x) {
+        String txt = dataCiriPenyakitList.get(x).nama_penyakit;
+        judul.setText(txt);
+    }
+
+    private void getDataFromDB() {
+        dataCiriPenyakitList = new ArrayList<DataCiriPenyakit>();
+
+        int counter = 0;
+        // gets the nama penyakit
+        Cursor cursor = sqlDB.rawQuery("select nama from penyakit", null);
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            dataCiriPenyakitList.add(new DataCiriPenyakit(cursor.getString(0), null, null));
+            cursor.moveToNext();
+        }
+        cursor.close();
+        System.gc();
+
+        // gets the latin
+        cursor = sqlDB.rawQuery("select latin from penyakit", null);
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            dataCiriPenyakitList.get(counter++).setNama_latin(cursor.getString(0));
+            cursor.moveToNext();
+        }
+        cursor.close();
+        System.gc();
+
+        // gets the ciriciri
+        counter = 0;
+        cursor = sqlDB.rawQuery("select listciri from penyakit", null);
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            dataCiriPenyakitList.get(counter++).setListCiriHtml(cursor.getString(0));
+            cursor.moveToNext();
+        }
+        cursor.close();
+        System.gc();
+
+        // gets the listGambar
+        counter = 0;
+        cursor = sqlDB.rawQuery("select gambarid from list_gambarid", null);
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            dataCiriPenyakitList.get(counter++).setListGambarId(cursor.getString(0));
+            cursor.moveToNext();
+        }
+        cursor.close();
+        System.gc();
+    }
+
+    private void createAndApplyContentLayout() {
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT
+        );
+        mChildView = new LinearLayout(activity);
+        mChildView.setLayoutParams(params);
+        mChildView.setOrientation(LinearLayout.VERTICAL);
+        mChildView.setVisibility(View.VISIBLE);
+        mContentView = new ScrollView(activity);
+        mContentView.setLayoutParams(new ScrollView.LayoutParams(
+                ScrollView.LayoutParams.MATCH_PARENT,
+                ScrollView.LayoutParams.WRAP_CONTENT
+        ));
+        mContentView.addView(mChildView);
+        mRootView.addView(mContentView);
+    }
+
+    public interface OnItemListener {
+        public void onBtnYaClicked(View v, int position);
+
+        public void onBtnTidakClicked(View v, int position);
+
+        public void onIsAfterLastListPosition(View v, int position, int size_list);
+    }
+
+    private class DataCiriPenyakit {
+        String nama_penyakit;
+        String nama_latin;
+        String listCiriHtml;
+        List<Integer> listGambarId;
+
+        public DataCiriPenyakit(String nama_penyakit, String nama_latin, String gambarList) {
+            this.nama_latin = nama_latin;
+            this.nama_penyakit = nama_penyakit;
+            setListGambarId(gambarList);
+        }
+
+        public void setNama_penyakit(String nama_penyakit) {
+            this.nama_penyakit = nama_penyakit;
+        }
+
+        public void setListCiriHtml(String listCiri) {
+            if (listCiri == null) return;
+            String[] list = listCiri.split(",");
+            StringBuffer bufHtml = new StringBuffer();
+            bufHtml.append("<ul>");
+            for (int x = 0; x < list.length; x++) {
+                bufHtml.append("<li>");
+                bufHtml.append(list[x]);
+                bufHtml.append("</li>");
+            }
+            bufHtml.append("</ul>");
+            this.listCiriHtml = bufHtml.toString();
+        }
+
+        public void setListGambarId(String listId) {
+            if (listId == null) return;
+            String[] list = listId.split(",");
+            this.listGambarId = new ArrayList<Integer>();
+            for (int x = 0; x < list.length; x++) {
+                int resId = activity.getResources().getIdentifier(
+                        list[x],
+                        "drawable",
+                        activity.getPackageName()
+                );
+                this.listGambarId.add(resId);
+            }
+        }
+
+        public void setNama_latin(String nama_latin) {
+            this.nama_latin = nama_latin;
+        }
+    }
+}

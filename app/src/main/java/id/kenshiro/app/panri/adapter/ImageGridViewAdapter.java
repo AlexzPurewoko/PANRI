@@ -71,6 +71,9 @@ public class ImageGridViewAdapter {
         imageItemSize.y = newHeight;
     }
     public void buildAndShow(){
+        if (rootElement != null) {
+            rootElement.removeViewsInLayout(0, rootElement.getChildCount());
+        }
         buildRootLayout();
         buildContentLayout();
     }

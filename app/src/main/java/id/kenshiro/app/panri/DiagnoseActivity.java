@@ -266,5 +266,9 @@ public class DiagnoseActivity extends MylexzActivity
         // SwitchIntoMainActivity.switchToMain(this);
 		return true;
 	}*/
-
+	@Override
+	public boolean onSupportNavigateUp() {
+		SwitchIntoMainActivity.switchToMain(this);
+		return true;
+	}
 }
