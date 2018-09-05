@@ -4,6 +4,7 @@ import android.graphics.Point;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
@@ -23,6 +24,7 @@ import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 public class GalleryActivity extends MylexzActivity {
     Toolbar toolbar;
     ImageGridViewAdapter adapterGrid;
+    private boolean doubleBackToExitPressedOnce;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -76,18 +78,21 @@ public class GalleryActivity extends MylexzActivity {
     }
 
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        int repeat = event.getRepeatCount();
-        int maxRepeat = 2;
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            if (repeat == maxRepeat) {
-                SwitchIntoMainActivity.switchToMain(this);
-            } else {
-                TOAST(Toast.LENGTH_SHORT, "Tekan tombol %d untuk kembali", maxRepeat - repeat);
-            }
-            return true;
+    public void onBackPressed() {
+        if (doubleBackToExitPressedOnce) {
+            SwitchIntoMainActivity.switchToMain(this);
+            return;
         }
-        return super.onKeyDown(keyCode, event);
+
+        this.doubleBackToExitPressedOnce = true;
+        TOAST(Toast.LENGTH_SHORT, "Klik lagi untuk kembali");
+        new Handler().postDelayed(new Runnable() {
+
+            @Override
+            public void run() {
+                doubleBackToExitPressedOnce = false;
+            }
+        }, 2000);
     }
 
     @Override

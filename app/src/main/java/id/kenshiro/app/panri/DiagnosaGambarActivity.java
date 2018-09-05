@@ -4,16 +4,19 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
 import android.view.KeyEvent;
+import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
+import id.kenshiro.app.panri.helper.ShowPenyakitDiagnoseHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 import id.kenshiro.app.panri.helper.TampilDiagnosaGambarHelper;
 
@@ -21,6 +24,9 @@ public class DiagnosaGambarActivity extends MylexzActivity {
     Toolbar toolbar;
     SQLiteDatabase sqlDB;
     TampilDiagnosaGambarHelper tampilDiagnosaGambarHelper;
+    ShowPenyakitDiagnoseHelper showPenyakitDiagnoseHelper;
+    private boolean doubleBackToExitPressedOnce;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,10 +37,38 @@ public class DiagnosaGambarActivity extends MylexzActivity {
     }
 
     private void setContentV() {
+        showPenyakitDiagnoseHelper = new ShowPenyakitDiagnoseHelper(this, sqlDB, (RelativeLayout) findViewById(R.id.actdim_id_layoutcontainer));
         tampilDiagnosaGambarHelper = new TampilDiagnosaGambarHelper(this, (RelativeLayout) findViewById(R.id.actdim_id_layoutcontainer), sqlDB);
-        tampilDiagnosaGambarHelper.setOnItemClickListener((v, p) -> {
-            TOAST(Toast.LENGTH_LONG, "Selected at" + p);
+        tampilDiagnosaGambarHelper.setOnItemListener(new TampilDiagnosaGambarHelper.OnItemListener() {
+                                                         @Override
+                                                         public void onBtnYaClicked(View v, int position) {
+                                                             v.setVisibility(View.GONE);
+                                                             TOAST(Toast.LENGTH_LONG, "position at %d", position);
+                                                             showPenyakitDiagnoseHelper.show(position);
+                                                         }
+
+                                                         @Override
+                                                         public void onBtnTidakClicked(View v, int position) {
+
+                                                         }
+
+                                                         @Override
+                                                         public void onIsAfterLastListPosition(View v, int position, int size_list) {
+                                                             v.setVisibility(View.GONE);
+                                                             TOAST(Toast.LENGTH_LONG, "position at %d is last (%d)", position, size_list);
+                                                         }
+                                                     }
+        );
+        showPenyakitDiagnoseHelper.setOnHaveFinalRequests(v -> {
+            showPenyakitDiagnoseHelper.countBtn -= 2;
+            showPenyakitDiagnoseHelper.klikBawahText.setText(R.string.actdiagnose_string_klikcaramenanggulangi);
+            v.setVisibility(View.GONE);
+
+            tampilDiagnosaGambarHelper.setItemPosition(1);
+            tampilDiagnosaGambarHelper.updateContentAfter();
+            tampilDiagnosaGambarHelper.showContentView();
         });
+        showPenyakitDiagnoseHelper.build();
         tampilDiagnosaGambarHelper.buildAndShow();
         tampilDiagnosaGambarHelper.showContentView();
     }
@@ -76,12 +110,42 @@ public class DiagnosaGambarActivity extends MylexzActivity {
         int repeat = event.getRepeatCount();
         int maxRepeat = 2;
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            if (repeat == maxRepeat) {
-                SwitchIntoMainActivity.switchToMain(this);
+            if (showPenyakitDiagnoseHelper.getmContentView().getVisibility() == View.GONE) {
+                if (!tampilDiagnosaGambarHelper.isContentViewHidden()) {
+                    if (doubleBackToExitPressedOnce) {
+                        SwitchIntoMainActivity.switchToMain(this);
+                        return true;
+                    }
+
+                    this.doubleBackToExitPressedOnce = true;
+                    TOAST(Toast.LENGTH_SHORT, "Klik lagi untuk kembali");
+                    new Handler().postDelayed(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            doubleBackToExitPressedOnce = false;
+                        }
+                    }, 2000);
+                    return false;
+                } else
+                    return false;
             } else {
-                TOAST(Toast.LENGTH_SHORT, "Tekan tombol %d untuk kembali", maxRepeat - repeat);
+                if (showPenyakitDiagnoseHelper.getmContent2().getVisibility() == View.VISIBLE) {
+                    showPenyakitDiagnoseHelper.getmContent2().setVisibility(View.GONE);
+                    showPenyakitDiagnoseHelper.getmContent1().setVisibility(View.VISIBLE);
+                    showPenyakitDiagnoseHelper.mScrollContent.pageScroll(0);
+                    --showPenyakitDiagnoseHelper.countBtn;
+                    showPenyakitDiagnoseHelper.klikBawahText.setText(R.string.actdiagnose_string_klikcaramenanggulangi);
+                    return false;
+                } else if (showPenyakitDiagnoseHelper.getmContent1().getVisibility() == View.VISIBLE) {
+                    showPenyakitDiagnoseHelper.getmContent1().setVisibility(View.GONE);
+                    showPenyakitDiagnoseHelper.getmContentView().setVisibility(View.GONE);
+                    tampilDiagnosaGambarHelper.showContentView();
+                    tampilDiagnosaGambarHelper.mContentView.pageScroll(0);
+                    --showPenyakitDiagnoseHelper.countBtn;
+                    return false;
+                }
             }
-            return true;
         }
         return super.onKeyDown(keyCode, event);
     }

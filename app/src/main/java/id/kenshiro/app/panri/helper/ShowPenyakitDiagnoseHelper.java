@@ -47,6 +47,7 @@ public class ShowPenyakitDiagnoseHelper {
     public int countBtn = 0;
     private final int maxCount = 2;
     View.OnClickListener onClickListener;
+    public ScrollView mScrollContent;
     public ShowPenyakitDiagnoseHelper(@NonNull MylexzActivity activity, @NonNull SQLiteDatabase sqLiteDatabase, @NonNull RelativeLayout mRootView){
         this.activity = activity;
         this.sqLiteDatabase = sqLiteDatabase;
@@ -65,6 +66,7 @@ public class ShowPenyakitDiagnoseHelper {
         mContentView.setVisibility(View.VISIBLE);
         mContent1.setVisibility(View.VISIBLE);
         mContent2.setVisibility(View.GONE);
+        mScrollContent.pageScroll(1);
         umum.loadUrl(path_to_asset+""+dataPath.getUmum_path());
         gejala.loadUrl(path_to_asset+""+dataPath.getGejala_path());
         caraatasi.loadUrl(path_to_asset+""+dataPath.getCara_atasi_path());
@@ -169,6 +171,7 @@ public class ShowPenyakitDiagnoseHelper {
         judul.setGravity(Gravity.CENTER);
         latin.setGravity(Gravity.CENTER);
 
+        mScrollContent = (ScrollView) mContentView.findViewById(R.id.adapter_id_scrollresultdiagnose);
         // prepare ScrollView
         mContent1 = (LinearLayout) mContentView.findViewById(R.id.actdiagnose_id_results1);
         mContent2 = (LinearLayout) mContentView.findViewById(R.id.actdiagnose_id_results2);
@@ -207,6 +210,7 @@ public class ShowPenyakitDiagnoseHelper {
                 // Do into cara_atasi
                 mContent1.setVisibility(View.GONE);
                 mContent2.setVisibility(View.VISIBLE);
+                mScrollContent.pageScroll(1);
                 klikBawahText.setText(R.string.actdiagnose_string_klikbalikdiagnosa);
                 /////////////////////
             }

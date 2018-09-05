@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
@@ -38,6 +39,8 @@ public class HowToResolveActivity extends MylexzActivity {
     String data_url;
     String name_penyakit;
     String name_latin;
+    private boolean doubleBackToExitPressedOnce;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -146,7 +149,20 @@ public class HowToResolveActivity extends MylexzActivity {
             if (content_caraatasi.getVisibility() == View.VISIBLE)
                 content_caraatasi.setVisibility(View.GONE);
             if (!tampil.onBackButtonPressed()) {
-                SwitchIntoMainActivity.switchToMain(this);
+                if (doubleBackToExitPressedOnce) {
+                    SwitchIntoMainActivity.switchToMain(this);
+                    return true;
+                }
+
+                this.doubleBackToExitPressedOnce = true;
+                TOAST(Toast.LENGTH_SHORT, "Klik lagi untuk kembali");
+                new Handler().postDelayed(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        doubleBackToExitPressedOnce = false;
+                    }
+                }, 2000);
                 return false;
             } else
                 return false;

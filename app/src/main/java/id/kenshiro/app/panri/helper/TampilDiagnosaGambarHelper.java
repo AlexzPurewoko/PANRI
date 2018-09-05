@@ -34,14 +34,14 @@ public class TampilDiagnosaGambarHelper {
     private SQLiteDatabase sqlDB;
     private MylexzActivity activity;
     private LinearLayout mChildView;
-    private ScrollView mContentView;
-    private List<DataCiriPenyakit> dataCiriPenyakitList;
+    public ScrollView mContentView;
+    DataCiriPenyakit dataCiriPenyakit;
     private AdapterRecycler.OnItemClickListener onItemClickListener;
 
     private static final int ON_BTN_YA = 0x6;
     private static final int ON_BTN_TIDAK = 0x6f;
     private int mSizeList = 0;
-    private int mPositionList = 0;
+    private int mPositionList = 1;
     private CardView content;
     private OnItemListener onItemListener;
 
@@ -53,12 +53,27 @@ public class TampilDiagnosaGambarHelper {
 
     public void buildAndShow() {
         createAndApplyContentLayout();
-        getDataFromDB();
+        getsTheSizeData();
+        getDataFromDB(mPositionList);
         buildContent();
+    }
+
+    private void getsTheSizeData() {
+        Cursor cursor = sqlDB.rawQuery("select nama from penyakit", null);
+        cursor.moveToFirst();
+        mSizeList = cursor.getCount();
+        cursor.close();
+        System.gc();
+
+        mPositionList = 1;
     }
 
     public void setOnItemListener(OnItemListener onItemListener) {
         this.onItemListener = onItemListener;
+    }
+
+    public boolean isContentViewHidden() {
+        return mContentView.getVisibility() == View.GONE;
     }
 
     public void hideContentView() {
@@ -74,7 +89,6 @@ public class TampilDiagnosaGambarHelper {
     }
 
     private void buildContent() {
-        mSizeList = dataCiriPenyakitList.size();
         //Load CardView
         content = (CardView) activity.getLayoutInflater().inflate(R.layout.adapter_imgdiagnose, mRootView, false);
         TextView judul = content.findViewById(R.id.actimgdiagnose_judulpenyakit);
@@ -85,16 +99,16 @@ public class TampilDiagnosaGambarHelper {
         Button btnTidak = content.findViewById(R.id.actimgdiagnose_buttontidak);
 
         // sets the judul
-        setJudulText(judul, mPositionList);
+        setJudulText(judul, dataCiriPenyakit.nama_penyakit);
 
         // sets the largeImage
-        setViewPagerImage(customViewPager, mPositionList, indicators);
+        setViewPagerImage(customViewPager, dataCiriPenyakit.listGambarId, indicators);
 
         // sets the TextView CiriP
-        setCiriPenyakitText(ciriP, mPositionList);
+        setCiriPenyakitText(ciriP, dataCiriPenyakit.listCiriHtml);
 
         // sets the button
-        setBtn(btnYa, btnTidak, mPositionList);
+        setBtn(btnYa, btnTidak);
 
         // add and apply into view
         mChildView.addView(content);
@@ -105,21 +119,23 @@ public class TampilDiagnosaGambarHelper {
     }
 
     public void updateContentAfter() {
-        if (mPositionList < mSizeList) {
+        if (mPositionList <= mSizeList) {
+            dataCiriPenyakit = null;
+            getDataFromDB(mPositionList);
             mContentView.pageScroll(0);
             TextView judul = content.findViewById(R.id.actimgdiagnose_judulpenyakit);
             CustomViewPager customViewPager = content.findViewById(R.id.actimgdiagnose_id_viewpagerimg);
             LinearLayout indicators = content.findViewById(R.id.actimgdiagnose_id_layoutIndicators);
             WebView ciriP = content.findViewById(R.id.actimgdiagnose_ciriciri);
             // sets the judul
-            setJudulText(judul, mPositionList);
+            setJudulText(judul, dataCiriPenyakit.nama_penyakit);
 
             // sets the largeImage
-            indicators.removeAllViewsInLayout();
-            setViewPagerImage(customViewPager, mPositionList, indicators);
+            setViewPagerImage(customViewPager, dataCiriPenyakit.listGambarId, indicators);
 
             // sets the TextView CiriP
-            setCiriPenyakitText(ciriP, mPositionList);
+            setCiriPenyakitText(ciriP, dataCiriPenyakit.listCiriHtml);
+            System.gc();
         } else if (onItemListener != null)
             onItemListener.onIsAfterLastListPosition(mContentView, mPositionList, mSizeList);
     }
@@ -140,7 +156,7 @@ public class TampilDiagnosaGambarHelper {
         }
     }
 
-    private void setBtn(Button btnYa, Button btnTidak, int x) {
+    private void setBtn(Button btnYa, Button btnTidak) {
         btnYa.setTypeface(Typeface.createFromAsset(activity.getAssets(), "Gill_SansMT.ttf"), Typeface.BOLD);
         btnYa.setTextColor(Color.WHITE);
         btnTidak.setTypeface(Typeface.createFromAsset(activity.getAssets(), "Gill_SansMT.ttf"), Typeface.BOLD);
@@ -163,19 +179,11 @@ public class TampilDiagnosaGambarHelper {
         });
     }
 
-    private void setCiriPenyakitText(WebView ciriP, int x) {
-        String html = dataCiriPenyakitList.get(x).listCiriHtml;
+    private void setCiriPenyakitText(WebView ciriP, String html) {
         ciriP.loadData(html, null, "utf-8");
-        /*
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-            ciriP.setText(Html.fromHtml(html, 0));
-        else
-            ciriP.setText(Html.fromHtml(html));
-            */
     }
 
-    private void setViewPagerImage(CustomViewPager customViewPager, int x, LinearLayout indicators) {
-        List<Integer> listGambar = dataCiriPenyakitList.get(x).listGambarId;
+    private void setViewPagerImage(CustomViewPager customViewPager, List<Integer> listGambar, LinearLayout indicators) {
         final int mDotCount = listGambar.size();
         LinearLayout[] mDots = new LinearLayout[mDotCount];
         ImageFragmentAdapter mImageControllerFragment = new ImageFragmentAdapter(activity, activity.getSupportFragmentManager(), listGambar);
@@ -212,6 +220,8 @@ public class TampilDiagnosaGambarHelper {
             }
         });
         // set the indicators
+        if (indicators != null)
+            indicators.removeAllViewsInLayout();
         for (int y = 0; y < mDotCount; y++) {
             mDots[y] = new LinearLayout(activity);
             mDots[y].setBackgroundResource(R.drawable.indicator_unselected_item_oval);
@@ -227,54 +237,38 @@ public class TampilDiagnosaGambarHelper {
         mDots[0].setBackgroundResource(R.drawable.indicator_selected_item_oval);
     }
 
-    private void setJudulText(TextView judul, int x) {
-        String txt = dataCiriPenyakitList.get(x).nama_penyakit;
+    private void setJudulText(TextView judul, String txt) {
         judul.setText(txt);
     }
 
-    private void getDataFromDB() {
-        dataCiriPenyakitList = new ArrayList<DataCiriPenyakit>();
+    private void getDataFromDB(int position) {
+        dataCiriPenyakit = new DataCiriPenyakit(null, null, null);
 
-        int counter = 0;
         // gets the nama penyakit
-        Cursor cursor = sqlDB.rawQuery("select nama from penyakit", null);
+        Cursor cursor = sqlDB.rawQuery("select nama from penyakit where no=" + position, null);
         cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            dataCiriPenyakitList.add(new DataCiriPenyakit(cursor.getString(0), null, null));
-            cursor.moveToNext();
-        }
+        dataCiriPenyakit.setNama_penyakit(cursor.getString(0));
         cursor.close();
         System.gc();
 
         // gets the latin
-        cursor = sqlDB.rawQuery("select latin from penyakit", null);
+        cursor = sqlDB.rawQuery("select latin from penyakit where no=" + position, null);
         cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            dataCiriPenyakitList.get(counter++).setNama_latin(cursor.getString(0));
-            cursor.moveToNext();
-        }
+        dataCiriPenyakit.setNama_latin(cursor.getString(0));
         cursor.close();
         System.gc();
 
         // gets the ciriciri
-        counter = 0;
-        cursor = sqlDB.rawQuery("select listciri from penyakit", null);
+        cursor = sqlDB.rawQuery("select listciri from penyakit where no=" + position, null);
         cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            dataCiriPenyakitList.get(counter++).setListCiriHtml(cursor.getString(0));
-            cursor.moveToNext();
-        }
+        dataCiriPenyakit.setListCiriHtml(cursor.getString(0));
         cursor.close();
         System.gc();
 
         // gets the listGambar
-        counter = 0;
-        cursor = sqlDB.rawQuery("select gambarid from list_gambarid", null);
+        cursor = sqlDB.rawQuery("select gambarid from list_gambarid where no=" + position, null);
         cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            dataCiriPenyakitList.get(counter++).setListGambarId(cursor.getString(0));
-            cursor.moveToNext();
-        }
+        dataCiriPenyakit.setListGambarId(cursor.getString(0));
         cursor.close();
         System.gc();
     }

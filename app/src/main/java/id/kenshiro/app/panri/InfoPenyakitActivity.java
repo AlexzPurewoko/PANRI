@@ -4,6 +4,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -30,6 +31,8 @@ public class InfoPenyakitActivity extends MylexzActivity {
     private TampilListPenyakitHelper tampil;
     private SQLiteDatabase sqlDB;
     private ShowPenyakitDiagnoseHelper showPenyakitDiagnoseHelper;
+    private boolean doubleBackToExitPressedOnce;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -101,7 +104,20 @@ public class InfoPenyakitActivity extends MylexzActivity {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             if (showPenyakitDiagnoseHelper.getmContentView().getVisibility() == View.GONE) {
                 if (!tampil.onBackButtonPressed()) {
-                    SwitchIntoMainActivity.switchToMain(this);
+                    if (doubleBackToExitPressedOnce) {
+                        SwitchIntoMainActivity.switchToMain(this);
+                        return true;
+                    }
+
+                    this.doubleBackToExitPressedOnce = true;
+                    TOAST(Toast.LENGTH_SHORT, "Klik lagi untuk kembali");
+                    new Handler().postDelayed(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            doubleBackToExitPressedOnce = false;
+                        }
+                    }, 2000);
                     return false;
                 } else
                     return false;

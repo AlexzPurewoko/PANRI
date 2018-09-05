@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="actsplash_dimen_img_wh">180dp</dimen>
+    <dimen name="actsplash_dimen_margintopimg">20dp</dimen>
+</resources>

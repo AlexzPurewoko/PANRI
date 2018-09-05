@@ -4,6 +4,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -41,6 +42,8 @@ public class DiagnoseActivity extends MylexzActivity
 	private HashMap<Integer, ListCiriCiriPenyakit> listCiriCiriPenyakitHashMap;
 	private DiagnoseActivityHelper diagnoseActivityHelper;
 	private ShowPenyakitDiagnoseHelper showPenyakitDiagnoseHelper;
+	private boolean doubleBackToExitPressedOnce;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -188,14 +191,27 @@ public class DiagnoseActivity extends MylexzActivity
 		int maxRepeat = 2;
 		if (keyCode == KeyEvent.KEYCODE_BACK) {
 			if (!diagnoseActivityHelper.setOnPushBackButtonPressed(true)) {
-				if (repeat == maxRepeat) {
+				if (doubleBackToExitPressedOnce) {
 					SwitchIntoMainActivity.switchToMain(this);
 					return true;
-				} else {
-					TOAST(Toast.LENGTH_SHORT, "Tekan tombol %d x untuk kembali", maxRepeat - repeat);
-					return false;
+				}
+
+				this.doubleBackToExitPressedOnce = true;
+				TOAST(Toast.LENGTH_SHORT, "Klik lagi untuk kembali");
+				new Handler().postDelayed(new Runnable() {
+
+					@Override
+					public void run() {
+						doubleBackToExitPressedOnce = false;
+					}
+				}, 2000);
+				return false;
+			} else {
+				if (showPenyakitDiagnoseHelper.getmContentView().getVisibility() == View.VISIBLE) {
+					showPenyakitDiagnoseHelper.getmContentView().setVisibility(View.GONE);
 				}
 			}
+
 			return false;
 		}
 		//else if(keyCode == )

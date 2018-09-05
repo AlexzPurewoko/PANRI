@@ -42,8 +42,9 @@ public class DiagnoseActivityHelper{
     private int count_position_data = 0;
     private int key_data_position = 0;
     private int savedItemDataPosition = 0;
-    private int saved_btn_yesno_modes = 0;
+    private List<Integer> saved_btn_yesno_modes = new ArrayList<Integer>();
     private int view_mode_saved = 0;
+    private int saved_counter = 0;
     // for temporary list
     private List<Integer> temp_list_nums, saved_temp_list_nums;
     private List<AdapterRecycler.DataPerItems> data;
@@ -71,10 +72,11 @@ public class DiagnoseActivityHelper{
     public boolean setOnPushBackButtonPressed(boolean on) {
         // if viewmodes is 0 indicates its first page
         if (!on) return false;
-        if (view_mode_saved == 0 || counter == 0)
+        if (view_mode_saved == 0)
             return false;
-        else if (counter == 1) {
+        else if (counter == 1 && view_mode_saved != ListCiriCiriPenyakit.MODE_SEQUENCE) {
             counter--;
+            count_when_accept--;
             selectFirstTampil();
             return true;
         } else {
@@ -82,6 +84,15 @@ public class DiagnoseActivityHelper{
                 // load previous lists
                 counter--;
                 count_when_accept--;
+                boolean same = checkIfSame(temp_list_nums, saved_temp_list_nums);
+                if (same) {
+                    if (counter == 1) {
+                        selectFirstTampil();
+                        return true;
+                    }
+                    String buildPointo = buildIntoListUsedDB(temp_list_nums);
+                    if (same) ;
+                }
                 temp_list_nums = saved_temp_list_nums;
                 // change the content of data
                 data = new ArrayList<AdapterRecycler.DataPerItems>();
@@ -102,8 +113,23 @@ public class DiagnoseActivityHelper{
                 System.gc();
                 return true;
             } else if (view_mode_saved == ListCiriCiriPenyakit.MODE_SEQUENCE) {
+                if (savedItemDataPosition > 0)
+                    savedItemDataPosition = --count_position_data;
+                else {
+                    if (counter == 1) {
+                        counter = count_when_accept = count_when_decline = 0;
+                        mAskLayout.setVisibility(View.GONE);
+                        mListFirstPage.setVisibility(View.VISIBLE);
+                        selectFirstTampil();
+                        return true;
+
+                    }
+                    // gets the number last pos
+                    int num = temp_list_nums.get(count_position_data);
+
+                }
                 counter--;
-                switch (saved_btn_yesno_modes) {
+                switch (saved_btn_yesno_modes.remove(saved_btn_yesno_modes.size() - 1)) {
                     case ON_BTN_YES_CLICKED:
                         count_when_accept--;
                         break;
@@ -112,15 +138,42 @@ public class DiagnoseActivityHelper{
                         break;
                     default:
                 }
-                String ciri = listCiriCiriPenyakitHashMap.get(temp_list_nums.get(count_position_data = savedItemDataPosition)).getCiri();
+                count_position_data = savedItemDataPosition;
+                String ciri = listCiriCiriPenyakitHashMap.get(temp_list_nums.get(count_position_data)).getCiri();
+
                 mDescCiri.setText(ciri);
                 mListFirstPage.setVisibility(View.GONE);
                 mAskLayout.setVisibility(View.VISIBLE);
+
                 System.gc();
                 return true;
             }
             return false;
         }
+    }
+
+    private void pointoBackInDB() {
+
+    }
+
+    private String buildIntoListUsedDB(List<Integer> lists) {
+        StringBuffer sb = new StringBuffer();
+        int x = 0;
+        do {
+            sb.append(lists.get(x));
+            if (++x != lists.size()) sb.append('-');
+        } while (x < lists.size());
+        return sb.toString();
+    }
+
+    private boolean checkIfSame(List<Integer> temps, List<Integer> saved) {
+        if (temps == null || saved == null) return false;
+        if (temps.size() != saved.size()) return false;
+
+        for (int x = 0; x < temps.size(); x++) {
+            if (temps.get(x) != saved.get(x)) return false;
+        }
+        return true;
     }
 
 
@@ -144,6 +197,7 @@ public class DiagnoseActivityHelper{
             onItemCardTouch(b);
         });
         mListFirstPage.setAdapter(dataAdapter);
+        mListFirstPage.scrollToPosition(0);
         System.gc();
     }
 
@@ -183,6 +237,7 @@ public class DiagnoseActivityHelper{
             if(!any) {
                 // end and gets the penyakit type
                 int results_penyakit = listCiriCiriPenyakitHashMap.get(itemPosition).pointo_flags.get(0);
+                saved_counter = counter;
                 double percentage = count_when_accept * 100 / counter ;
                 if (onPenyakitHaveSelected != null)
                     onPenyakitHaveSelected.onPenyakitSelected(this.mListFirstPage, this.mAskLayout, this.listNamaPenyakitHashMap, results_penyakit, percentage);                return;
@@ -240,9 +295,11 @@ public class DiagnoseActivityHelper{
         switch (conditionBTN){
             case ON_BTN_YES_CLICKED:
                 count_when_accept++;
+                saved_btn_yesno_modes.add(ON_BTN_YES_CLICKED);
                 break;
             case ON_BTN_NO_CLICKED:
                 count_when_decline++;
+                saved_btn_yesno_modes.add(ON_BTN_NO_CLICKED);
                 break;
             default:
         }
@@ -254,6 +311,7 @@ public class DiagnoseActivityHelper{
                 // end and gets the penyakit type
                 int results_penyakit = listCiriCiriPenyakitHashMap.get(itemPosition).pointo_flags.get(0);
                 double percentage = count_when_accept * 100  / counter;
+                saved_counter = counter;
                 if (onPenyakitHaveSelected != null)
                     onPenyakitHaveSelected.onPenyakitSelected(this.mListFirstPage, this.mAskLayout, this.listNamaPenyakitHashMap, results_penyakit, percentage);
                 return;
@@ -264,9 +322,8 @@ public class DiagnoseActivityHelper{
         }
         itemPosition = temp_list_nums.get(count_position_data);
         view_mode_saved = ListCiriCiriPenyakit.MODE_SEQUENCE;
-        savedItemDataPosition = count_position_data - 1;
+        savedItemDataPosition = count_position_data;
         saved_temp_list_nums = temp_list_nums;
-        saved_btn_yesno_modes = conditionBTN;
         if(view_modes == ListCiriCiriPenyakit.MODE_SEQUENCE) {
             // handling into the next ciri - ciri if possible
             if (count_position_data >= temp_list_nums.size()) {
