@@ -219,12 +219,14 @@ public class MainActivity extends MylexzActivity
 
         for (int x = 0; x < mListCard.size(); x++) {
             final int y = x;
-            mListCard.get(x).setOnClickListener((v) ->
-                    {
-                        if (cls[y] != null) {
-                            SwitchIntoMainActivity.switchTo(this, cls[y], null);
-                        }
-                    }
+            mListCard.get(x).setOnClickListener(new View.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(View v) {
+                                                        if (cls[y] != null) {
+                                                            SwitchIntoMainActivity.switchTo(MainActivity.this, cls[y], null);
+                                                        }
+                                                    }
+                                                }
             );
         }
     }

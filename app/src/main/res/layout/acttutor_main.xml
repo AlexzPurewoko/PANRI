@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:id="@+id/acttutor_id_mainlayout"
+    android:layout_height="match_parent">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/acttutor_id_placeholder" />
+    <!-- indicators -->
+    <LinearLayout
+        android:id="@+id/acttutor_id_layoutIndicators"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal"
+        android:layout_above="@id/acttutor_id_layoutbtn"
+        android:layout_gravity="center|center_horizontal" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/acttutor_id_layoutbtn"
+        android:layout_alignParentBottom="true">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/acttutor_id_btnprev"
+            android:layout_alignParentLeft="true"
+            android:text="kembali"
+            android:foreground="?attr/selectableItemBackground" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/acttutor_id_btnnext"
+            android:layout_alignParentRight="true"
+            android:text="lanjut"
+            android:foreground="?attr/selectableItemBackground" />
+    </RelativeLayout>
+</RelativeLayout>

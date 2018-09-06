@@ -6,5 +6,6 @@
     <color name="colorAccent">#FF4081</color>
     <color name="background_sect_color_start">#e5edff</color>
     <color name="background_sect_color_end">#ffffff</color>
+    <color name="frag_color_green">#6DC727</color>
 
 </resources>

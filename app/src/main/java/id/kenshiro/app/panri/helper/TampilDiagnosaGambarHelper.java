@@ -8,8 +8,12 @@ import android.os.Build;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.CardView;
 import android.text.Html;
+import android.text.SpannableString;
+import android.text.style.BulletSpan;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -34,6 +38,7 @@ public class TampilDiagnosaGambarHelper {
     private SQLiteDatabase sqlDB;
     private MylexzActivity activity;
     private LinearLayout mChildView;
+    private LinearLayout btnBawah;
     public ScrollView mContentView;
     DataCiriPenyakit dataCiriPenyakit;
     private AdapterRecycler.OnItemClickListener onItemClickListener;
@@ -95,8 +100,8 @@ public class TampilDiagnosaGambarHelper {
         CustomViewPager customViewPager = content.findViewById(R.id.actimgdiagnose_id_viewpagerimg);
         LinearLayout indicators = content.findViewById(R.id.actimgdiagnose_id_layoutIndicators);
         WebView ciriP = content.findViewById(R.id.actimgdiagnose_ciriciri);
-        Button btnYa = content.findViewById(R.id.actimgdiagnose_buttonya);
-        Button btnTidak = content.findViewById(R.id.actimgdiagnose_buttontidak);
+        Button btnYa = btnBawah.findViewById(R.id.actimgdiagnose_buttonya);
+        Button btnTidak = btnBawah.findViewById(R.id.actimgdiagnose_buttontidak);
 
         // sets the judul
         setJudulText(judul, dataCiriPenyakit.nama_penyakit);
@@ -162,40 +167,52 @@ public class TampilDiagnosaGambarHelper {
         btnTidak.setTypeface(Typeface.createFromAsset(activity.getAssets(), "Gill_SansMT.ttf"), Typeface.BOLD);
         btnTidak.setTextColor(Color.WHITE);
 
-        btnYa.setOnClickListener(v -> {
-            onClickBtn(ON_BTN_YA, mPositionList);
+        btnYa.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TampilDiagnosaGambarHelper.this.onClickBtn(ON_BTN_YA, mPositionList);
+            }
         });
-        btnTidak.setOnClickListener(v -> {
-            onClickBtn(ON_BTN_TIDAK, mPositionList);
+        btnTidak.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TampilDiagnosaGambarHelper.this.onClickBtn(ON_BTN_TIDAK, mPositionList);
+            }
         });
     }
 
     private void setBtnMulai(Button btnMulai, final int x) {
         btnMulai.setTypeface(Typeface.createFromAsset(activity.getAssets(), "Gill_SansMT.ttf"), Typeface.BOLD);
         btnMulai.setTextColor(Color.WHITE);
-        btnMulai.setOnClickListener((v) -> {
-            if (onItemClickListener != null)
-                onItemClickListener.onClick(mContentView, x);
+        btnMulai.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (onItemClickListener != null)
+                    onItemClickListener.onClick(mContentView, x);
+            }
         });
     }
 
     private void setCiriPenyakitText(WebView ciriP, String html) {
-        ciriP.loadData(html, null, "utf-8");
+        ciriP.loadData(html, "text/html", "utf-8");
     }
 
-    private void setViewPagerImage(CustomViewPager customViewPager, List<Integer> listGambar, LinearLayout indicators) {
+    private void setViewPagerImage(final CustomViewPager customViewPager, final List<Integer> listGambar, LinearLayout indicators) {
         final int mDotCount = listGambar.size();
-        LinearLayout[] mDots = new LinearLayout[mDotCount];
+        final LinearLayout[] mDots = new LinearLayout[mDotCount];
         ImageFragmentAdapter mImageControllerFragment = new ImageFragmentAdapter(activity, activity.getSupportFragmentManager(), listGambar);
         customViewPager.setAdapter(mImageControllerFragment);
         customViewPager.setCurrentItem(0);
-        customViewPager.setOnClickListener(v -> {
-            int curr_img = customViewPager.getCurrentItem();
-            customViewPager.setPageTransformer(true, new FadePageViewTransformer());
-            if (++curr_img == listGambar.size())
-                curr_img = 0;
-            customViewPager.setCurrentItem(curr_img);
-            System.gc();
+        customViewPager.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int curr_img = customViewPager.getCurrentItem();
+                customViewPager.setPageTransformer(true, new FadePageViewTransformer());
+                if (++curr_img == listGambar.size())
+                    curr_img = 0;
+                customViewPager.setCurrentItem(curr_img);
+                System.gc();
+            }
         });
         customViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
@@ -288,21 +305,31 @@ public class TampilDiagnosaGambarHelper {
                 ScrollView.LayoutParams.WRAP_CONTENT
         ));
         mContentView.addView(mChildView);
+        btnBawah = (LinearLayout) activity.getLayoutInflater().inflate(R.layout.adapter_btnbawahdiag, mRootView, false);
         mRootView.addView(mContentView);
+        mRootView.addView(btnBawah);
+
+        RelativeLayout.LayoutParams paramsbtn = new RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.MATCH_PARENT,
+                RelativeLayout.LayoutParams.WRAP_CONTENT
+        );
+        paramsbtn.addRule(RelativeLayout.ABOVE, R.id.adapter_id_imgdiag_layout);
+        mContentView.setLayoutParams(paramsbtn);
     }
 
     public interface OnItemListener {
-        public void onBtnYaClicked(View v, int position);
+        void onBtnYaClicked(View v, int position);
 
-        public void onBtnTidakClicked(View v, int position);
+        void onBtnTidakClicked(View v, int position);
 
-        public void onIsAfterLastListPosition(View v, int position, int size_list);
+        void onIsAfterLastListPosition(View v, int position, int size_list);
     }
 
     private class DataCiriPenyakit {
         String nama_penyakit;
         String nama_latin;
         String listCiriHtml;
+        //SpannableString listCiriHtml;
         List<Integer> listGambarId;
 
         public DataCiriPenyakit(String nama_penyakit, String nama_latin, String gambarList) {
@@ -319,7 +346,11 @@ public class TampilDiagnosaGambarHelper {
             if (listCiri == null) return;
             String[] list = listCiri.split(",");
             StringBuffer bufHtml = new StringBuffer();
+            bufHtml.append("<font color=\"black\" size=\"5pt\">");
+            bufHtml.append("<b>Ciri - ciri : </b>");
+            bufHtml.append("</font>");
             bufHtml.append("<ul>");
+            //bufHtml.append("<li>");
             for (int x = 0; x < list.length; x++) {
                 bufHtml.append("<li>");
                 bufHtml.append(list[x]);

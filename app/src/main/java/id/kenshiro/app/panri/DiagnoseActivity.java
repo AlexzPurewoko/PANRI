@@ -62,20 +62,26 @@ public class DiagnoseActivity extends MylexzActivity
     private void loadLayoutAndShow() {
 	    diagnoseActivityHelper = new DiagnoseActivityHelper(this, this.listNamaPenyakitHashMap, this.listCiriCiriPenyakitHashMap);
 		showPenyakitDiagnoseHelper = new ShowPenyakitDiagnoseHelper(this, sqlDB, (RelativeLayout) this.findViewById(R.id.actdiagnose_id_layoutcontainer));
-	    diagnoseActivityHelper.setOnPenyakitHaveSelected((a, b, c, d, e)->{
-	        String penyakit = c.get(d).getName();
-	        TOAST(Toast.LENGTH_LONG, "Padi Anda terdiagnosa penyakit %s sebesar %s.", penyakit, String.valueOf(e));
-	        a.setVisibility(View.GONE);
-	        b.setVisibility(View.GONE);
+        diagnoseActivityHelper.setOnPenyakitHaveSelected(new DiagnoseActivityHelper.OnPenyakitHaveSelected() {
+            @Override
+            public void onPenyakitSelected(RecyclerView a, RelativeLayout b, HashMap<Integer, ListNamaPenyakit> c, int d, double e) {
+                String penyakit = c.get(d).getName();
+                DiagnoseActivity.this.TOAST(Toast.LENGTH_LONG, "Padi Anda terdiagnosa penyakit %s sebesar %s.", penyakit, String.valueOf(e));
+                a.setVisibility(View.GONE);
+                b.setVisibility(View.GONE);
 
-			// switching into the next
-			showPenyakitDiagnoseHelper.show(d);
+                // switching into the next
+                showPenyakitDiagnoseHelper.show(d);
+            }
         });
 		showPenyakitDiagnoseHelper.build();
-		showPenyakitDiagnoseHelper.setOnHaveFinalRequests((mContentView) -> {
-			mContentView.setVisibility(View.GONE);
-			// back into begin diagnostics
-			diagnoseActivityHelper.showAgain();
+        showPenyakitDiagnoseHelper.setOnHaveFinalRequests(new View.OnClickListener() {
+            @Override
+            public void onClick(View mContentView) {
+                mContentView.setVisibility(View.GONE);
+                // back into begin diagnostics
+                diagnoseActivityHelper.showAgain();
+            }
 		});
 	    diagnoseActivityHelper.buildAndShow();
     }
@@ -93,8 +99,11 @@ public class DiagnoseActivity extends MylexzActivity
 		mListView.setHasFixedSize(true);
 		mListView.setLayoutManager(new LinearLayoutManager(this));
 		AdapterRecycler recycler = new AdapterRecycler(data);
-		recycler.setOnItemClickListener((a,b)->{
-			Toast.makeText(DiagnoseActivity.this, "selected at position "+b, Toast.LENGTH_LONG).show();
+        recycler.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
+            @Override
+            public void onClick(View a, int b) {
+                Toast.makeText(DiagnoseActivity.this, "selected at position " + b, Toast.LENGTH_LONG).show();
+            }
 		});
 		mListView.setAdapter(recycler);
 
@@ -237,27 +246,28 @@ public class DiagnoseActivity extends MylexzActivity
 		mListView.setHasFixedSize(true);
 		mListView.setLayoutManager(new LinearLayoutManager(this));
 		AdapterRecycler recycler = new AdapterRecycler(data);
-		recycler.setOnItemClickListener((a,b)->{
-            Toast.makeText(DiagnoseActivity.this, "selected at position "+b, Toast.LENGTH_LONG).show();
+        recycler.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
+            @Override
+            public void onClick(View a, int b) {
+                Toast.makeText(DiagnoseActivity.this, "selected at position " + b, Toast.LENGTH_LONG).show();
+            }
         });
 		mListView.setAdapter(recycler);
 
 	}
 
-	private void setMyActionBar()
-	{
-		// TODO: Implement this method
+    private void setMyActionBar() {
 		toolbar = (Toolbar) findViewById(R.id.toolbar);
-		SpannableString strTitle = new SpannableString(getTitle());
-		Typeface tTitle = Typeface.createFromAsset(getAssets(), "Gecko_PersonalUseOnly.ttf");
-		strTitle.setSpan(new CustomTypefaceSpan(tTitle), 0, getTitle().length(), 0);
-		toolbar.setTitle(strTitle);
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
+            SpannableString strTitle = new SpannableString(getTitle());
+            Typeface tTitle = Typeface.createFromAsset(getAssets(), "Gecko_PersonalUseOnly.ttf");
+            strTitle.setSpan(new CustomTypefaceSpan(tTitle), 0, getTitle().length(), 0);
+            toolbar.setTitle(strTitle);
+        }
 		setSupportActionBar(toolbar);
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-		//getSupportActionBar().setHomeButtonEnabled(true);
-		//getActionBar().setDisplayShowHomeEnabled(true);
 		getSupportActionBar().setDisplayShowHomeEnabled(true);
-		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
 			getWindow().setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark));
 	}
 

@@ -40,10 +40,13 @@ public class GalleryActivity extends MylexzActivity {
         l.add(R.drawable.viewpager_area_4);
         adapterGrid = new ImageGridViewAdapter(this, l, p, R.id.actgallery_id_gridimage);
         adapterGrid.setColumnCount(2);
-        adapterGrid.setOnItemClickListener((v, position) -> {
+        adapterGrid.setOnItemClickListener(new ImageGridViewAdapter.OnItemClickListener() {
+                                               @Override
+                                               public void onItemClick(View v, int position) {
 
-            Toast.makeText(GalleryActivity.this, "selected at position = "+position, Toast.LENGTH_SHORT).show();
-        }
+                                                   Toast.makeText(GalleryActivity.this, "selected at position = " + position, Toast.LENGTH_SHORT).show();
+                                               }
+                                           }
         );
         adapterGrid.buildAndShow();
     }
@@ -62,18 +65,19 @@ public class GalleryActivity extends MylexzActivity {
     protected void onDestroy() {
         super.onDestroy();
     }
-    private void setMyActionBar()
-    {
-        // TODO: Implement this method
+
+    private void setMyActionBar() {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
-        SpannableString strTitle = new SpannableString(getTitle());
-        Typeface tTitle = Typeface.createFromAsset(getAssets(), "Gecko_PersonalUseOnly.ttf");
-        strTitle.setSpan(new CustomTypefaceSpan(tTitle), 0, getTitle().length(), 0);
-        toolbar.setTitle(strTitle);
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
+            SpannableString strTitle = new SpannableString(getTitle());
+            Typeface tTitle = Typeface.createFromAsset(getAssets(), "Gecko_PersonalUseOnly.ttf");
+            strTitle.setSpan(new CustomTypefaceSpan(tTitle), 0, getTitle().length(), 0);
+            toolbar.setTitle(strTitle);
+        }
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
             getWindow().setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark));
     }
 

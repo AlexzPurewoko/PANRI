@@ -101,10 +101,13 @@ public class DiagnoseActivityHelper{
                 }
                 // apply these changes into RecyclerView
                 dataAdapter = new AdapterRecycler(data);
-                dataAdapter.setOnItemClickListener((a, b) -> {
-                    count_position_data = temp_list_nums.size();
-                    // call this function itself
-                    this.onItemCardTouch(b);
+                dataAdapter.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
+                    @Override
+                    public void onClick(View a, int b) {
+                        count_position_data = temp_list_nums.size();
+                        // call this function itself
+                        DiagnoseActivityHelper.this.onItemCardTouch(b);
+                    }
                 });
                 mListFirstPage.setAdapter(dataAdapter);
                 mListFirstPage.setVisibility(View.VISIBLE);
@@ -193,8 +196,11 @@ public class DiagnoseActivityHelper{
         }
 
         dataAdapter = new AdapterRecycler(data);
-        dataAdapter.setOnItemClickListener((a,b)->{
-            onItemCardTouch(b);
+        dataAdapter.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
+            @Override
+            public void onClick(View a, int b) {
+                DiagnoseActivityHelper.this.onItemCardTouch(b);
+            }
         });
         mListFirstPage.setAdapter(dataAdapter);
         mListFirstPage.scrollToPosition(0);
@@ -258,10 +264,13 @@ public class DiagnoseActivityHelper{
             }
             // apply these changes into RecyclerView
             dataAdapter = new AdapterRecycler(data);
-            dataAdapter.setOnItemClickListener((a,b)->{
-                count_position_data = temp_list_nums.size();
-                // call this function itself
-                this.onItemCardTouch(b);
+            dataAdapter.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
+                @Override
+                public void onClick(View a, int b) {
+                    count_position_data = temp_list_nums.size();
+                    // call this function itself
+                    DiagnoseActivityHelper.this.onItemCardTouch(b);
+                }
             });
             mListFirstPage.setAdapter(dataAdapter);
             mListFirstPage.setVisibility(View.VISIBLE);
@@ -348,10 +357,13 @@ public class DiagnoseActivityHelper{
             }
             // apply these changes into RecyclerView
             dataAdapter = new AdapterRecycler(data);
-            dataAdapter.setOnItemClickListener((a,b)->{
-                count_position_data = temp_list_nums.size();
-                // call this function itself
-                this.onItemCardTouch(b);
+            dataAdapter.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
+                @Override
+                public void onClick(View a, int b) {
+                    count_position_data = temp_list_nums.size();
+                    // call this function itself
+                    DiagnoseActivityHelper.this.onItemCardTouch(b);
+                }
             });
             mListFirstPage.setAdapter(dataAdapter);
             mListFirstPage.setVisibility(View.VISIBLE);
@@ -365,11 +377,17 @@ public class DiagnoseActivityHelper{
         yes = (Button) mAskLayout.findViewById(R.id.actdiagnose_id_btnyes);
         no = (Button) mAskLayout.findViewById(R.id.actdiagnose_id_btnno);
         mDescCiri = (TextView) mAskLayout.findViewById(R.id.actdiagnose_id_contentforask);
-        yes.setOnClickListener((v)->{
-            onBtnClicked(ON_BTN_YES_CLICKED);
+        yes.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DiagnoseActivityHelper.this.onBtnClicked(ON_BTN_YES_CLICKED);
+            }
         });
-        no.setOnClickListener((v)->{
-            onBtnClicked(ON_BTN_NO_CLICKED);
+        no.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DiagnoseActivityHelper.this.onBtnClicked(ON_BTN_NO_CLICKED);
+            }
         });
         mDescCiri.setTextColor(Color.BLACK);
         mDescCiri.setTextSize(16.5f);

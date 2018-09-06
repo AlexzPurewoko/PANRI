@@ -1,14 +1,18 @@
 package id.kenshiro.app.panri;
 
+import android.annotation.SuppressLint;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.support.v7.view.menu.MenuBuilder;
+import android.support.v7.view.menu.MenuPresenter;
 import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
 import android.view.KeyEvent;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -59,14 +63,17 @@ public class DiagnosaGambarActivity extends MylexzActivity {
                                                          }
                                                      }
         );
-        showPenyakitDiagnoseHelper.setOnHaveFinalRequests(v -> {
-            showPenyakitDiagnoseHelper.countBtn -= 2;
-            showPenyakitDiagnoseHelper.klikBawahText.setText(R.string.actdiagnose_string_klikcaramenanggulangi);
-            v.setVisibility(View.GONE);
+        showPenyakitDiagnoseHelper.setOnHaveFinalRequests(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showPenyakitDiagnoseHelper.countBtn -= 2;
+                showPenyakitDiagnoseHelper.klikBawahText.setText(R.string.actdiagnose_string_klikcaramenanggulangi);
+                v.setVisibility(View.GONE);
 
-            tampilDiagnosaGambarHelper.setItemPosition(1);
-            tampilDiagnosaGambarHelper.updateContentAfter();
-            tampilDiagnosaGambarHelper.showContentView();
+                tampilDiagnosaGambarHelper.setItemPosition(1);
+                tampilDiagnosaGambarHelper.updateContentAfter();
+                tampilDiagnosaGambarHelper.showContentView();
+            }
         });
         showPenyakitDiagnoseHelper.build();
         tampilDiagnosaGambarHelper.buildAndShow();
@@ -92,12 +99,13 @@ public class DiagnosaGambarActivity extends MylexzActivity {
     }
 
     private void setMyActionBar() {
-        // TODO: Implement this method
         toolbar = (Toolbar) findViewById(R.id.toolbar);
-        SpannableString strTitle = new SpannableString(getTitle());
-        Typeface tTitle = Typeface.createFromAsset(getAssets(), "Gecko_PersonalUseOnly.ttf");
-        strTitle.setSpan(new CustomTypefaceSpan(tTitle), 0, getTitle().length(), 0);
-        toolbar.setTitle(strTitle);
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
+            SpannableString strTitle = new SpannableString(getTitle());
+            Typeface tTitle = Typeface.createFromAsset(getAssets(), "Gecko_PersonalUseOnly.ttf");
+            strTitle.setSpan(new CustomTypefaceSpan(tTitle), 0, getTitle().length(), 0);
+            toolbar.setTitle(strTitle);
+        }
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);

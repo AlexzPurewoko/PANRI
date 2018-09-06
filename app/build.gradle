@@ -17,8 +17,8 @@ android {
         }
     }
     compileOptions {
-        targetCompatibility 1.8
-        sourceCompatibility 1.8
+        targetCompatibility 1.7
+        sourceCompatibility 1.7
     }
 }
 
@@ -34,4 +34,5 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     //implementation project(':MylexzLib')
     implementation project(':mylexzlibrary')
+    implementation 'pl.droidsonroids.gif:android-gif-drawable:+'
 }

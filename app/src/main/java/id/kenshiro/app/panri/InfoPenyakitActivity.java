@@ -21,6 +21,7 @@ import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
 import java.io.IOException;
 
+import id.kenshiro.app.panri.adapter.AdapterRecycler;
 import id.kenshiro.app.panri.helper.DiagnoseActivityHelper;
 import id.kenshiro.app.panri.helper.ShowPenyakitDiagnoseHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
@@ -49,9 +50,12 @@ public class InfoPenyakitActivity extends MylexzActivity {
     private void setContent() throws IOException {
         loadLayoutAndShow();
         tampil = new TampilListPenyakitHelper(this, sqlDB, (RelativeLayout) findViewById(R.id.actinfo_id_layoutcontainer));
-        tampil.setOnItemClickListener((view, position) -> {
-            view.setVisibility(View.GONE);
-            showPenyakitDiagnoseHelper.show(position + 1);
+        tampil.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
+            @Override
+            public void onClick(View view, int position) {
+                view.setVisibility(View.GONE);
+                showPenyakitDiagnoseHelper.show(position + 1);
+            }
         });
         tampil.buildAndShow();
     }
@@ -59,10 +63,13 @@ public class InfoPenyakitActivity extends MylexzActivity {
     private void loadLayoutAndShow() {
         showPenyakitDiagnoseHelper = new ShowPenyakitDiagnoseHelper(this, sqlDB, (RelativeLayout) this.findViewById(R.id.actinfo_id_layoutcontainer));
         showPenyakitDiagnoseHelper.build();
-        showPenyakitDiagnoseHelper.setOnHaveFinalRequests((mContentView) -> {
-            mContentView.setVisibility(View.GONE);
-            // back into begin diagnostics
-            tampil.getmContentView().setVisibility(View.VISIBLE);
+        showPenyakitDiagnoseHelper.setOnHaveFinalRequests(new View.OnClickListener() {
+            @Override
+            public void onClick(View mContentView) {
+                mContentView.setVisibility(View.GONE);
+                // back into begin diagnostics
+                tampil.getmContentView().setVisibility(View.VISIBLE);
+            }
         });
     }
 
@@ -86,10 +93,12 @@ public class InfoPenyakitActivity extends MylexzActivity {
 
     private void setMyActionBar() {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
-        SpannableString strTitle = new SpannableString(getTitle());
-        Typeface tTitle = Typeface.createFromAsset(getAssets(), "Gecko_PersonalUseOnly.ttf");
-        strTitle.setSpan(new CustomTypefaceSpan(tTitle), 0, getTitle().length(), 0);
-        toolbar.setTitle(strTitle);
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
+            SpannableString strTitle = new SpannableString(getTitle());
+            Typeface tTitle = Typeface.createFromAsset(getAssets(), "Gecko_PersonalUseOnly.ttf");
+            strTitle.setSpan(new CustomTypefaceSpan(tTitle), 0, getTitle().length(), 0);
+            toolbar.setTitle(strTitle);
+        }
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);

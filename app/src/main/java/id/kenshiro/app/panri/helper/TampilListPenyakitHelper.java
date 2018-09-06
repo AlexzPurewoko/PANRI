@@ -68,9 +68,12 @@ public class TampilListPenyakitHelper {
 
             // sets the item touchable
             final int y = x;
-            mContent.setOnClickListener((v) -> {
-                if (onItemClickListener != null)
-                    onItemClickListener.onClick(mContentView, y);
+            mContent.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (onItemClickListener != null)
+                        onItemClickListener.onClick(mContentView, y);
+                }
             });
 
             // applying into content section

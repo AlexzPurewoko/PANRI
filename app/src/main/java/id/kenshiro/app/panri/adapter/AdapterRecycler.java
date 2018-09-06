@@ -46,10 +46,13 @@ public class AdapterRecycler extends RecyclerView.Adapter {
         rootElement.setCardElevation(8f);
         rootElement.setContentPadding(16,16,16,16);
         rootElement.setRadius(8f);
-        ViewItemHolder vih = new ViewItemHolder(rootElement);
-        rootElement.setOnClickListener((v)-> {
-            if(listener != null){
-                listener.onClick(v, vih.position);
+        final ViewItemHolder vih = new ViewItemHolder(rootElement);
+        rootElement.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (listener != null) {
+                    listener.onClick(v, vih.position);
+                }
             }
         });
         return vih;

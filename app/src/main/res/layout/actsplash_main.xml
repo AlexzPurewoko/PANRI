@@ -22,7 +22,7 @@
             android:adjustViewBounds="true"
             android:foregroundGravity="center"
             android:scaleType="fitXY"
-            android:src="@drawable/petani_4" />
+            android:src="@drawable/ic_launcher" />
 
         <TextView
             android:id="@+id/actsplash_id_txtjudul"
@@ -47,20 +47,29 @@
             android:textSize="20sp" />
     </LinearLayout>
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="46dp"
-        android:gravity="center|center_horizontal"
-        android:orientation="vertical">
+        android:gravity="center|center_horizontal">
 
         <Button
             android:id="@+id/actsplash_id_btnlanjut"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:background="@drawable/ic_btn_awal_blue"
             android:text="LANJUT"
-            android:textSize="26sp" />
-    </LinearLayout>
+            android:textColor="@android:color/white"
+            android:textSize="26sp"
+            android:visibility="gone" />
+
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/Base.Widget.AppCompat.ProgressBar"
+            android:id="@+id/actsplash_id_progress"
+            android:visibility="visible" />
+    </RelativeLayout>
 </RelativeLayout>

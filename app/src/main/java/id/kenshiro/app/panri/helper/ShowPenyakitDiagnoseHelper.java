@@ -202,17 +202,20 @@ public class ShowPenyakitDiagnoseHelper {
         klikBawah = (CardView) mContentView.findViewById(R.id.actdiagnose_id_klikbawah);
         klikBawahText = (TextView) klikBawah.getChildAt(0);
         klikBawahText.setTypeface(Typeface.createFromAsset(activity.getAssets(), "Comic_Sans_MS3.ttf"));
-        klikBawah.setOnClickListener((v) -> {
+        klikBawah.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
-            if(++countBtn == maxCount && onClickListener != null)
-                onClickListener.onClick(mContentView); // the 1st parameters is main Content View so if you unvisible the layout its become easier
-            else{
-                // Do into cara_atasi
-                mContent1.setVisibility(View.GONE);
-                mContent2.setVisibility(View.VISIBLE);
-                mScrollContent.pageScroll(1);
-                klikBawahText.setText(R.string.actdiagnose_string_klikbalikdiagnosa);
-                /////////////////////
+                if (++countBtn == maxCount && onClickListener != null)
+                    onClickListener.onClick(mContentView); // the 1st parameters is main Content View so if you unvisible the layout its become easier
+                else {
+                    // Do into cara_atasi
+                    mContent1.setVisibility(View.GONE);
+                    mContent2.setVisibility(View.VISIBLE);
+                    mScrollContent.pageScroll(1);
+                    klikBawahText.setText(R.string.actdiagnose_string_klikbalikdiagnosa);
+                    /////////////////////
+                }
             }
         });
 

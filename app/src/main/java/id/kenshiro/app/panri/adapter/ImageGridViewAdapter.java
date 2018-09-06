@@ -131,9 +131,12 @@ public class ImageGridViewAdapter {
                 img.setScaleType(ImageView.ScaleType.FIT_XY);
                 img.setAdjustViewBounds(false);
                 final int items1 = items;
-                img.setOnClickListener((v)->{
-                    if(onItemClickListener != null)
-                        onItemClickListener.onItemClick(v, items1);
+                img.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (onItemClickListener != null)
+                            onItemClickListener.onItemClick(v, items1);
+                    }
                 });
                 element.addView(img);
                 items++;
