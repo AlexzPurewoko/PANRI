@@ -1,8 +1,12 @@
 package id.kenshiro.app.panri;
 
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.graphics.Typeface;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -11,9 +15,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.webkit.WebView;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -40,12 +47,16 @@ public class HowToResolveActivity extends MylexzActivity {
     String data_url;
     String name_penyakit;
     String name_latin;
+    private HowToResolveActivity.ImgPetaniKedip imgPetaniKedip;
+    ImageView imgPetani;
+    Button mTextPetaniDesc;
     private boolean doubleBackToExitPressedOnce;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.acthowto_main);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setMyActionBar();
         setDB();
         try {
@@ -55,7 +66,25 @@ public class HowToResolveActivity extends MylexzActivity {
         }
     }
 
+    private void setTask() {
+        imgPetaniKedip = new ImgPetaniKedip();
+        imgPetaniKedip.execute();
+    }
+
+    private void stopTask() {
+        if (imgPetaniKedip != null) {
+            imgPetaniKedip.cancel(true);
+            imgPetaniKedip = null;
+        }
+    }
     private void setContent() throws IOException {
+        imgPetani = (ImageView) findViewById(R.id.actmain_id_section_petani_img);
+        mTextPetaniDesc = (Button) findViewById(R.id.actmain_id_section_petani_btn);
+        mTextPetaniDesc.setTextColor(Color.BLACK);
+        mTextPetaniDesc.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.NORMAL);
+        mTextPetaniDesc.setText(getText(R.string.acthowto_string_speechfarmer_1));
+        imgPetani.setImageResource(R.drawable.petani);
+        imgPetani.setImageLevel(4);
         content_caraatasi = findViewById(R.id.acthowto_id_scrollpage);
         content_caraatasi.setVisibility(View.GONE);
         cardBottom = findViewById(R.id.acthowto_id_klikbawah);
@@ -63,6 +92,7 @@ public class HowToResolveActivity extends MylexzActivity {
         cardBottom.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mTextPetaniDesc.setText(getString(R.string.acthowto_string_speechfarmer_1));
                 content_caraatasi.setVisibility(View.GONE);
                 cardBottom.setVisibility(View.GONE);
                 tampil.getmContentView().setVisibility(View.VISIBLE);
@@ -78,7 +108,7 @@ public class HowToResolveActivity extends MylexzActivity {
                 view.setVisibility(View.GONE);
                 content_caraatasi.setVisibility(View.VISIBLE);
                 cardBottom.setVisibility(View.VISIBLE);
-
+                mTextPetaniDesc.setText(getString(R.string.acthowto_string_speechfarmer_2));
                 // SETS content to show
                 HowToResolveActivity.this.loadDataFromDB(position + 1);
                 HowToResolveActivity.this.setCaraAtasiContent();
@@ -123,17 +153,26 @@ public class HowToResolveActivity extends MylexzActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        setTask();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        stopTask();
     }
 
     @Override
     protected void onDestroy() {
+        stopTask();
         super.onDestroy();
     }
+
 
     private void setMyActionBar() {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -155,8 +194,11 @@ public class HowToResolveActivity extends MylexzActivity {
         int repeat = event.getRepeatCount();
         int maxRepeat = 2;
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            if (content_caraatasi.getVisibility() == View.VISIBLE)
+            if (content_caraatasi.getVisibility() == View.VISIBLE) {
                 content_caraatasi.setVisibility(View.GONE);
+                cardBottom.setVisibility(View.GONE);
+                mTextPetaniDesc.setText(getString(R.string.acthowto_string_speechfarmer_1));
+            }
             if (!tampil.onBackButtonPressed()) {
                 if (doubleBackToExitPressedOnce) {
                     SwitchIntoMainActivity.switchToMain(this);
@@ -173,8 +215,10 @@ public class HowToResolveActivity extends MylexzActivity {
                     }
                 }, 2000);
                 return false;
-            } else
+            } else {
+
                 return false;
+            }
         }
         return super.onKeyDown(keyCode, event);
     }
@@ -183,5 +227,35 @@ public class HowToResolveActivity extends MylexzActivity {
     public boolean onSupportNavigateUp() {
         SwitchIntoMainActivity.switchToMain(this);
         return true;
+    }
+
+    private class ImgPetaniKedip extends AsyncTask<Void, Integer, Void> {
+        private void sleep(int mil) {
+            try {
+                Thread.sleep(mil);
+            } catch (InterruptedException e) {
+                Log.e("Main_Exception", "Interrupted in method ImageAutoSwipe.doInBackground()", e);
+            }
+        }
+
+        @Override
+        protected Void doInBackground(Void[] p1) {
+            // TODO: Implement this method
+            while (true) {
+                sleep(400);
+                publishProgress(1);
+                sleep(2000);
+                publishProgress(4);
+            }
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer[] values) {
+            // TODO: Implement this method
+            super.onProgressUpdate(values);
+            int pos = values[0];
+            imgPetani.setImageLevel(pos);
+        }
+
     }
 }

@@ -13,13 +13,14 @@
         android:layout_marginTop="@dimen/actsplash_dimen_margintopimg"
         android:layout_centerHorizontal="true"
         android:gravity="center"
+        android:textSize="@dimen/frag3_dimen_txtbesar"
         android:textColor="@android:color/white"
         android:text="@string/frag3_string_txtatas" />
 
     <LinearLayout
         android:id="@+id/frag3_id_layoutjelas"
         android:layout_below="@+id/frag3_id_txtatas"
-        android:layout_marginTop="@dimen/actsplash_dimen_margintopimg"
+        android:layout_marginTop="@dimen/frag3_dimen_marginTopLyt"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="10dp"
@@ -44,7 +45,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/frag3_id_txtim1"
                 android:gravity="left"
-                android:textSize="15sp"
+                android:textSize="@dimen/frag3_dimen_txtbesar"
                 android:textColor="@android:color/white"
                 android:text="LANGSUNG DIAGNOSIS" />
 
@@ -53,7 +54,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/frag3_id_txtim2"
                 android:gravity="left|right"
-                android:textSize="10sp"
+                android:textSize="@dimen/frag3_dimen_txtkecil"
                 android:layout_marginTop="8dp"
                 android:textColor="@android:color/white"
                 android:text="@string/frag3_string_txt_langsungdiag" />
@@ -88,7 +89,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/frag3_id_txtim21"
                 android:gravity="left"
-                android:textSize="15sp"
+                android:textSize="@dimen/frag3_dimen_txtbesar"
                 android:textColor="@android:color/white"
                 android:text="DIAGNOSIS GAMBAR" />
 
@@ -97,7 +98,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/frag3_id_txtim22"
                 android:gravity="left|right"
-                android:textSize="10sp"
+                android:textSize="@dimen/frag3_dimen_txtkecil"
                 android:layout_marginTop="8dp"
                 android:textColor="@android:color/white"
                 android:text="@string/frag3_string_imgdiagjelas" />

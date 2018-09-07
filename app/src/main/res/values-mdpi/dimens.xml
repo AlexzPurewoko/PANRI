@@ -2,4 +2,10 @@
 <resources>
     <dimen name="actsplash_dimen_img_wh">180dp</dimen>
     <dimen name="actsplash_dimen_margintopimg">20dp</dimen>
+    <dimen name="acttutor_dimen_btn_mulai_frag4">220dp</dimen>
+    <dimen name="frag3_dimen_marginTopLyt">40dp</dimen>
+    <dimen name="frag3_dimen_txtbesar">15sp</dimen>
+    <dimen name="frag3_dimen_txtkecil">10sp</dimen>
+    <dimen name="actsplash_dimen_loading_wh">50dp</dimen>
+    <dimen name="acttutor_indicator_marginlr">5dp</dimen>
 </resources>

@@ -17,9 +17,9 @@
         android:text="@string/frag4_string_txtatas" />
 
     <Button
-        android:layout_width="@dimen/actsplash_dimen_img_wh"
-        android:layout_height="@dimen/actsplash_dimen_img_wh"
-        android:background="@drawable/petani_4"
+        android:layout_width="@dimen/acttutor_dimen_btn_mulai_frag4"
+        android:layout_height="@dimen/acttutor_dimen_btn_mulai_frag4"
+        android:background="@drawable/ic_btn_mulai"
         android:id="@+id/frag4_id_img"
         android:adjustViewBounds="true"
         android:layout_centerHorizontal="true"

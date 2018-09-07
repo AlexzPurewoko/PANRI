@@ -1,7 +1,12 @@
 package id.kenshiro.app.panri;
+
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.graphics.Typeface;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,6 +19,8 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -23,6 +30,7 @@ import com.mylexz.utils.text.style.CustomTypefaceSpan;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import id.kenshiro.app.panri.adapter.AdapterRecycler;
 import id.kenshiro.app.panri.helper.DiagnoseActivityHelper;
@@ -42,6 +50,9 @@ public class DiagnoseActivity extends MylexzActivity
 	private HashMap<Integer, ListCiriCiriPenyakit> listCiriCiriPenyakitHashMap;
 	private DiagnoseActivityHelper diagnoseActivityHelper;
 	private ShowPenyakitDiagnoseHelper showPenyakitDiagnoseHelper;
+	private ImgPetaniKedip imgPetaniKedip;
+	ImageView imgPetani;
+	Button mTextPetaniDesc;
 	private boolean doubleBackToExitPressedOnce;
 
 	@Override
@@ -50,30 +61,72 @@ public class DiagnoseActivity extends MylexzActivity
 		// TODO: Implement this method
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.actdiagnose_maincontent);
+		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		setMyActionBar();
-		//setData();
 		setDB();
 		loadListPenyakit();
 		loadAllDataCiri();
-		//tampilFirstDataCiri();
 		loadLayoutAndShow();
 	}
 
-    private void loadLayoutAndShow() {
+	@Override
+	protected void onResume() {
+		super.onResume();
+		setTask();
+	}
+
+	private void setTask() {
+		imgPetaniKedip = new ImgPetaniKedip();
+		imgPetaniKedip.execute();
+	}
+
+	private void stopTask() {
+		if (imgPetaniKedip != null) {
+			imgPetaniKedip.cancel(true);
+			imgPetaniKedip = null;
+		}
+	}
+
+	@Override
+	protected void onPause() {
+		stopTask();
+		System.gc();
+		super.onPause();
+	}
+
+	private void loadLayoutAndShow() {
+		imgPetani = (ImageView) findViewById(R.id.actmain_id_section_petani_img);
+		mTextPetaniDesc = (Button) findViewById(R.id.actmain_id_section_petani_btn);
+		mTextPetaniDesc.setTextColor(Color.BLACK);
+		mTextPetaniDesc.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.NORMAL);
+		imgPetani.setImageResource(R.drawable.petani);
+		imgPetani.setImageLevel(4);
 	    diagnoseActivityHelper = new DiagnoseActivityHelper(this, this.listNamaPenyakitHashMap, this.listCiriCiriPenyakitHashMap);
 		showPenyakitDiagnoseHelper = new ShowPenyakitDiagnoseHelper(this, sqlDB, (RelativeLayout) this.findViewById(R.id.actdiagnose_id_layoutcontainer));
         diagnoseActivityHelper.setOnPenyakitHaveSelected(new DiagnoseActivityHelper.OnPenyakitHaveSelected() {
             @Override
             public void onPenyakitSelected(RecyclerView a, RelativeLayout b, HashMap<Integer, ListNamaPenyakit> c, int d, double e) {
                 String penyakit = c.get(d).getName();
-                DiagnoseActivity.this.TOAST(Toast.LENGTH_LONG, "Padi Anda terdiagnosa penyakit %s sebesar %s.", penyakit, String.valueOf(e));
+				//DiagnoseActivity.this.TOAST(Toast.LENGTH_LONG, "Padi Anda terdiagnosa penyakit %s sebesar %s.", penyakit, String.valueOf(e));
+				mTextPetaniDesc.setText(String.format(getString(R.string.actdiagnose_string_speechfarmer_3), penyakit, Math.round(e)));
                 a.setVisibility(View.GONE);
                 b.setVisibility(View.GONE);
 
                 // switching into the next
                 showPenyakitDiagnoseHelper.show(d);
             }
-        });
+
+			@Override
+			public void onTanyaSection() {
+				mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_2));
+			}
+
+			@Override
+			public void onPilihCiriSection() {
+				mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
+
+			}
+		});
 		showPenyakitDiagnoseHelper.build();
         showPenyakitDiagnoseHelper.setOnHaveFinalRequests(new View.OnClickListener() {
             @Override
@@ -84,31 +137,8 @@ public class DiagnoseActivity extends MylexzActivity
             }
 		});
 	    diagnoseActivityHelper.buildAndShow();
-    }
-
-    private void tampilFirstDataCiri() {
-		data = new ArrayList<AdapterRecycler.DataPerItems>();
-		for(int x = 0; x < listCiriCiriPenyakitHashMap.size(); x++){
-			ListCiriCiriPenyakit penyakit = listCiriCiriPenyakitHashMap.get(x+1);
-			if(penyakit.isUsefirst_flags())
-				data.add(new AdapterRecycler.DataPerItems(penyakit.getCiri()));
-		}
-		for(int x = 0; x < data.size(); x++)
-			Log.i("MainActivity", String.format("position %d text %s.", x, data.get(x).items));
-		mListView = (RecyclerView) findViewById(R.id.actdiagnose_id_contentrecycler);
-		mListView.setHasFixedSize(true);
-		mListView.setLayoutManager(new LinearLayoutManager(this));
-		AdapterRecycler recycler = new AdapterRecycler(data);
-        recycler.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
-            @Override
-            public void onClick(View a, int b) {
-                Toast.makeText(DiagnoseActivity.this, "selected at position " + b, Toast.LENGTH_LONG).show();
-            }
-		});
-		mListView.setAdapter(recycler);
-
+		mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
 	}
-
 	private void loadAllDataCiri() {
 		listCiriCiriPenyakitHashMap = new HashMap<Integer, ListCiriCiriPenyakit>();
 		// input ciri ciri penyakit
@@ -167,6 +197,11 @@ public class DiagnoseActivity extends MylexzActivity
 		System.gc();
 		//////////////////////////
 		//////////////////////////////////////// load successfully
+	}
+
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+
 	}
 
 	private void loadListPenyakit() {
@@ -229,6 +264,8 @@ public class DiagnoseActivity extends MylexzActivity
 
 	@Override
 	protected void onDestroy() {
+		stopTask();
+		System.gc();
 		sqlDB.close();
 		super.onDestroy();
 	}
@@ -271,30 +308,39 @@ public class DiagnoseActivity extends MylexzActivity
 			getWindow().setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark));
 	}
 
-	/*@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2
-				&& item.getTitleCondensed() != null) {
-			item.setTitleCondensed(item.getTitleCondensed().toString());
-		}
-		switch(item.getItemId()){
-			case android.R.id.home:
-				TOAST(Toast.LENGTH_SHORT, "onSupportClicked()!");
-				return true;
-		}
-		return super.onOptionsItemSelected(item);
-	}
-
-	@Override
-	public boolean onSupportNavigateUp() {
-		// back into main activity
-		TOAST(Toast.LENGTH_SHORT, "onSupportClicked()!");
-        // SwitchIntoMainActivity.switchToMain(this);
-		return true;
-	}*/
 	@Override
 	public boolean onSupportNavigateUp() {
 		SwitchIntoMainActivity.switchToMain(this);
 		return true;
+	}
+
+	private class ImgPetaniKedip extends AsyncTask<Void, Integer, Void> {
+		private void sleep(int mil) {
+			try {
+				Thread.sleep(mil);
+			} catch (InterruptedException e) {
+				Log.e("Main_Exception", "Interrupted in method ImageAutoSwipe.doInBackground()", e);
+			}
+		}
+
+		@Override
+		protected Void doInBackground(Void[] p1) {
+			// TODO: Implement this method
+			while (true) {
+				sleep(400);
+				publishProgress(1);
+				sleep(2000);
+				publishProgress(4);
+			}
+		}
+
+		@Override
+		protected void onProgressUpdate(Integer[] values) {
+			// TODO: Implement this method
+			super.onProgressUpdate(values);
+			int pos = values[0];
+			imgPetani.setImageLevel(pos);
+		}
+
 	}
 }

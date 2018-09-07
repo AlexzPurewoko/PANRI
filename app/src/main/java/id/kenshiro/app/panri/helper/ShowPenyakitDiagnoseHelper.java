@@ -11,6 +11,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
@@ -48,11 +49,18 @@ public class ShowPenyakitDiagnoseHelper {
     private final int maxCount = 2;
     View.OnClickListener onClickListener;
     public ScrollView mScrollContent;
+    private Button mTextPetaniDesc;
+    boolean mTxtPeralihan = false;
     public ShowPenyakitDiagnoseHelper(@NonNull MylexzActivity activity, @NonNull SQLiteDatabase sqLiteDatabase, @NonNull RelativeLayout mRootView){
         this.activity = activity;
         this.sqLiteDatabase = sqLiteDatabase;
         this.mRootView = mRootView;
     }
+
+    public void setmTextPetaniDesc(Button mTextPetaniDesc) {
+        this.mTextPetaniDesc = mTextPetaniDesc;
+    }
+
     public void build(){
         prepareAndBuildLayout();
         // sets the layout visibility and apply into rootView
@@ -66,6 +74,21 @@ public class ShowPenyakitDiagnoseHelper {
         mContentView.setVisibility(View.VISIBLE);
         mContent1.setVisibility(View.VISIBLE);
         mContent2.setVisibility(View.GONE);
+        if (mTextPetaniDesc != null)
+            mTextPetaniDesc.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mContent1.getVisibility() == View.VISIBLE) {
+                        if (mTxtPeralihan) {
+                            mTextPetaniDesc.setText(activity.getString(R.string.actdiagnose_string_speechfarmer_img_2));
+                            mTxtPeralihan = false;
+                        } else {
+                            mTextPetaniDesc.setText(activity.getString(R.string.actdiagnose_string_speechfarmer_img_s2));
+                            mTxtPeralihan = true;
+                        }
+                    }
+                }
+            });
         mScrollContent.pageScroll(1);
         umum.loadUrl(path_to_asset+""+dataPath.getUmum_path());
         gejala.loadUrl(path_to_asset+""+dataPath.getGejala_path());

@@ -1,5 +1,6 @@
 package id.kenshiro.app.panri;
 
+import android.content.pm.ActivityInfo;
 import android.graphics.Point;
 import android.graphics.Typeface;
 import android.os.Build;
@@ -30,6 +31,7 @@ public class GalleryActivity extends MylexzActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.actgallery_main);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setMyActionBar();
         Point p = new Point();
         getWindowManager().getDefaultDisplay().getSize(p);
@@ -100,7 +102,7 @@ public class GalleryActivity extends MylexzActivity {
     }
 
     @Override
-    public boolean onNavigateUp() {
+    public boolean onSupportNavigateUp() {
         SwitchIntoMainActivity.switchToMain(this);
         return true;
     }

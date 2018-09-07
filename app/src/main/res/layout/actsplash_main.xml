@@ -52,6 +52,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="46dp"
+        android:id="@+id/actsplash_id_bawah_layout"
         android:gravity="center|center_horizontal">
 
         <Button
@@ -65,11 +66,10 @@
             android:textSize="26sp"
             android:visibility="gone" />
 
-        <ProgressBar
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            style="@style/Base.Widget.AppCompat.ProgressBar"
-            android:id="@+id/actsplash_id_progress"
-            android:visibility="visible" />
+        <pl.droidsonroids.gif.GifImageView
+            android:layout_width="@dimen/actsplash_dimen_loading_wh"
+            android:layout_height="@dimen/actsplash_dimen_loading_wh"
+            android:src="@drawable/loading"
+            android:id="@+id/actsplash_id_loadingview" />
     </RelativeLayout>
 </RelativeLayout>

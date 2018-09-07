@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import com.mylexz.utils.MylexzActivity;
 
 import id.kenshiro.app.panri.MainActivity;
+import id.kenshiro.app.panri.SplashScreenActivity;
 
 public class SwitchIntoMainActivity {
     public static void switchTo(@NonNull MylexzActivity activity, @NonNull Class<?> cls, @Nullable Bundle args) {
@@ -21,6 +22,9 @@ public class SwitchIntoMainActivity {
     }
 
     public static void switchToMain(@NonNull MylexzActivity activity) {
-        switchTo(activity, MainActivity.class, null);
+        Bundle args = new Bundle();
+        args.putInt(SplashScreenActivity.DB_CONDITION_KEY, SplashScreenActivity.DB_IS_SAME_VERSION);
+        args.putInt(SplashScreenActivity.APP_CONDITION_KEY, SplashScreenActivity.APP_IS_SAME_VERSION);
+        switchTo(activity, MainActivity.class, args);
     }
 }

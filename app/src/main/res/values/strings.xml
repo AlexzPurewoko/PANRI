@@ -21,6 +21,18 @@
     <string name="actmain_string_speechfarmer_3">KLIK "DIAGNOSIS GAMBAR" UNTUK MEMULAI MENCARI TAHU PENYAKIT PADI ANDA DENGAN MENCOCOKKAN DENGAN GAMBAR YANG SUDAH DISEDIAKAN</string>
     <string name="actmain_string_speechfarmer_4">MENU "INFO PENYAKIT" ADALAH MENU YANG DAPAT DIGUNAKAN UNTUK MENGETAHUI BEBERAPA PENYAKIT - PENYAKIT PADA TANAMAN PADI</string>
     <string name="actmain_string_speechfarmer_5">UNTUK MENGETAHUI CARA MENGOBATI PENYAKIT PADI ANDA, ANDA BISA KLIK MENU "CARA MENANGGULANGI"</string>
+
+    <string name="actdiagnose_string_speechfarmer_1">Silahkan pilih salah satu gejala yang terlihat pada padi anda</string>
+    <string name="actdiagnose_string_speechfarmer_2">Mohon periksa padi anda...\nApakah memiliki gejala yang sama dengan pertanyaan dibawah? Bila sama mohon klik "Ya" dan tidak sama klik "Tidak"</string>
+    <string name="actdiagnose_string_speechfarmer_3">Padi anda terinfeksi penyakit %s dengan presentase %d%%</string>
+
+    <string name="actdiagnose_string_speechfarmer_img_1">Apakah padi anda memiliki gejala yang sama dengan gambar dan ciri - ciri dibawah? </string>
+    <string name="actdiagnose_string_speechfarmer_img_2">Dibawah ini merupakan penyakit yang diderita padi anda...</string>
+    <string name="actdiagnose_string_speechfarmer_img_s2">Anda bisa klik tombol "Klik untuk cara menanggulangi" untuk mengetahui cara penanggulangan penyakit padi anda</string>
+    <string name="actinfo_string_speechfarmer_1">Anda bisa langsung klik salah satu penyakit untuk melihat infonya</string>
+    <string name="actinfo_string_speechfarmer_2">@string/actdiagnose_string_speechfarmer_img_s2</string>
+    <string name="acthowto_string_speechfarmer_1">Anda bisa langsung klik salah satu penyakit untuk mengetahui cara menanggulanginya</string>
+    <string name="acthowto_string_speechfarmer_2">Berikut adalah cara pengendalian penyakit padi anda</string>
     <!---->
     <!-- section dialog exit -->
     <string name="actmain_string_dialogexit_desc">APAKAH ANDA INGIN KELUAR?</string>
@@ -43,5 +55,9 @@
     <string name="frag3_string_txt_langsungdiag">MENU UNTUK MEMUDAHKAN ANDA MENCARI TAHU JENIS PENYTAKIT PADA PADI DENGAN MEMILIH BEBERAPA GEJALA YANG DISEDIAKAN</string>
     <string name="frag3_string_imgdiagjelas">MENU UNTUK MEMUDAHKAN ANDA MENCARI TAHU JENIS PENYAKIT PADA PADI DENGAN CARA MENCOCOKKAN GAMBAR DAN CIRI - CIRI PENYAKIT YANG SUDAH DISEDIAKAN DENGAN PADI ANDA</string>
     <string name="frag4_string_txtatas">KLIK MULAI\nUNTUK MEMULAI MENJALANKAN\nAPLIKASI</string>
+    <string name="acttutor_string_btnback"><![CDATA[kembali]]></string>
+    <string name="acttutor_string_btnnext">lanjut</string>
+    <string name="actabout_string_hope_made">Made By\nHOPE Project</string>
+    <string name="about_name">Tentang Kami</string>
     <!-- -->
 </resources>

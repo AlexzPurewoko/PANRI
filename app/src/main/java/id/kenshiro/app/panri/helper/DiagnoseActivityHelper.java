@@ -72,11 +72,14 @@ public class DiagnoseActivityHelper{
     public boolean setOnPushBackButtonPressed(boolean on) {
         // if viewmodes is 0 indicates its first page
         if (!on) return false;
+        if (counter == 0)
+            return false;
         if (view_mode_saved == 0)
             return false;
         else if (counter == 1 && view_mode_saved != ListCiriCiriPenyakit.MODE_SEQUENCE) {
-            counter--;
-            count_when_accept--;
+            counter = count_when_accept = count_when_decline = 0;
+            mAskLayout.setVisibility(View.GONE);
+            mListFirstPage.setVisibility(View.VISIBLE);
             selectFirstTampil();
             return true;
         } else {
@@ -113,34 +116,35 @@ public class DiagnoseActivityHelper{
                 mListFirstPage.setVisibility(View.VISIBLE);
                 mAskLayout.setVisibility(View.GONE);
                 mRootView.setGravity(Gravity.TOP | Gravity.CENTER);
+                if (onPenyakitHaveSelected != null)
+                    onPenyakitHaveSelected.onPilihCiriSection();
                 System.gc();
                 return true;
             } else if (view_mode_saved == ListCiriCiriPenyakit.MODE_SEQUENCE) {
                 if (savedItemDataPosition > 0)
                     savedItemDataPosition = --count_position_data;
-                else {
-                    if (counter == 1) {
-                        counter = count_when_accept = count_when_decline = 0;
-                        mAskLayout.setVisibility(View.GONE);
-                        mListFirstPage.setVisibility(View.VISIBLE);
-                        selectFirstTampil();
-                        return true;
-
-                    }
-                    // gets the number last pos
-                    int num = temp_list_nums.get(count_position_data);
+                if (counter == 1) {
+                    counter = count_when_accept = count_when_decline = 0;
+                    mAskLayout.setVisibility(View.GONE);
+                    mListFirstPage.setVisibility(View.VISIBLE);
+                    selectFirstTampil();
+                    return true;
 
                 }
+                if (onPenyakitHaveSelected != null)
+                    onPenyakitHaveSelected.onTanyaSection();
                 counter--;
-                switch (saved_btn_yesno_modes.remove(saved_btn_yesno_modes.size() - 1)) {
-                    case ON_BTN_YES_CLICKED:
-                        count_when_accept--;
-                        break;
-                    case ON_BTN_NO_CLICKED:
-                        count_when_decline--;
-                        break;
-                    default:
-                }
+
+                if (saved_btn_yesno_modes.size() > 0)
+                    switch (saved_btn_yesno_modes.remove(saved_btn_yesno_modes.size() - 1)) {
+                        case ON_BTN_YES_CLICKED:
+                            count_when_accept--;
+                            break;
+                        case ON_BTN_NO_CLICKED:
+                            count_when_decline--;
+                            break;
+                        default:
+                    }
                 count_position_data = savedItemDataPosition;
                 String ciri = listCiriCiriPenyakitHashMap.get(temp_list_nums.get(count_position_data)).getCiri();
 
@@ -153,10 +157,6 @@ public class DiagnoseActivityHelper{
             }
             return false;
         }
-    }
-
-    private void pointoBackInDB() {
-
     }
 
     private String buildIntoListUsedDB(List<Integer> lists) {
@@ -204,6 +204,9 @@ public class DiagnoseActivityHelper{
         });
         mListFirstPage.setAdapter(dataAdapter);
         mListFirstPage.scrollToPosition(0);
+        view_mode_saved = ListCiriCiriPenyakit.MODE_BIND;
+        if (onPenyakitHaveSelected != null)
+            onPenyakitHaveSelected.onPilihCiriSection();
         System.gc();
     }
 
@@ -276,6 +279,8 @@ public class DiagnoseActivityHelper{
             mListFirstPage.setVisibility(View.VISIBLE);
             mAskLayout.setVisibility(View.GONE);
             mRootView.setGravity(Gravity.TOP | Gravity.CENTER);
+            if (onPenyakitHaveSelected != null)
+                onPenyakitHaveSelected.onPilihCiriSection();
             System.gc();
         }
         // and if is another its content will be displayed as asking
@@ -291,6 +296,8 @@ public class DiagnoseActivityHelper{
             // sets the textView
             String ciri = listCiriCiriPenyakitHashMap.get(temp_list_nums.get(count_position_data)).getCiri();
             mDescCiri.setText(ciri);
+            if (onPenyakitHaveSelected != null)
+                onPenyakitHaveSelected.onTanyaSection();
             System.gc();
         }
     }
@@ -344,6 +351,8 @@ public class DiagnoseActivityHelper{
             mDescCiri.setText(ciri);
             mListFirstPage.setVisibility(View.GONE);
             mAskLayout.setVisibility(View.VISIBLE);
+            if (onPenyakitHaveSelected != null)
+                onPenyakitHaveSelected.onTanyaSection();
             System.gc();
         }
         else if(view_modes == ListCiriCiriPenyakit.MODE_BIND){
@@ -368,6 +377,8 @@ public class DiagnoseActivityHelper{
             mListFirstPage.setAdapter(dataAdapter);
             mListFirstPage.setVisibility(View.VISIBLE);
             mAskLayout.setVisibility(View.GONE);
+            if (onPenyakitHaveSelected != null)
+                onPenyakitHaveSelected.onPilihCiriSection();
             System.gc();
         }
     }
@@ -393,7 +404,11 @@ public class DiagnoseActivityHelper{
         mDescCiri.setTextSize(16.5f);
     }
     public interface OnPenyakitHaveSelected{
-        public void onPenyakitSelected(RecyclerView list, RelativeLayout mAskLayout, HashMap<Integer, ListNamaPenyakit> listNamaPenyakitHashMap, int keyId, double percentage);
+        void onPenyakitSelected(RecyclerView list, RelativeLayout mAskLayout, HashMap<Integer, ListNamaPenyakit> listNamaPenyakitHashMap, int keyId, double percentage);
+
+        void onTanyaSection();
+
+        void onPilihCiriSection();
     }
 
 }

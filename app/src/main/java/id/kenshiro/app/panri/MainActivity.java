@@ -1,10 +1,14 @@
 package id.kenshiro.app.panri;
 
+import android.content.DialogInterface;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AppCompatDialog;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -90,6 +94,7 @@ public class MainActivity extends MylexzActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setDB();
         setMyActionBar();
         setInitialPagerData();
@@ -105,8 +110,78 @@ public class MainActivity extends MylexzActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         startTask();
+        checkVersion();
     }
 
+    private void checkVersion() {
+        Bundle bundle = getIntent().getExtras();
+        int app_cond = bundle.getInt(SplashScreenActivity.APP_CONDITION_KEY);
+        int db_cond = bundle.getInt(SplashScreenActivity.DB_CONDITION_KEY);
+        String messageIfNeeded = null;
+        String dbErrorMesageIfNeeded = null;
+        switch (app_cond) {
+            case SplashScreenActivity.APP_IS_FIRST_USAGE:
+            case SplashScreenActivity.APP_IS_NEWER_VERSION:
+                break;
+            case SplashScreenActivity.APP_IS_OLDER_VERSION:
+                messageIfNeeded = "Aplikasi ini sudah usang dan tidak kompatibel dengan versi sebelumnya yang lebih baru, coba copot dan pasang lagi aplikasi ini";
+            case SplashScreenActivity.APP_IS_SAME_VERSION:
+                break;
+        }
+        switch (db_cond) {
+            case SplashScreenActivity.DB_IS_FIRST_USAGE:
+                break;
+            case SplashScreenActivity.DB_IS_NEWER_VERSION:
+                TOAST(Toast.LENGTH_SHORT, "The data now is new version !");
+                break;
+            case SplashScreenActivity.DB_IS_OLDER_IN_APP_VERSION:
+                dbErrorMesageIfNeeded = "Current Database dengan database di aplikasi sudah usang, mohon copot dan pasang aplikasi untuk membenahi";
+            case SplashScreenActivity.DB_IS_SAME_VERSION:
+                break;
+        }
+        showDialog(messageIfNeeded, dbErrorMesageIfNeeded);
+    }
+
+    private void showDialog(String messageIfNeeded, final String dbErrorMesageIfNeeded) {
+        int selected = -1;
+        if (messageIfNeeded == null && dbErrorMesageIfNeeded == null) return;
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setCancelable(false);
+        alert.setTitle("Peringatan!");
+        alert.setIcon(android.R.drawable.ic_dialog_alert);
+        if (messageIfNeeded == null) {
+            selected = 0;
+            alert.setMessage(dbErrorMesageIfNeeded);
+        } else {
+            selected = 1;
+            alert.setMessage(messageIfNeeded);
+        }
+        final int selectable = selected;
+        alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+                if (selectable == 0) {
+                    MainActivity.this.finish();
+                    return;
+                }
+                AlertDialog.Builder alert2 = new AlertDialog.Builder(MainActivity.this);
+                alert2.setCancelable(false);
+                alert2.setTitle("Peringatan!");
+                alert2.setIcon(android.R.drawable.ic_dialog_alert);
+                alert2.setMessage(dbErrorMesageIfNeeded);
+                alert2.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                        MainActivity.this.finish();
+                    }
+                });
+                alert2.show();
+            }
+        });
+        alert.show();
+    }
     private void setDB() {
         try {
             new CheckAndMoveDB(this, "database_penyakitpadi.db").upgradeDB();
@@ -179,6 +254,7 @@ public class MainActivity extends MylexzActivity
                 SwitchIntoMainActivity.switchTo(this, GalleryActivity.class, null);
                 break;
             case R.id.nav_about:
+                SwitchIntoMainActivity.switchTo(this, AboutActivity.class, null);
                 break;
             case R.id.nav_out:
                 this.finish();
@@ -306,6 +382,11 @@ public class MainActivity extends MylexzActivity
         mTextDetails = (TextView) findViewById(R.id.actmain_id_textIndicatorViewPager);
         mTextDetails.setTypeface(Typeface.createFromAsset(getAssets(), "Gill_SansMT.ttf"), Typeface.ITALIC);
         mTextDetails.setText("MUDAHKAN HIDUPMU KENALI PENYAKIT PADIMU");
+
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
 
     }
 

@@ -2,6 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:id="@+id/acttutor_id_mainlayout"
+    android:background="@color/colorPrimary"
     android:layout_height="match_parent">
 
     <FrameLayout
@@ -16,6 +17,7 @@
         android:layout_centerHorizontal="true"
         android:gravity="center_horizontal"
         android:orientation="horizontal"
+        android:layout_marginBottom="10dp"
         android:layout_above="@id/acttutor_id_layoutbtn"
         android:layout_gravity="center|center_horizontal" />
 
@@ -23,6 +25,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/acttutor_id_layoutbtn"
+        android:layout_marginBottom="10dp"
         android:layout_alignParentBottom="true">
 
         <Button
@@ -30,15 +33,23 @@
             android:layout_height="wrap_content"
             android:id="@+id/acttutor_id_btnprev"
             android:layout_alignParentLeft="true"
-            android:text="kembali"
-            android:foreground="?attr/selectableItemBackground" />
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            android:textSize="15sp"
+            android:text="@string/acttutor_string_btnback"
+            android:foreground="@color/color_transparent"
+            android:background="?attr/selectableItemBackground" />
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/acttutor_id_btnnext"
             android:layout_alignParentRight="true"
-            android:text="lanjut"
-            android:foreground="?attr/selectableItemBackground" />
+            android:textColor="@android:color/white"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:text="@string/acttutor_string_btnnext"
+            android:foreground="@color/color_transparent"
+            android:background="?attr/selectableItemBackground" />
     </RelativeLayout>
 </RelativeLayout>

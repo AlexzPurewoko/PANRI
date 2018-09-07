@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="5dp"
+    android:orientation="horizontal">
+
+    <ImageView
+        android:layout_width="@dimen/actmain_dimen_petani_wh"
+        android:layout_height="@dimen/actmain_dimen_petani_wh"
+        android:adjustViewBounds="true"
+        android:scaleType="fitXY"
+        android:id="@+id/adapter_aboutdev_id_imgpeople" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginLeft="10dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/adapter_aboutdev_id_name"
+            android:textSize="@dimen/frag3_dimen_txtbesar"
+            android:textStyle="bold"
+            android:textColor="@android:color/black"
+            android:text="HELLO WORLD" />
+
+        <TextView
+            android:layout_marginTop="12dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/adapter_aboutdev_id_jobs"
+            android:textSize="15sp"
+            android:textColor="@android:color/black"
+            android:text="HELLO WORLD" />
+    </LinearLayout>
+</LinearLayout>

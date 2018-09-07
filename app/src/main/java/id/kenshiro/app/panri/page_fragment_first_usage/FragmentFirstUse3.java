@@ -35,8 +35,8 @@ public class FragmentFirstUse3 extends Fragment {
     private String mParam1;
     private String mParam2;
 
-    private final float txt_besar = 20f;
-    private final float txt_kecil = 12f;
+    private final float txt_besar = 18f;
+    private final float txt_kecil = 11f;
     private OnFragmentInteractionListener mListener;
 
     public FragmentFirstUse3() {
@@ -76,24 +76,24 @@ public class FragmentFirstUse3 extends Fragment {
         // Inflate the layout for this fragment
         View layout = inflater.inflate(R.layout.acttutor_main_fragment_firstuse_3, container, false);
         // section upper
-        setTextAppearanceLayout(layout, R.id.frag3_id_txtatas, txt_besar, Typeface.BOLD, Gravity.CENTER);
+        setTextAppearanceLayout(layout, R.id.frag3_id_txtatas, Typeface.BOLD, Gravity.CENTER);
         // section txt 1 section 1
-        setTextAppearanceLayout(layout, R.id.frag3_id_txtim1, txt_besar, Typeface.BOLD, Gravity.LEFT);
+        setTextAppearanceLayout(layout, R.id.frag3_id_txtim1, Typeface.BOLD, Gravity.LEFT);
         // section txt 2 section 1
-        setTextAppearanceLayout(layout, R.id.frag3_id_txtim2, txt_kecil, Typeface.NORMAL, Gravity.LEFT);
+        setTextAppearanceLayout(layout, R.id.frag3_id_txtim2, Typeface.NORMAL, Gravity.LEFT);
         // section txt 1 section 2
-        setTextAppearanceLayout(layout, R.id.frag3_id_txtim21, txt_besar, Typeface.BOLD, Gravity.LEFT);
+        setTextAppearanceLayout(layout, R.id.frag3_id_txtim21, Typeface.BOLD, Gravity.LEFT);
         // section txt 2 section 2
-        setTextAppearanceLayout(layout, R.id.frag3_id_txtim22, txt_kecil, Typeface.NORMAL, Gravity.LEFT);
+        setTextAppearanceLayout(layout, R.id.frag3_id_txtim22, Typeface.NORMAL, Gravity.LEFT);
         return layout;
     }
 
-    private void setTextAppearanceLayout(@NonNull View layout, @IdRes int resId, @Size float size, int typeface_type, int gravity) {
+    private void setTextAppearanceLayout(@NonNull View layout, @IdRes int resId, int typeface_type, int gravity) {
         TextView txt = layout.findViewById(resId);
         txt.setTypeface(Typeface.createFromAsset(this.getContext().getAssets(), "Comic_Sans_MS3.ttf"), typeface_type);
         txt.setTextColor(Color.WHITE);
         txt.setGravity(gravity);
-        txt.setTextSize(size);
+        //txt.setTextSize(size);
     }
 
     // TODO: Rename method, update argument and hook method into UI event

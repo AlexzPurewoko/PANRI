@@ -87,6 +87,7 @@ public class TampilDiagnosaGambarHelper {
 
     public void showContentView() {
         mContentView.setVisibility(View.VISIBLE);
+        btnBawah.setVisibility(View.VISIBLE);
     }
 
     public void setOnItemClickListener(AdapterRecycler.OnItemClickListener onItemClickListener) {
@@ -142,7 +143,7 @@ public class TampilDiagnosaGambarHelper {
             setCiriPenyakitText(ciriP, dataCiriPenyakit.listCiriHtml);
             System.gc();
         } else if (onItemListener != null)
-            onItemListener.onIsAfterLastListPosition(mContentView, mPositionList, mSizeList);
+            onItemListener.onIsAfterLastListPosition(mContentView, btnBawah, mPositionList, mSizeList);
     }
 
     private void onClickBtn(int whichType, int x) {
@@ -151,12 +152,12 @@ public class TampilDiagnosaGambarHelper {
                 mPositionList++;
                 updateContentAfter();
                 if (onItemListener != null)
-                    onItemListener.onBtnTidakClicked(mContentView, mPositionList);
+                    onItemListener.onBtnTidakClicked(mContentView, btnBawah, mPositionList);
             }
             break;
             case ON_BTN_YA:
                 if (onItemListener != null)
-                    onItemListener.onBtnYaClicked(mContentView, mPositionList);
+                    onItemListener.onBtnYaClicked(mContentView, btnBawah, mPositionList);
                 break;
         }
     }
@@ -318,11 +319,11 @@ public class TampilDiagnosaGambarHelper {
     }
 
     public interface OnItemListener {
-        void onBtnYaClicked(View v, int position);
+        void onBtnYaClicked(View v, View button, int position);
 
-        void onBtnTidakClicked(View v, int position);
+        void onBtnTidakClicked(View v, View button, int position);
 
-        void onIsAfterLastListPosition(View v, int position, int size_list);
+        void onIsAfterLastListPosition(View v, View button, int position, int size_list);
     }
 
     private class DataCiriPenyakit {

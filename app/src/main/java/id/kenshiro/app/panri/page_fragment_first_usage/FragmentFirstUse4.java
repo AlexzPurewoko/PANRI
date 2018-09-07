@@ -94,6 +94,10 @@ public class FragmentFirstUse4 extends Fragment {
         }
     }
 
+    public void setmListener(OnFragmentInteractionListener mListener) {
+        this.mListener = mListener;
+    }
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
