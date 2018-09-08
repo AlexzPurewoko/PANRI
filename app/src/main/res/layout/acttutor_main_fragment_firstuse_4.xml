@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimary"
+    tools:context=".page_fragment_first_usage.FragmentFirstUse4">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/frag4_id_txtatas"
+        android:layout_marginTop="@dimen/actsplash_dimen_margintopimg"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        android:text="@string/frag4_string_txtatas" />
+
+    <Button
+        android:layout_width="@dimen/acttutor_dimen_btn_mulai_frag4"
+        android:layout_height="@dimen/acttutor_dimen_btn_mulai_frag4"
+        android:background="@drawable/ic_btn_mulai"
+        android:id="@+id/frag4_id_img"
+        android:adjustViewBounds="true"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/frag4_id_txtatas"
+        android:scaleType="fitXY"
+        android:layout_marginTop="@dimen/actsplash_dimen_margintopimg" />
+</RelativeLayout>

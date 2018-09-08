@@ -1,0 +1,63 @@
+<resources>
+    <string name="app_name">PANRI</string>
+    <string name="diagnose_name">Diagnosa</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">@string/app_name</string>
+    <string name="nav_header_subtitle">KENALI PENYAKIT PADIMU</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_settings">Settings</string>
+
+    <!-- activity main -->
+    <!-- section card options -->
+    <string name="actmain_string_startdiagnose">MULAI DIAGNOSIS</string>
+    <string name="actmain_string_howto">CARA MENANGGULANGI</string>
+    <string name="actmain_string_aboutpenyakit">INFO PENYAKIT</string>
+    <string name="actmain_string_diagnosagambar">DIAGNOSA GAMBAR</string>
+    <!---->
+    <!-- section textbox -->
+    <string name="actmain_string_speechfarmer_1">SELAMAT DATANG DI PANRI, SEBUAH APLIKASI YANG DAPAT MEMUDAHKAN ANDA MENENTUKAN JENIS PENYAKIT PADA PADI ANDA.</string>
+    <string name="actmain_string_speechfarmer_2">KLIK "MULAI DIAGNOSIS" UNTUK MULAI MENCARI TAHU JENIS PENYAKIT PADI ANDA DENGAN MEMILIH GEJALA YANG SUDAH DISEDIAKAN.</string>
+    <string name="actmain_string_speechfarmer_3">KLIK "DIAGNOSIS GAMBAR" UNTUK MEMULAI MENCARI TAHU PENYAKIT PADI ANDA DENGAN MENCOCOKKAN DENGAN GAMBAR YANG SUDAH DISEDIAKAN</string>
+    <string name="actmain_string_speechfarmer_4">MENU "INFO PENYAKIT" ADALAH MENU YANG DAPAT DIGUNAKAN UNTUK MENGETAHUI BEBERAPA PENYAKIT - PENYAKIT PADA TANAMAN PADI</string>
+    <string name="actmain_string_speechfarmer_5">UNTUK MENGETAHUI CARA MENGOBATI PENYAKIT PADI ANDA, ANDA BISA KLIK MENU "CARA MENANGGULANGI"</string>
+
+    <string name="actdiagnose_string_speechfarmer_1">Silahkan pilih salah satu gejala yang terlihat pada padi anda</string>
+    <string name="actdiagnose_string_speechfarmer_2">Mohon periksa padi anda...\nApakah memiliki gejala yang sama dengan pertanyaan dibawah? Bila sama mohon klik "Ya" dan tidak sama klik "Tidak"</string>
+    <string name="actdiagnose_string_speechfarmer_3">Padi anda terinfeksi penyakit %s dengan presentase %d%%</string>
+
+    <string name="actdiagnose_string_speechfarmer_img_1">Apakah padi anda memiliki gejala yang sama dengan gambar dan ciri - ciri dibawah? </string>
+    <string name="actdiagnose_string_speechfarmer_img_2">Dibawah ini merupakan penyakit yang diderita padi anda...</string>
+    <string name="actdiagnose_string_speechfarmer_img_s2">Anda bisa klik tombol "Klik untuk cara menanggulangi" untuk mengetahui cara penanggulangan penyakit padi anda</string>
+    <string name="actinfo_string_speechfarmer_1">Anda bisa langsung klik salah satu penyakit untuk melihat infonya</string>
+    <string name="actinfo_string_speechfarmer_2">@string/actdiagnose_string_speechfarmer_img_s2</string>
+    <string name="acthowto_string_speechfarmer_1">Anda bisa langsung klik salah satu penyakit untuk mengetahui cara menanggulanginya</string>
+    <string name="acthowto_string_speechfarmer_2">Berikut adalah cara pengendalian penyakit padi anda</string>
+    <!---->
+    <!-- section dialog exit -->
+    <string name="actmain_string_dialogexit_desc">APAKAH ANDA INGIN KELUAR?</string>
+    <string name="actmain_string_dialogexit_btnyes">YA!</string>
+    <string name="actmain_string_dialogexit_btnno">TIDAK!</string>
+    <string name="actdiagnose_string_klikcaramenanggulangi">KLIK UNTUK CARA MENANGGULANGI</string>
+    <string name="actdiagnose_string_klikbalikdiagnosa">KLIK DISINI UNTUK DIAGNOSA LAGI</string>
+    <string name="acthowto_string_title">Cara Menanggulangi</string>
+    <string name="actinfo_string_title">Info Penyakit</string>
+    <string name="actimgdiagnose_string_title">Diagnosa Gambar</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="frag1_string_talk">SELAMAT DATANG DI PANRI
+        \n.......\n\nSEBUAH APLIKASI\n
+        YANG MEMBANTU MENDIAGNOSIS\n
+        PENYAKIT PADI ANDA</string>
+    <string name="frag2_string_txt">DIDALAM APLIKASI\nANDA AKAN LANGSUNG BERTEMU\nPEMANDU YANG BERNAMA SOLEH\nYANG SELALU MEMBERIKAN PETUNJUK\nMENGENAI CARA PEMAKAIAN\nAPLIKASI</string>
+    <string name="frag3_string_txtatas">ANDA BISA LANGSUNG\nMENDIAGNOSIS DENGAN\nDUA MENU TERSEBUT</string>
+    <string name="frag3_string_txt_langsungdiag">MENU UNTUK MEMUDAHKAN ANDA MENCARI TAHU JENIS PENYTAKIT PADA PADI DENGAN MEMILIH BEBERAPA GEJALA YANG DISEDIAKAN</string>
+    <string name="frag3_string_imgdiagjelas">MENU UNTUK MEMUDAHKAN ANDA MENCARI TAHU JENIS PENYAKIT PADA PADI DENGAN CARA MENCOCOKKAN GAMBAR DAN CIRI - CIRI PENYAKIT YANG SUDAH DISEDIAKAN DENGAN PADI ANDA</string>
+    <string name="frag4_string_txtatas">KLIK MULAI\nUNTUK MEMULAI MENJALANKAN\nAPLIKASI</string>
+    <string name="acttutor_string_btnback"><![CDATA[kembali]]></string>
+    <string name="acttutor_string_btnnext">lanjut</string>
+    <string name="actabout_string_hope_made">Made By\nHOPE Project</string>
+    <string name="about_name">Tentang Kami</string>
+    <!-- -->
+</resources>

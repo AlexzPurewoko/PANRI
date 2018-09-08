@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="actsplash_dimen_img_wh">165dp</dimen>
+    <dimen name="actsplash_dimen_margintopimg">10dp</dimen>
+    <dimen name="acttutor_dimen_btn_mulai_frag4">210dp</dimen>
+    <dimen name="frag3_dimen_marginTopLyt">30dp</dimen>
+    <dimen name="frag3_dimen_txtbesar">14sp</dimen>
+    <dimen name="frag3_dimen_txtkecil">11sp</dimen>
+    <dimen name="actsplash_dimen_loading_wh">35dp</dimen>
+</resources>

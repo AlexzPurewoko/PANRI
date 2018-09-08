@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimary"
+    tools:context=".page_fragment_first_usage.FragmentFirstUse3">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/frag3_id_txtatas"
+        android:layout_marginTop="@dimen/actsplash_dimen_margintopimg"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:textSize="@dimen/frag3_dimen_txtbesar"
+        android:textColor="@android:color/white"
+        android:text="@string/frag3_string_txtatas" />
+
+    <LinearLayout
+        android:id="@+id/frag3_id_layoutjelas"
+        android:layout_below="@+id/frag3_id_txtatas"
+        android:layout_marginTop="@dimen/frag3_dimen_marginTopLyt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:src="@drawable/ic_actmain_diagnose"
+            android:adjustViewBounds="true"
+            android:scaleType="fitXY" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginLeft="10dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/frag3_id_txtim1"
+                android:gravity="left"
+                android:textSize="@dimen/frag3_dimen_txtbesar"
+                android:textColor="@android:color/white"
+                android:text="LANGSUNG DIAGNOSIS" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/frag3_id_txtim2"
+                android:gravity="left|right"
+                android:textSize="@dimen/frag3_dimen_txtkecil"
+                android:layout_marginTop="8dp"
+                android:textColor="@android:color/white"
+                android:text="@string/frag3_string_txt_langsungdiag" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/frag3_id_layoutjelas2"
+        android:layout_below="@+id/frag3_id_layoutjelas"
+        android:layout_marginTop="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:src="@drawable/ic_actmain_imgdiagnose"
+            android:adjustViewBounds="true"
+            android:scaleType="fitXY" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginLeft="10dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/frag3_id_txtim21"
+                android:gravity="left"
+                android:textSize="@dimen/frag3_dimen_txtbesar"
+                android:textColor="@android:color/white"
+                android:text="DIAGNOSIS GAMBAR" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/frag3_id_txtim22"
+                android:gravity="left|right"
+                android:textSize="@dimen/frag3_dimen_txtkecil"
+                android:layout_marginTop="8dp"
+                android:textColor="@android:color/white"
+                android:text="@string/frag3_string_imgdiagjelas" />
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>

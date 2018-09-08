@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<color name="myBlueColor">#3075ff</color>
+    <color name="colorPrimary">@color/myBlueColor</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="background_sect_color_start">#e5edff</color>
+    <color name="background_sect_color_end">#ffffff</color>
+    <color name="frag_color_green">#6DC727</color>
+    <color name="color_transparent">#00000000</color>
+    <color name="color_status_white_dark">#b9b9b9</color>
+    <color name="frag_color_green_dark">#4b8f17</color>
+</resources>

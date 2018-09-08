@@ -1,0 +1,16 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="actmain_dimen_viewpager_height">210dp</dimen>
+    <dimen name="actmain_dimen_petani_wh">100dp</dimen>
+    <dimen name="actmain_dimen_opimg_incard_wh">50dp</dimen>
+    <dimen name="nav_header_height">200dp</dimen>
+    <dimen name="actmain_dimen_petanidesc_txtsize">10sp</dimen>
+    <dimen name="actsplash_dimen_img_wh">200dp</dimen>
+    <dimen name="actsplash_dimen_margintopimg">40dp</dimen>
+    <dimen name="acttutor_dimen_btn_mulai_frag4">240dp</dimen>
+    <dimen name="frag3_dimen_marginTopLyt">60dp</dimen>
+    <dimen name="frag3_dimen_txtbesar">18sp</dimen>
+    <dimen name="frag3_dimen_txtkecil">11sp</dimen>
+    <dimen name="actsplash_dimen_loading_wh">50dp</dimen>
+    <dimen name="acttutor_indicator_marginlr">10dp</dimen>
+</resources>
