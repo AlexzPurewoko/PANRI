@@ -61,15 +61,15 @@ public class MainActivity extends MylexzActivity
     Toolbar toolbar;
     // for view image pager
     LinearLayout indicators;
-    private static CustomViewPager mImageSelector;
+    private CustomViewPager mImageSelector;
     private int mDotCount;
-    private static List<Integer> mListResImage;
+    private List<Integer> mListResImage;
     private LinearLayout[] mDots;
     private ImageFragmentAdapter mImageControllerFragment;
     private TextView mTextDetails;
 
     // for section petani
-    private static ImageView imgPetani;
+    private ImageView imgPetani;
     private Button mTextPetaniDesc;
     private int[] TextPetaniDesc = {
             R.string.actmain_string_speechfarmer_1,
@@ -79,15 +79,14 @@ public class MainActivity extends MylexzActivity
             R.string.actmain_string_speechfarmer_5
     };
     private int mPosTxtPetani = 0;
-    private static boolean mPetaniIsKedip = false;
 
     // for section operation
     private LinearLayout mListOp;
     private List<CardView> mListCard;
     // Important Task
-    private static ImageAutoSwipe imgSw;
-    private static ImgPetaniKedip imgKedip;
-    private static TalkingFarmer imgFarmerTalk;
+    private ImageAutoSwipe imgSw;
+    private ImgPetaniKedip imgKedip;
+    private TalkingFarmer imgFarmerTalk;
     private boolean doubleBackToExitPressedOnce;
 
     @Override
@@ -271,8 +270,8 @@ public class MainActivity extends MylexzActivity
     }
 
     private void startTask() {
-        imgSw = new ImageAutoSwipe();
-        imgKedip = new ImgPetaniKedip();
+        imgSw = new ImageAutoSwipe(mListResImage, mImageSelector);
+        imgKedip = new ImgPetaniKedip(imgPetani);
         imgSw.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         imgKedip.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
@@ -356,7 +355,7 @@ public class MainActivity extends MylexzActivity
             imgFarmerTalk = null;
         }
         System.gc();
-        imgFarmerTalk = new TalkingFarmer();
+        imgFarmerTalk = new TalkingFarmer(imgPetani, imgKedip);
         imgFarmerTalk.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
     }
@@ -531,12 +530,18 @@ public class MainActivity extends MylexzActivity
     }
 
     static class TalkingFarmer extends AsyncTask<Void, Integer, Void> {
+        private ImageView imgPetani1;
+        private ImgPetaniKedip imgPetaniKedip;
+
+        TalkingFarmer(ImageView imgPetani1, ImgPetaniKedip imgPetaniKedip) {
+            this.imgPetani1 = imgPetani1;
+        }
 
         @Override
         protected void onPreExecute() {
             // TODO: Implement this method
             super.onPreExecute();
-            imgPetani.setImageLevel(2);
+            imgPetani1.setImageLevel(2);
         }
 
         private void sleep(int mil) {
@@ -570,31 +575,36 @@ public class MainActivity extends MylexzActivity
             // TODO: Implement this method
             super.onProgressUpdate(values);
             int x = values[0];
-            imgPetani.setImageLevel(x);
+            imgPetani1.setImageLevel(x);
         }
 
         @Override
         protected void onPostExecute(Void result) {
             // TODO: Implement this method
             super.onPostExecute(result);
-            imgPetani.setImageLevel(4);
-            imgKedip = null;
+            imgPetani1.setImageLevel(4);
+            this.imgPetaniKedip = null;
             System.gc();
-            imgKedip = new ImgPetaniKedip();
-            imgKedip.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            this.imgPetaniKedip = new ImgPetaniKedip(imgPetani1);
+            this.imgPetaniKedip.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
 
         @Override
         protected void onCancelled() {
             // TODO: Implement this method
             super.onCancelled();
-            imgPetani.setImageLevel(4);
+            imgPetani1.setImageLevel(4);
         }
 
 
     }
 
     static class ImgPetaniKedip extends AsyncTask<Void, Integer, Void> {
+        ImageView imgPetani1;
+
+        ImgPetaniKedip(ImageView imgPetani1) {
+            this.imgPetani1 = imgPetani1;
+        }
         private void sleep(int mil) {
             try {
                 Thread.sleep(mil);
@@ -619,7 +629,7 @@ public class MainActivity extends MylexzActivity
             // TODO: Implement this method
             super.onProgressUpdate(values);
             int pos = values[0];
-            imgPetani.setImageLevel(pos);
+            imgPetani1.setImageLevel(pos);
         }
 
     }
@@ -627,12 +637,18 @@ public class MainActivity extends MylexzActivity
     static class ImageAutoSwipe extends AsyncTask<Void, Integer, Void> {
         private final long pause_swipe_in_millis = 6000;
         private int maxImages;
+        private List<Integer> mListResImage1;
+        private CustomViewPager mImageSelector1;
 
+        ImageAutoSwipe(List<Integer> mListResImage1, CustomViewPager mImageSelector1) {
+            this.mListResImage1 = mListResImage1;
+            this.mImageSelector1 = mImageSelector1;
+        }
         @Override
         protected void onPreExecute() {
             // TODO: Implement this method
             super.onPreExecute();
-            maxImages = mListResImage.size();
+            maxImages = mListResImage1.size();
         }//5s
 
         @Override
@@ -644,8 +660,8 @@ public class MainActivity extends MylexzActivity
                 } catch (InterruptedException e) {
                     Log.e("Main_Exception", "Interrupted in method ImageAutoSwipe.doInBackground()", e);
                 }
-                if (!mImageSelector.isFakeDragging())
-                    publishProgress(mImageSelector.getCurrentItem());
+                if (!mImageSelector1.isFakeDragging())
+                    publishProgress(mImageSelector1.getCurrentItem());
             }
         }
 
@@ -655,9 +671,9 @@ public class MainActivity extends MylexzActivity
             super.onProgressUpdate(values);
             int pos_result = values[0];
             if (++pos_result == maxImages)
-                mImageSelector.setCurrentItem(0, true);
+                mImageSelector1.setCurrentItem(0, true);
             else
-                mImageSelector.setCurrentItem(pos_result, true);
+                mImageSelector1.setCurrentItem(pos_result, true);
         }
 
 
