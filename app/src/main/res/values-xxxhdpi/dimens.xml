@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="actmain_dimen_viewpager_height">230dp</dimen>
+</resources>

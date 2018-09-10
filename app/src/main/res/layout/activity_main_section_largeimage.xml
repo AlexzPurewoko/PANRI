@@ -12,6 +12,7 @@
         android:layout_height="@dimen/actmain_dimen_viewpager_height"
         android:layout_alignParentTop="true"
         android:scaleType="fitXY"
+        android:adjustViewBounds="false"
         app:srcCompat="@drawable/side_nav_bar" />
 
 </RelativeLayout>

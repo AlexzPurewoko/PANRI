@@ -54,7 +54,7 @@ public class DiagnoseActivity extends MylexzActivity
 	ImageView imgPetani;
 	Button mTextPetaniDesc;
 	private boolean doubleBackToExitPressedOnce;
-
+	private boolean isDiagnosting = true;
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -111,7 +111,7 @@ public class DiagnoseActivity extends MylexzActivity
 				mTextPetaniDesc.setText(String.format(getString(R.string.actdiagnose_string_speechfarmer_3), penyakit, Math.round(e)));
                 a.setVisibility(View.GONE);
                 b.setVisibility(View.GONE);
-
+				isDiagnosting = false;
                 // switching into the next
                 showPenyakitDiagnoseHelper.show(d);
             }
@@ -234,25 +234,39 @@ public class DiagnoseActivity extends MylexzActivity
 		int repeat = event.getRepeatCount();
 		int maxRepeat = 2;
 		if (keyCode == KeyEvent.KEYCODE_BACK) {
-			if (!diagnoseActivityHelper.setOnPushBackButtonPressed(true)) {
-				if (doubleBackToExitPressedOnce) {
-					SwitchIntoMainActivity.switchToMain(this);
-					return true;
-				}
-
-				this.doubleBackToExitPressedOnce = true;
-				TOAST(Toast.LENGTH_SHORT, "Klik lagi untuk kembali");
-				new Handler().postDelayed(new Runnable() {
-
-					@Override
-					public void run() {
-						doubleBackToExitPressedOnce = false;
+			if (isDiagnosting) {
+				if (!diagnoseActivityHelper.setOnPushBackButtonPressed(true)) {
+					if (doubleBackToExitPressedOnce) {
+						SwitchIntoMainActivity.switchToMain(this);
+						return true;
 					}
-				}, 2000);
-				return false;
+
+					this.doubleBackToExitPressedOnce = true;
+					TOAST(Toast.LENGTH_SHORT, "Klik lagi untuk kembali");
+					new Handler().postDelayed(new Runnable() {
+
+						@Override
+						public void run() {
+							doubleBackToExitPressedOnce = false;
+						}
+					}, 2000);
+					return false;
+				}
 			} else {
-				if (showPenyakitDiagnoseHelper.getmContentView().getVisibility() == View.VISIBLE) {
+				if (showPenyakitDiagnoseHelper.getmContent2().getVisibility() == View.VISIBLE) {
+					showPenyakitDiagnoseHelper.getmContent2().setVisibility(View.GONE);
+					showPenyakitDiagnoseHelper.getmContent1().setVisibility(View.VISIBLE);
+					showPenyakitDiagnoseHelper.mScrollContent.pageScroll(0);
+					--showPenyakitDiagnoseHelper.countBtn;
+					showPenyakitDiagnoseHelper.klikBawahText.setText(R.string.actdiagnose_string_klikcaramenanggulangi);
+					return false;
+				} else if (showPenyakitDiagnoseHelper.getmContent1().getVisibility() == View.VISIBLE) {
+					showPenyakitDiagnoseHelper.getmContent1().setVisibility(View.GONE);
 					showPenyakitDiagnoseHelper.getmContentView().setVisibility(View.GONE);
+					mTextPetaniDesc.setOnClickListener(null);
+					mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
+					isDiagnosting = true;
+					return false;
 				}
 			}
 

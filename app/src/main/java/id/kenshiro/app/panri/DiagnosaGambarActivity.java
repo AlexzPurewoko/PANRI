@@ -195,7 +195,7 @@ public class DiagnosaGambarActivity extends MylexzActivity {
                     mTextPetaniDesc.setOnClickListener(null);
                     mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_img_1));
                     tampilDiagnosaGambarHelper.mContentView.pageScroll(0);
-                    --showPenyakitDiagnoseHelper.countBtn;
+                    //--showPenyakitDiagnoseHelper.countBtn;
                     return false;
                 }
             }
