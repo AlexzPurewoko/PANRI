@@ -231,8 +231,6 @@ public class DiagnoseActivity extends MylexzActivity
 
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		int repeat = event.getRepeatCount();
-		int maxRepeat = 2;
 		if (keyCode == KeyEvent.KEYCODE_BACK) {
 			if (isDiagnosting) {
 				if (!diagnoseActivityHelper.setOnPushBackButtonPressed(true)) {
@@ -265,6 +263,7 @@ public class DiagnoseActivity extends MylexzActivity
 					showPenyakitDiagnoseHelper.getmContentView().setVisibility(View.GONE);
 					mTextPetaniDesc.setOnClickListener(null);
 					mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
+					diagnoseActivityHelper.setOnPushBackButtonPressed(true);
 					isDiagnosting = true;
 					return false;
 				}

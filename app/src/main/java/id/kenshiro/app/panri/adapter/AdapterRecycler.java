@@ -28,24 +28,23 @@ public class AdapterRecycler extends RecyclerView.Adapter {
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        CardView rootElement = (CardView) LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.cardview_adapter, viewGroup, false);
+        CardView rootElement = (CardView) LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.cardview_adapter, null, false);
         LinearLayout layout = new LinearLayout(viewGroup.getContext());
         layout.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         ));
         layout.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout.LayoutParams rootParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+        RecyclerView.LayoutParams rootParams = new RecyclerView.LayoutParams(
+                RecyclerView.LayoutParams.MATCH_PARENT,
+                RecyclerView.LayoutParams.WRAP_CONTENT
         );
-        rootParams.gravity = Gravity.CENTER;
         rootElement.setLayoutParams(rootParams);
-
         rootElement.addView(layout);
         rootElement.setCardElevation(8f);
         rootElement.setContentPadding(16,16,16,16);
         rootElement.setRadius(8f);
+        rootElement.setUseCompatPadding(true);
         final ViewItemHolder vih = new ViewItemHolder(rootElement);
         rootElement.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -76,7 +75,7 @@ public class AdapterRecycler extends RecyclerView.Adapter {
         this.listener = listener;
     }
     public interface OnItemClickListener{
-        public void onClick(View target, int position);
+        void onClick(View target, int position);
     }
     public class ViewItemHolder extends RecyclerView.ViewHolder {
         TextView item;
@@ -90,7 +89,7 @@ public class AdapterRecycler extends RecyclerView.Adapter {
             ));
             item.setTextColor(Color.parseColor("#000000"));
             item.setTextSize(15f);
-            item.setGravity(Gravity.CENTER);
+            item.setGravity(Gravity.CENTER_HORIZONTAL);
             CardView root = (CardView) v;
             LinearLayout child = (LinearLayout) root.getChildAt(0);
             child.addView(item);
