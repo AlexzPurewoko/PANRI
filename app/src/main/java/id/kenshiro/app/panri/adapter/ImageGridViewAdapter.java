@@ -21,6 +21,7 @@ import java.util.List;
 
 import id.kenshiro.app.panri.MainActivity;
 import id.kenshiro.app.panri.R;
+import id.kenshiro.app.panri.helper.DecodeBitmapHelper;
 
 public class ImageGridViewAdapter {
     private List<Integer> listLocationResImages;
@@ -118,14 +119,16 @@ public class ImageGridViewAdapter {
                 img.setLayoutParams(params1);
                 if (mode == 1) {
                     try {
-                        InputStream is = ctx.getAssets().open(listLocationAssetsImages.get(items));
+                        /*InputStream is = ctx.getAssets().open(listLocationAssetsImages.get(items));
                         img.setImageDrawable(Drawable.createFromStream(is, null));
-                        is.close();
+                        is.close();*/
+                        img.setImageBitmap(DecodeBitmapHelper.decodeAndResizeBitmapsAssets(ctx.getAssets(), listLocationAssetsImages.get(items), imageItemSize.y, imageItemSize.x));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 } else
-                    img.setImageResource(listLocationResImages.get(items));
+                    img.setImageBitmap(DecodeBitmapHelper.decodeAndResizeBitmapsResources(ctx.getResources(), listLocationResImages.get(items), imageItemSize.y, imageItemSize.x));
+                //img.setImageResource(listLocationResImages.get(items));
                 img.setMaxHeight(imageItemSize.y);
                 img.setMaxWidth(imageItemSize.x);
                 img.setScaleType(ImageView.ScaleType.FIT_XY);

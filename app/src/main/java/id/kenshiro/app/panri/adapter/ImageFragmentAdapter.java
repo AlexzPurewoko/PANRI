@@ -2,6 +2,7 @@ package id.kenshiro.app.panri.adapter;
 
 
 import android.content.Context;
+import android.graphics.Point;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
@@ -12,12 +13,14 @@ public class ImageFragmentAdapter extends FragmentStatePagerAdapter {
     private Fragment[] mListImageFragment;
     private List<Integer> data;
     private Context mCurrentContext;
+    private Point requestedSize;
 
-    public ImageFragmentAdapter(Context mCurrentContext, FragmentManager fm, List<Integer> data) {
+    public ImageFragmentAdapter(Context mCurrentContext, FragmentManager fm, List<Integer> data, Point requestedSize) {
         super(fm);
         this.mCurrentContext = mCurrentContext;
         this.data = data;
         mListImageFragment = new Fragment[data.size()];
+        this.requestedSize = requestedSize;
     }
 
     @Override
@@ -27,6 +30,7 @@ public class ImageFragmentAdapter extends FragmentStatePagerAdapter {
 
         ViewImageSelectorAdapter vImgSelectorAdapter = new ViewImageSelectorAdapter();
         vImgSelectorAdapter.setResImageLocation(items);
+        vImgSelectorAdapter.setRequestedImageSize(requestedSize);
         fragment = vImgSelectorAdapter;
 
         if(mListImageFragment[i] == null)

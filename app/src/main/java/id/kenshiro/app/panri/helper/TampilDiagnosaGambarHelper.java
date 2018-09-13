@@ -3,6 +3,7 @@ package id.kenshiro.app.panri.helper;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.support.v4.view.ViewPager;
@@ -201,7 +202,10 @@ public class TampilDiagnosaGambarHelper {
     private void setViewPagerImage(final CustomViewPager customViewPager, final List<Integer> listGambar, LinearLayout indicators) {
         final int mDotCount = listGambar.size();
         final LinearLayout[] mDots = new LinearLayout[mDotCount];
-        ImageFragmentAdapter mImageControllerFragment = new ImageFragmentAdapter(activity, activity.getSupportFragmentManager(), listGambar);
+        Point reqSize = new Point();
+        activity.getWindowManager().getDefaultDisplay().getSize(reqSize);
+        reqSize.y = Math.round(activity.getResources().getDimension(R.dimen.actmain_dimen_viewpager_height));
+        ImageFragmentAdapter mImageControllerFragment = new ImageFragmentAdapter(activity, activity.getSupportFragmentManager(), listGambar, reqSize);
         customViewPager.setAdapter(mImageControllerFragment);
         customViewPager.setCurrentItem(0);
         customViewPager.setOnClickListener(new View.OnClickListener() {

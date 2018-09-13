@@ -129,6 +129,8 @@ public class ShowPenyakitDiagnoseHelper {
         if (imageViewPenyakit == null)
             imageViewPenyakit = new ImageGridViewAdapter(activity, mListResImage, p, R.id.actgallery_id_gridimage, null);
         imageViewPenyakit.setColumnCount(2);
+        int dimen = Math.round(activity.getResources().getDimension(R.dimen.margin_img_penyakit));
+        imageViewPenyakit.setMargin(dimen, dimen, dimen, dimen);
         imageViewPenyakit.buildAndShow();
     }
 

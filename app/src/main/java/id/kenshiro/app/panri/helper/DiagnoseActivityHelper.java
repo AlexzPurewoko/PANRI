@@ -103,7 +103,7 @@ public class DiagnoseActivityHelper{
                     data.add(new AdapterRecycler.DataPerItems(listCiriCiriPenyakitHashMap.get(temp_list_nums.get(x)).getCiri()));
                 }
                 // apply these changes into RecyclerView
-                dataAdapter = new AdapterRecycler(data);
+                dataAdapter = new AdapterRecycler(data, activity);
                 dataAdapter.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
                     @Override
                     public void onClick(View a, int b) {
@@ -195,7 +195,7 @@ public class DiagnoseActivityHelper{
             }
         }
 
-        dataAdapter = new AdapterRecycler(data);
+        dataAdapter = new AdapterRecycler(data, activity);
         dataAdapter.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
             @Override
             public void onClick(View a, int b) {
@@ -266,7 +266,7 @@ public class DiagnoseActivityHelper{
                 data.add(new AdapterRecycler.DataPerItems(listCiriCiriPenyakitHashMap.get(temp_list_nums.get(x)).getCiri()));
             }
             // apply these changes into RecyclerView
-            dataAdapter = new AdapterRecycler(data);
+            dataAdapter = new AdapterRecycler(data, activity);
             dataAdapter.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
                 @Override
                 public void onClick(View a, int b) {
@@ -365,7 +365,7 @@ public class DiagnoseActivityHelper{
                 data.add(new AdapterRecycler.DataPerItems(listCiriCiriPenyakitHashMap.get(temp_list_nums.get(x)).getCiri()));
             }
             // apply these changes into RecyclerView
-            dataAdapter = new AdapterRecycler(data);
+            dataAdapter = new AdapterRecycler(data, activity);
             dataAdapter.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
                 @Override
                 public void onClick(View a, int b) {

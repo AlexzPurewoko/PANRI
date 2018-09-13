@@ -295,7 +295,7 @@ public class DiagnoseActivity extends MylexzActivity
 		mListView = (RecyclerView) findViewById(R.id.actdiagnose_id_contentrecycler);
 		mListView.setHasFixedSize(true);
 		mListView.setLayoutManager(new LinearLayoutManager(this));
-		AdapterRecycler recycler = new AdapterRecycler(data);
+		AdapterRecycler recycler = new AdapterRecycler(data, this);
         recycler.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
             @Override
             public void onClick(View a, int b) {

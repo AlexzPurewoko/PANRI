@@ -8,4 +8,6 @@
     <dimen name="frag3_dimen_txtbesar">18sp</dimen>
     <dimen name="frag3_dimen_txtkecil">11sp</dimen>
     <dimen name="actsplash_dimen_loading_wh">50dp</dimen>
+    <dimen name="margin_img_penyakit">6dp</dimen>
+    <dimen name="size_text_incard">7sp</dimen>
 </resources>

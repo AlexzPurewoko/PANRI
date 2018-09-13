@@ -3,6 +3,7 @@ package id.kenshiro.app.panri;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
@@ -400,7 +401,11 @@ public class MainActivity extends MylexzActivity
         mListResImage.add(R.drawable.viewpager_area_3);
         mListResImage.add(R.drawable.viewpager_area_4);
         //////////
-        mImageControllerFragment = new ImageFragmentAdapter(this, getSupportFragmentManager(), mListResImage);
+        // Build a point
+        Point reqSize = new Point();
+        getWindowManager().getDefaultDisplay().getSize(reqSize);
+        reqSize.y = Math.round(getResources().getDimension(R.dimen.actmain_dimen_viewpager_height));
+        mImageControllerFragment = new ImageFragmentAdapter(this, getSupportFragmentManager(), mListResImage, reqSize);
         mImageSelector.setAdapter(mImageControllerFragment);
         mImageSelector.setCurrentItem(0);
         mImageSelector.setPageTransformer(true, new CustomPageViewTransformer());
