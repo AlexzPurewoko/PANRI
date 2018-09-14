@@ -3,11 +3,13 @@ package id.kenshiro.app.panri;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.util.LruCache;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatDialog;
 import android.view.View;
@@ -44,6 +46,7 @@ import android.support.v4.view.PagerAdapter;
 
 import id.kenshiro.app.panri.adapter.CustomPageViewTransformer;
 import id.kenshiro.app.panri.helper.CheckAndMoveDB;
+import id.kenshiro.app.panri.helper.DecodeBitmapHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 
 import android.os.AsyncTask;
@@ -89,6 +92,7 @@ public class MainActivity extends MylexzActivity
     private ImgPetaniKedip imgKedip;
     private TalkingFarmer imgFarmerTalk;
     private boolean doubleBackToExitPressedOnce;
+    private LruCache<Integer, Bitmap> mImageMemCache;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,6 +105,7 @@ public class MainActivity extends MylexzActivity
         setInitialTextInds();
         setInitialSectPetani();
         setInitialSectOpIntent();
+        final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -111,6 +116,27 @@ public class MainActivity extends MylexzActivity
         navigationView.setNavigationItemSelectedListener(this);
         startTask();
         checkVersion();
+    }
+
+    private void addmImageMemCache(Integer key, Bitmap value) {
+        if(getImageFromMemCache(key) == null)
+            mImageMemCache.put(key, value);
+    }
+
+    private Bitmap getImageFromMemCache(Integer key) {
+        return mImageMemCache.get(key);
+    }
+
+
+
+    class BitmapWorkerTask extends AsyncTask<Integer, Void, Bitmap>{
+
+        @Override
+        protected Bitmap doInBackground(Integer... integers) {
+            final Bitmap bitmap = DecodeBitmapHelper.decodeAndResizeBitmapsResources(getResources(), integers[0], integers[1], integers[2]);
+            addmImageMemCache(integers[0], bitmap);
+            return bitmap;
+        }
     }
 
     private void checkVersion() {
