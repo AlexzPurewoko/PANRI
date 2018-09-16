@@ -40,8 +40,21 @@ public class DecodeBitmapHelper {
         System.gc();
         return results;
     }
+	public static Bitmap decodeAndResizeBitmapStream(@NonNull InputStream stream, @Px int reqHeight, @Px int reqWidth) throws IOException {
+        BitmapFactory.Options optionBitmaps = new BitmapFactory.Options();
+        optionBitmaps.inJustDecodeBounds = true;
 
-    private static int calculateImageInSampleSize(BitmapFactory.Options optionBitmaps, int reqHeight, int reqWidth) {
+        // load image in inputstream
+        Bitmap b = BitmapFactory.decodeStream(stream, null, optionBitmaps);
+        stream.reset();
+        optionBitmaps.inSampleSize = calculateImageInSampleSize(optionBitmaps, reqHeight, reqWidth);
+        optionBitmaps.inJustDecodeBounds = false;
+        Bitmap results = BitmapFactory.decodeStream(stream, null, optionBitmaps);
+        //imageStream.close();
+        System.gc();
+        return results;
+    }
+    public static int calculateImageInSampleSize(BitmapFactory.Options optionBitmaps, int reqHeight, int reqWidth) {
         final int height = optionBitmaps.outHeight;
         final int width = optionBitmaps.outWidth;
         int inSampleSize = 1;
