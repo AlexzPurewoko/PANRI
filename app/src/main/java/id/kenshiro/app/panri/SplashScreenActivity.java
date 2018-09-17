@@ -3,6 +3,9 @@ package id.kenshiro.app.panri;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Typeface;
@@ -30,16 +33,24 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.mylexz.utils.DiskLruObjectCache;
 import com.mylexz.utils.MylexzActivity;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.HashMap;
 
 import id.kenshiro.app.panri.helper.CheckAndMoveDB;
+import id.kenshiro.app.panri.helper.DecodeBitmapHelper;
+import id.kenshiro.app.panri.helper.ListCiriCiriPenyakit;
+import id.kenshiro.app.panri.helper.ListNamaPenyakit;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 import pl.droidsonroids.gif.GifImageView;
 
@@ -55,10 +66,13 @@ public class SplashScreenActivity extends MylexzActivity {
     public static final String APP_CONDITION_KEY = "APP_CONDITION_KEY_EXTRAS";
     public static final String DB_CONDITION_KEY = "DB_CONDITION_KEY_EXTRAS";
     private static final String TAG = "SplashScreenActivity";
+    private static final String LIST_PENYAKIT_CIRI_KEY_CACHE = "key_ciri_data_penyakit";
     int app_condition = 0;
     int db_condition = 0;
     TextView judul;
     Button btnNext;
+    LinearLayout linearIndicator;
+    TextView indicators;
     private GifImageView gifImageView;
     private int marginBtnFactor = 8;
 
@@ -82,6 +96,8 @@ public class SplashScreenActivity extends MylexzActivity {
         judul = findViewById(R.id.actsplash_id_txtjudul);
         btnNext = findViewById(R.id.actsplash_id_btnlanjut);
         gifImageView = findViewById(R.id.actsplash_id_loadingview);
+        indicators = findViewById(R.id.actsplash_id_txtsplash_indicator);
+        linearIndicator = findViewById(R.id.actsplash_id_linear_indicator);
         judul.setTypeface(Typeface.createFromAsset(getAssets(), "Gecko_PersonalUseOnly.ttf"), Typeface.BOLD);
         btnNext.setTypeface(Typeface.createFromAsset(getAssets(), "RifficFree-Bold.ttf"), Typeface.BOLD);
         Point p = new Point();
@@ -104,15 +120,24 @@ public class SplashScreenActivity extends MylexzActivity {
 
             }
         });
+        indicators.setText("Mempersiapkan data...");
     }
 
-    private class LoaderTask extends AsyncTask<Void, Void, Integer> {
+    private class LoaderTask extends AsyncTask<Void, Integer, Integer> {
+        private static final long MAX_CACHE_BUFFERED_SIZE = 1048576;
+        private static final int QUALITY_FACTOR = 40;
         String folder_app_version = "app_version";
         String file_db_version = "db_version";
+        File fileCache;
+        DiskLruObjectCache diskCache;
+        private SQLiteDatabase sqlDB;
+        private HashMap<Integer, ListCiriCiriPenyakit> listCiriCiriPenyakitHashMap;
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+            fileCache = new File(getExternalCacheDir(), "cache");
+            fileCache.mkdir();
         }
 
         @Override
@@ -124,18 +149,179 @@ public class SplashScreenActivity extends MylexzActivity {
             } catch (IOException e) {
                 SplashScreenActivity.this.LOGE("Task.background()", "IOException occured when executing checkAndSaveAppVersion() & updateDBIfItsNewVersion();", e);
             }
+            // creates cache directory if not exists
             try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                SplashScreenActivity.this.LOGE("Task.background()", "InterruptedException during call Thread.sleep()", e);
+                diskCache = new DiskLruObjectCache(fileCache, 1, MAX_CACHE_BUFFERED_SIZE);
+            } catch (IOException e) {
+                SplashScreenActivity.this.LOGE("Task.background()", "IOException occured when initialize DiskLruObjectCache instance", e);
             }
-            publishProgress();
+            publishProgress(0);
+            synchronized (this) {
+                switch (app_condition) {
+                    case APP_IS_OLDER_VERSION:
+                    case APP_IS_NEWER_VERSION: {
+                        cleanCache();
+                        createCacheOperation();
+                    }
+                    break;
+                    case APP_IS_FIRST_USAGE: {
+                        createCacheOperation();
+                    }
+                    break;
+                    case APP_IS_SAME_VERSION: {
+                        boolean status_cache_dirs = validateCacheDirs();
+                        if (!status_cache_dirs) {
+                            createCacheOperation();
+                        }
+                    }
+                }
+            }
+            publishProgress(1);
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                SplashScreenActivity.this.LOGE("Task.background()", "InterruptedException during call Thread.sleep()", e);
+                SplashScreenActivity.this.LOGE("Task.background()", "Interrupted signal exception!", e);
+            }
+            try {
+                diskCache.close();
+            } catch (IOException e) {
+                SplashScreenActivity.this.LOGE("Task.background()", "IOException occured when closing diskCache", e);
             }
             return app_condition;
+        }
+
+        private boolean validateCacheDirs() {
+            if (fileCache.list() == null)
+                return true;
+            return false;
+        }
+
+        private void createCacheOperation() {
+            // caching images
+            cachingBitmapsViewPager();
+            // caching Objects
+            try {
+                cachingListPenyakit();
+            } catch (IOException e) {
+                SplashScreenActivity.this.LOGE("Task.background()", "IOException occured when create listCiriCiriPenyakit Cache", e);
+            }
+        }
+
+        private void cachingListPenyakit() throws IOException {
+            sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/databases/database_penyakitpadi.db", null);
+            loadAllDataCiri();
+            if (listCiriCiriPenyakitHashMap != null) {
+                synchronized (diskCache) {
+                    diskCache.putObjectWithEncode(LIST_PENYAKIT_CIRI_KEY_CACHE, listCiriCiriPenyakitHashMap);
+                }
+            }
+        }
+
+        private void loadAllDataCiri() {
+            listCiriCiriPenyakitHashMap = new HashMap<Integer, ListCiriCiriPenyakit>();
+            // input ciri ciri penyakit
+            Cursor curr = sqlDB.rawQuery("select ciri from ciriciri", null);
+            curr.moveToFirst();
+            while (!curr.isAfterLast()) {
+                String ciri = curr.getString(0);
+                listCiriCiriPenyakitHashMap.put(curr.getPosition() + 1, new ListCiriCiriPenyakit(ciri, false, false));
+                curr.moveToNext();
+            }
+            curr.close();
+            System.gc();
+            ///////////////////////////
+            // input usefirst flags
+            curr = sqlDB.rawQuery("select usefirst from ciriciri", null);
+            curr.moveToFirst();
+            while (!curr.isAfterLast()) {
+                String ciri = curr.getString(0);
+                listCiriCiriPenyakitHashMap.get(curr.getPosition() + 1).setUsefirst_flags(Boolean.parseBoolean(ciri));
+                curr.moveToNext();
+            }
+            curr.close();
+            System.gc();
+            ///////////////////////////
+            // input ask flags
+            curr = sqlDB.rawQuery("select ask from ciriciri", null);
+            curr.moveToFirst();
+            while (!curr.isAfterLast()) {
+                String ciri = curr.getString(0);
+                listCiriCiriPenyakitHashMap.get(curr.getPosition() + 1).setAsk_flags(Boolean.parseBoolean(ciri));
+                curr.moveToNext();
+            }
+            curr.close();
+            System.gc();
+            ///////////////////////////
+            // input listused flags
+            curr = sqlDB.rawQuery("select listused from ciriciri", null);
+            curr.moveToFirst();
+            while (!curr.isAfterLast()) {
+                String ciri = curr.getString(0);
+                listCiriCiriPenyakitHashMap.get(curr.getPosition() + 1).setListused_flags(ciri);
+                curr.moveToNext();
+            }
+            curr.close();
+            System.gc();
+            ///////////////////////////
+            // input pointo flags
+            curr = sqlDB.rawQuery("select pointo from ciriciri", null);
+            curr.moveToFirst();
+            while (!curr.isAfterLast()) {
+                String ciri = curr.getString(0);
+                listCiriCiriPenyakitHashMap.get(curr.getPosition() + 1).setPointo_flags(ciri);
+                curr.moveToNext();
+            }
+            curr.close();
+            System.gc();
+            //////////////////////////
+            //////////////////////////////////////// load successfully
+        }
+
+        private void cachingBitmapsViewPager() {
+            String[] keyImageLists = {
+                    "viewpager_area_1",
+                    "viewpager_area_2",
+                    "viewpager_area_3",
+                    "viewpager_area_4"
+            };
+            Point point = new Point();
+            getWindowManager().getDefaultDisplay().getSize(point);
+            point.y = Math.round(getResources().getDimension(R.dimen.actmain_dimen_viewpager_height));
+            for (String key : keyImageLists) {
+                int resDrawable = getResources().getIdentifier(key, "drawable", getPackageName());
+                //gets the Bitmap
+                Bitmap bitmap = DecodeBitmapHelper.decodeAndResizeBitmapsResources(getResources(), resDrawable, point.y, point.x);
+                // creates the scaled bitmaps
+                Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, point.x, point.y, false);
+                //gets the byte of bitmap
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                float scaling = bitmap.getHeight() / point.y;
+                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, Math.round(QUALITY_FACTOR / scaling), bos);
+                // put into cache
+                try {
+                    diskCache.put(key, bos.toByteArray());
+                } catch (IOException e) {
+                    SplashScreenActivity.this.LOGE("Task.background()", "IOException occured when putting a cache image", e);
+                }
+                try {
+                    bos.close();
+                } catch (IOException e) {
+                    SplashScreenActivity.this.LOGE("Task.background()", "IOException occured when releasing ByteOutputStream", e);
+                }
+                bitmap.recycle();
+                scaledBitmap.recycle();
+                System.gc();
+            }
+        }
+
+        private void cleanCache() {
+            fileCache.delete();
+            fileCache.mkdir();
+            /*try {
+                diskCache.clean();
+            } catch (IOException e) {
+                SplashScreenActivity.this.LOGE("Task.background()", "IOException occured when cleaning a cache", e);
+            }*/
         }
 
         private void updateDBIfItsNewVersion() throws IOException {
@@ -245,16 +431,20 @@ public class SplashScreenActivity extends MylexzActivity {
         }
 
         @Override
-        protected void onProgressUpdate(Void... values) {
+        protected void onProgressUpdate(Integer... values) {
             super.onProgressUpdate(values);
-            gifImageView.setFreezesAnimation(true);
+            if (values[0] == 0) {
+                indicators.setText("Membuat cache...");
+            } else if (values[0] == 1) {
+                indicators.setText("Membuka aplikasi");
+            }
         }
 
         private void animateAndForward() {
             Fade in = new Fade(Fade.IN);
             in.setDuration(1200);
             TransitionManager.beginDelayedTransition((RelativeLayout) findViewById(R.id.actsplash_id_bawah_layout), in);
-            gifImageView.setVisibility(View.GONE);
+            linearIndicator.setVisibility(View.GONE);
             if (app_condition == APP_IS_FIRST_USAGE)
                 btnNext.setVisibility(View.VISIBLE);
             else {

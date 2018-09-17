@@ -48,6 +48,7 @@ import id.kenshiro.app.panri.adapter.CustomPageViewTransformer;
 import id.kenshiro.app.panri.helper.CheckAndMoveDB;
 import id.kenshiro.app.panri.helper.DecodeBitmapHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
+import pl.droidsonroids.gif.GifImageView;
 
 import android.os.AsyncTask;
 import android.util.Log;
@@ -75,6 +76,7 @@ public class MainActivity extends MylexzActivity
     // for section petani
     private ImageView imgPetani;
     private Button mTextPetaniDesc;
+    private GifImageView imgPetaniKedipView;
     private int[] TextPetaniDesc = {
             R.string.actmain_string_speechfarmer_1,
             R.string.actmain_string_speechfarmer_2,
@@ -89,7 +91,6 @@ public class MainActivity extends MylexzActivity
     private List<CardView> mListCard;
     // Important Task
     private ImageAutoSwipe imgSw;
-    private ImgPetaniKedip imgKedip;
     private TalkingFarmer imgFarmerTalk;
     private boolean doubleBackToExitPressedOnce;
     private LruCache<Integer, Bitmap> mImageMemCache;
@@ -298,9 +299,7 @@ public class MainActivity extends MylexzActivity
 
     private void startTask() {
         imgSw = new ImageAutoSwipe(mListResImage, mImageSelector);
-        imgKedip = new ImgPetaniKedip(imgPetani);
         imgSw.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        imgKedip.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     private void stopTask() {
@@ -308,11 +307,8 @@ public class MainActivity extends MylexzActivity
             imgSw.cancel(true);
         if (imgFarmerTalk != null)
             imgFarmerTalk.cancel(true);
-        if (imgKedip != null)
-            imgKedip.cancel(true);
         imgSw = null;
         imgFarmerTalk = null;
-        imgKedip = null;
         System.gc();
 
     }
@@ -372,17 +368,12 @@ public class MainActivity extends MylexzActivity
         if (++mPosTxtPetani == TextPetaniDesc.length)
             mPosTxtPetani = 0;
         mTextPetaniDesc.setText(TextPetaniDesc[mPosTxtPetani]);
-
-        if (imgKedip != null) {
-            imgKedip.cancel(true);
-            imgKedip = null;
-        }
         if (imgFarmerTalk != null) {
             imgFarmerTalk.cancel(true);
             imgFarmerTalk = null;
         }
         System.gc();
-        imgFarmerTalk = new TalkingFarmer(imgPetani, imgKedip);
+        imgFarmerTalk = new TalkingFarmer(imgPetani, imgPetaniKedipView);
         imgFarmerTalk.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
     }
@@ -390,18 +381,18 @@ public class MainActivity extends MylexzActivity
     private void setInitialSectPetani() {
         mTextPetaniDesc = (Button) findViewById(R.id.actmain_id_section_petani_btn);
         imgPetani = (ImageView) findViewById(R.id.actmain_id_section_petani_img);
+        imgPetaniKedipView = findViewById(R.id.actsplash_id_gifpetanikedip);
         mTextPetaniDesc.setTextColor(Color.BLACK);
         mTextPetaniDesc.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.NORMAL);
         mTextPetaniDesc.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View p1) {
-                // TODO: Implement this method
                 onButtonPetaniClicked();
             }
         });
-        imgPetani.setImageResource(R.drawable.petani);
-        imgPetani.setImageLevel(4);
         mTextPetaniDesc.setText(TextPetaniDesc[mPosTxtPetani]);
+        imgPetani.setVisibility(View.GONE);
+        imgPetaniKedipView.setVisibility(View.VISIBLE);
     }
 
     private void setInitialTextInds() {
@@ -562,10 +553,10 @@ public class MainActivity extends MylexzActivity
 
     static class TalkingFarmer extends AsyncTask<Void, Integer, Void> {
         private ImageView imgPetani1;
-        private ImgPetaniKedip imgPetaniKedip;
-
-        TalkingFarmer(ImageView imgPetani1, ImgPetaniKedip imgPetaniKedip) {
+        private GifImageView imgGif;
+        TalkingFarmer(ImageView imgPetani1, GifImageView imgGif) {
             this.imgPetani1 = imgPetani1;
+            this.imgGif = imgGif;
         }
 
         @Override
@@ -603,7 +594,6 @@ public class MainActivity extends MylexzActivity
 
         @Override
         protected void onProgressUpdate(Integer[] values) {
-            // TODO: Implement this method
             super.onProgressUpdate(values);
             int x = values[0];
             imgPetani1.setImageLevel(x);
@@ -611,13 +601,12 @@ public class MainActivity extends MylexzActivity
 
         @Override
         protected void onPostExecute(Void result) {
-            // TODO: Implement this method
             super.onPostExecute(result);
             imgPetani1.setImageLevel(4);
-            this.imgPetaniKedip = null;
+            imgPetani1.setVisibility(View.GONE);
+            imgGif.setVisibility(View.VISIBLE);
             System.gc();
-            this.imgPetaniKedip = new ImgPetaniKedip(imgPetani1);
-            this.imgPetaniKedip.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
         }
 
         @Override
@@ -625,46 +614,12 @@ public class MainActivity extends MylexzActivity
             // TODO: Implement this method
             super.onCancelled();
             imgPetani1.setImageLevel(4);
+            imgPetani1.setVisibility(View.GONE);
+            imgGif.setVisibility(View.VISIBLE);
         }
 
 
     }
-
-    static class ImgPetaniKedip extends AsyncTask<Void, Integer, Void> {
-        ImageView imgPetani1;
-
-        ImgPetaniKedip(ImageView imgPetani1) {
-            this.imgPetani1 = imgPetani1;
-        }
-        private void sleep(int mil) {
-            try {
-                Thread.sleep(mil);
-            } catch (InterruptedException e) {
-                Log.e("Main_Exception", "Interrupted in method ImageAutoSwipe.doInBackground()", e);
-            }
-        }
-
-        @Override
-        protected Void doInBackground(Void[] p1) {
-            // TODO: Implement this method
-            while (true) {
-                sleep(400);
-                publishProgress(1);
-                sleep(3000);
-                publishProgress(4);
-            }
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer[] values) {
-            // TODO: Implement this method
-            super.onProgressUpdate(values);
-            int pos = values[0];
-            imgPetani1.setImageLevel(pos);
-        }
-
-    }
-
     static class ImageAutoSwipe extends AsyncTask<Void, Integer, Void> {
         private final long pause_swipe_in_millis = 6000;
         private int maxImages;

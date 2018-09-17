@@ -1,9 +1,10 @@
 package id.kenshiro.app.panri.helper;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ListCiriCiriPenyakit {
+public class ListCiriCiriPenyakit implements Serializable{
     public String ciri;
     public boolean usefirst_flags;
     public boolean ask_flags;

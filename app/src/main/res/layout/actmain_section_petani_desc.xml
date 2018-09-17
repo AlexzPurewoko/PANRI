@@ -1,27 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-	xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="match_parent"
-	android:layout_height="wrap_content"
-	android:orientation="horizontal"
-	android:id="@+id/actmain_id_sectpetani_layout"
-	android:layout_margin="10dp">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/actmain_id_sectpetani_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="10dp"
+    android:orientation="horizontal">
 
-	<ImageView
-		android:layout_height="@dimen/actmain_dimen_petani_wh"
-		android:layout_width="@dimen/actmain_dimen_petani_wh"
-		android:id="@+id/actmain_id_section_petani_img"
-		android:src="@drawable/petani_2"/>
+    <RelativeLayout
+        android:layout_width="@dimen/actmain_dimen_petani_wh"
+        android:layout_height="@dimen/actmain_dimen_petani_wh">
 
-	<Button
-		android:layout_height="wrap_content"
-		android:text="Button"
-		android:layout_width="match_parent"
-		android:layout_marginLeft="8dp"
-		android:id="@+id/actmain_id_section_petani_btn"
-		android:background="@drawable/ic_textbox"
-		android:layout_gravity="center"
-		android:textSize="12sp"/>
+        <ImageView
+            android:id="@+id/actmain_id_section_petani_img"
+            android:layout_width="@dimen/actmain_dimen_petani_wh"
+            android:layout_height="@dimen/actmain_dimen_petani_wh"
+            android:src="@drawable/petani_2"
+            android:visibility="gone" />
+
+        <pl.droidsonroids.gif.GifImageView
+            android:id="@+id/actsplash_id_gifpetanikedip"
+            android:layout_width="@dimen/actsplash_dimen_loading_wh"
+            android:layout_height="@dimen/actsplash_dimen_loading_wh"
+            android:src="@drawable/petani_kedip" />
+    </RelativeLayout>
+
+    <Button
+        android:id="@+id/actmain_id_section_petani_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginLeft="8dp"
+        android:background="@drawable/ic_textbox"
+        android:text="Button"
+        android:textSize="12sp" />
 
 </LinearLayout>
 
