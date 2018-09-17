@@ -136,7 +136,7 @@ public class SplashScreenActivity extends MylexzActivity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            fileCache = new File(getExternalCacheDir(), "cache");
+            fileCache = new File(getCacheDir(),"cache");
             fileCache.mkdir();
         }
 
