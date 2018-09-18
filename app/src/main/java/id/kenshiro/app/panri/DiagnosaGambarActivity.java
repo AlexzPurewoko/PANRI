@@ -30,14 +30,13 @@ import com.mylexz.utils.text.style.CustomTypefaceSpan;
 import id.kenshiro.app.panri.helper.ShowPenyakitDiagnoseHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 import id.kenshiro.app.panri.helper.TampilDiagnosaGambarHelper;
+import pl.droidsonroids.gif.GifImageView;
 
 public class DiagnosaGambarActivity extends MylexzActivity {
     Toolbar toolbar;
     SQLiteDatabase sqlDB;
     TampilDiagnosaGambarHelper tampilDiagnosaGambarHelper;
     ShowPenyakitDiagnoseHelper showPenyakitDiagnoseHelper;
-    private DiagnosaGambarActivity.ImgPetaniKedip imgPetaniKedip;
-    ImageView imgPetani;
     Button mTextPetaniDesc;
     private boolean doubleBackToExitPressedOnce;
 
@@ -52,13 +51,10 @@ public class DiagnosaGambarActivity extends MylexzActivity {
     }
 
     private void setContentV() {
-        imgPetani = (ImageView) findViewById(R.id.actmain_id_section_petani_img);
         mTextPetaniDesc = (Button) findViewById(R.id.actmain_id_section_petani_btn);
         mTextPetaniDesc.setTextColor(Color.BLACK);
         mTextPetaniDesc.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.NORMAL);
         mTextPetaniDesc.setText(getText(R.string.actdiagnose_string_speechfarmer_img_1));
-        imgPetani.setImageResource(R.drawable.petani);
-        imgPetani.setImageLevel(4);
         showPenyakitDiagnoseHelper = new ShowPenyakitDiagnoseHelper(this, sqlDB, (RelativeLayout) findViewById(R.id.actdim_id_layoutcontainer));
         tampilDiagnosaGambarHelper = new TampilDiagnosaGambarHelper(this, (RelativeLayout) findViewById(R.id.actdim_id_layoutcontainer), sqlDB);
         tampilDiagnosaGambarHelper.setOnItemListener(new TampilDiagnosaGambarHelper.OnItemListener() {
@@ -105,21 +101,7 @@ public class DiagnosaGambarActivity extends MylexzActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        setTask();
     }
-
-    private void setTask() {
-        imgPetaniKedip = new ImgPetaniKedip();
-        imgPetaniKedip.execute();
-    }
-
-    private void stopTask() {
-        if (imgPetaniKedip != null) {
-            imgPetaniKedip.cancel(true);
-            imgPetaniKedip = null;
-        }
-    }
-
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
 
@@ -131,13 +113,11 @@ public class DiagnosaGambarActivity extends MylexzActivity {
 
     @Override
     protected void onPause() {
-        stopTask();
         System.gc();
         super.onPause();
     }
     @Override
     protected void onDestroy() {
-        stopTask();
         super.onDestroy();
     }
 
@@ -209,33 +189,4 @@ public class DiagnosaGambarActivity extends MylexzActivity {
         return true;
     }
 
-    private class ImgPetaniKedip extends AsyncTask<Void, Integer, Void> {
-        private void sleep(int mil) {
-            try {
-                Thread.sleep(mil);
-            } catch (InterruptedException e) {
-                Log.e("Main_Exception", "Interrupted in method ImageAutoSwipe.doInBackground()", e);
-            }
-        }
-
-        @Override
-        protected Void doInBackground(Void[] p1) {
-            // TODO: Implement this method
-            while (true) {
-                sleep(400);
-                publishProgress(1);
-                sleep(2000);
-                publishProgress(4);
-            }
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer[] values) {
-            // TODO: Implement this method
-            super.onProgressUpdate(values);
-            int pos = values[0];
-            imgPetani.setImageLevel(pos);
-        }
-
-    }
 }

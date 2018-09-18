@@ -35,6 +35,7 @@ import java.io.IOException;
 import id.kenshiro.app.panri.adapter.AdapterRecycler;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 import id.kenshiro.app.panri.helper.TampilListPenyakitHelper;
+import pl.droidsonroids.gif.GifImageView;
 
 public class HowToResolveActivity extends MylexzActivity {
     Toolbar toolbar;
@@ -47,8 +48,6 @@ public class HowToResolveActivity extends MylexzActivity {
     String data_url;
     String name_penyakit;
     String name_latin;
-    private HowToResolveActivity.ImgPetaniKedip imgPetaniKedip;
-    ImageView imgPetani;
     Button mTextPetaniDesc;
     private boolean doubleBackToExitPressedOnce;
 
@@ -65,26 +64,11 @@ public class HowToResolveActivity extends MylexzActivity {
             e.printStackTrace();
         }
     }
-
-    private void setTask() {
-        imgPetaniKedip = new ImgPetaniKedip();
-        imgPetaniKedip.execute();
-    }
-
-    private void stopTask() {
-        if (imgPetaniKedip != null) {
-            imgPetaniKedip.cancel(true);
-            imgPetaniKedip = null;
-        }
-    }
     private void setContent() throws IOException {
-        imgPetani = (ImageView) findViewById(R.id.actmain_id_section_petani_img);
         mTextPetaniDesc = (Button) findViewById(R.id.actmain_id_section_petani_btn);
         mTextPetaniDesc.setTextColor(Color.BLACK);
         mTextPetaniDesc.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.NORMAL);
         mTextPetaniDesc.setText(getText(R.string.acthowto_string_speechfarmer_1));
-        imgPetani.setImageResource(R.drawable.petani);
-        imgPetani.setImageLevel(4);
         content_caraatasi = findViewById(R.id.acthowto_id_scrollpage);
         content_caraatasi.setVisibility(View.GONE);
         cardBottom = findViewById(R.id.acthowto_id_klikbawah);
@@ -153,7 +137,6 @@ public class HowToResolveActivity extends MylexzActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        setTask();
     }
 
     @Override
@@ -164,12 +147,10 @@ public class HowToResolveActivity extends MylexzActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        stopTask();
     }
 
     @Override
     protected void onDestroy() {
-        stopTask();
         super.onDestroy();
     }
 
@@ -227,35 +208,5 @@ public class HowToResolveActivity extends MylexzActivity {
     public boolean onSupportNavigateUp() {
         SwitchIntoMainActivity.switchToMain(this);
         return true;
-    }
-
-    private class ImgPetaniKedip extends AsyncTask<Void, Integer, Void> {
-        private void sleep(int mil) {
-            try {
-                Thread.sleep(mil);
-            } catch (InterruptedException e) {
-                Log.e("Main_Exception", "Interrupted in method ImageAutoSwipe.doInBackground()", e);
-            }
-        }
-
-        @Override
-        protected Void doInBackground(Void[] p1) {
-            // TODO: Implement this method
-            while (true) {
-                sleep(400);
-                publishProgress(1);
-                sleep(2000);
-                publishProgress(4);
-            }
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer[] values) {
-            // TODO: Implement this method
-            super.onProgressUpdate(values);
-            int pos = values[0];
-            imgPetani.setImageLevel(pos);
-        }
-
     }
 }

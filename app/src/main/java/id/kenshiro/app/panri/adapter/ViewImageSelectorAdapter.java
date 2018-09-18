@@ -1,6 +1,7 @@
 package id.kenshiro.app.panri.adapter;
 
 
+import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -25,6 +26,7 @@ public class ViewImageSelectorAdapter extends Fragment {
     private String assetsImgLocation;
     private int mode = 0;
     Point requestedImageSize;
+    private Bitmap bitmapLocation;
 
     public ViewImageSelectorAdapter() {
         super();
@@ -65,6 +67,9 @@ public class ViewImageSelectorAdapter extends Fragment {
                 e.printStackTrace();
             }
         }
+        else if(mode == 2){
+            mImageContainer.setImageBitmap(bitmapLocation);
+        }
     }
 
     public void setMode(int mode) {
@@ -78,6 +83,11 @@ public class ViewImageSelectorAdapter extends Fragment {
     public void setResImageLocation(@IdRes int resId){
         resImageLocation = resId;
     }
+
+    public void setBitmapLocation(Bitmap bitmapLocation) {
+        this.bitmapLocation = bitmapLocation;
+    }
+
     public int getResImageLocation(){
         return resImageLocation;
     }

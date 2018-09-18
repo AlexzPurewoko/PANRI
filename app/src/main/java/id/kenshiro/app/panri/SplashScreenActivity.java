@@ -66,7 +66,7 @@ public class SplashScreenActivity extends MylexzActivity {
     public static final String APP_CONDITION_KEY = "APP_CONDITION_KEY_EXTRAS";
     public static final String DB_CONDITION_KEY = "DB_CONDITION_KEY_EXTRAS";
     private static final String TAG = "SplashScreenActivity";
-    private static final String LIST_PENYAKIT_CIRI_KEY_CACHE = "key_ciri_data_penyakit";
+    public static final String LIST_PENYAKIT_CIRI_KEY_CACHE = "key_ciri_data_penyakit";
     int app_condition = 0;
     int db_condition = 0;
     TextView judul;

@@ -5,25 +5,11 @@
     android:layout_height="wrap_content"
     android:layout_margin="10dp"
     android:orientation="horizontal">
-
-    <RelativeLayout
+    <pl.droidsonroids.gif.GifImageView
+        android:id="@+id/actsplash_id_gifpetanikedip"
         android:layout_width="@dimen/actmain_dimen_petani_wh"
-        android:layout_height="@dimen/actmain_dimen_petani_wh">
-
-        <ImageView
-            android:id="@+id/actmain_id_section_petani_img"
-            android:layout_width="@dimen/actmain_dimen_petani_wh"
-            android:layout_height="@dimen/actmain_dimen_petani_wh"
-            android:src="@drawable/petani_2"
-            android:visibility="gone" />
-
-        <pl.droidsonroids.gif.GifImageView
-            android:id="@+id/actsplash_id_gifpetanikedip"
-            android:layout_width="@dimen/actsplash_dimen_loading_wh"
-            android:layout_height="@dimen/actsplash_dimen_loading_wh"
-            android:src="@drawable/petani_kedip" />
-    </RelativeLayout>
-
+        android:layout_height="@dimen/actmain_dimen_petani_wh"
+        android:src="@drawable/petani_kedip" />
     <Button
         android:id="@+id/actmain_id_section_petani_btn"
         android:layout_width="match_parent"
