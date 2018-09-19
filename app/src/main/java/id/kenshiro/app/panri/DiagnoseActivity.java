@@ -11,18 +11,13 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -34,10 +29,8 @@ import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.Executor;
 
 import id.kenshiro.app.panri.adapter.AdapterRecycler;
 import id.kenshiro.app.panri.helper.DiagnoseActivityHelper;
@@ -211,30 +204,12 @@ public class DiagnoseActivity extends MylexzActivity
 	protected void onDestroy() {
 		System.gc();
 		sqlDB.close();
+		try {
+			showPenyakitDiagnoseHelper.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		super.onDestroy();
-	}
-
-	private void setData() {
-	    data = new ArrayList<AdapterRecycler.DataPerItems>();
-		data.add(new AdapterRecycler.DataPerItems("Hello World"));
-		data.add(new AdapterRecycler.DataPerItems("Alexzander Purwoko Widiantoro"));
-		data.add(new AdapterRecycler.DataPerItems("Roman Av"));
-		data.add(new AdapterRecycler.DataPerItems("Anggi Mundita"));
-		data.add(new AdapterRecycler.DataPerItems("Catur lagi kentut"));
-		for(int x = 0; x < data.size(); x++)
-		    Log.i("MainActivity", String.format("position %d text %s.", x, data.get(x).items));
-		mListView = (RecyclerView) findViewById(R.id.actdiagnose_id_contentrecycler);
-		mListView.setHasFixedSize(true);
-		mListView.setLayoutManager(new LinearLayoutManager(this));
-		AdapterRecycler recycler = new AdapterRecycler(data, this);
-        recycler.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
-            @Override
-            public void onClick(View a, int b) {
-                Toast.makeText(DiagnoseActivity.this, "selected at position " + b, Toast.LENGTH_LONG).show();
-            }
-        });
-		mListView.setAdapter(recycler);
-
 	}
 
     private void setMyActionBar() {
@@ -288,6 +263,8 @@ public class DiagnoseActivity extends MylexzActivity
 		}
 
 		private LinearLayout buildAndConfigureRootelement() {
+			int sizeDialog =
+					Math.round(getResources().getDimension(R.dimen.actsplash_dimen_loading_wh));
 			LinearLayout resultElement = new LinearLayout(DiagnoseActivity.this);
 			LinearLayout.LayoutParams paramRoot = new LinearLayout.LayoutParams(
 					LinearLayout.LayoutParams.MATCH_PARENT,
@@ -295,12 +272,14 @@ public class DiagnoseActivity extends MylexzActivity
 			);
 			resultElement.setLayoutParams(paramRoot);
 			resultElement.setPadding(10, 10, 10, 10);
-			resultElement.setOrientation(LinearLayout.HORIZONTAL);
+			resultElement.setOrientation(LinearLayout.VERTICAL);
 
 			GifImageView gifImg = new GifImageView(DiagnoseActivity.this);
+			gifImg.setLayoutParams(new LinearLayout.LayoutParams(
+					sizeDialog,
+					sizeDialog
+			));
 			gifImg.setImageResource(R.drawable.loading);
-			gifImg.setMaxHeight(Math.round(getResources().getDimension(R.dimen.actsplash_dimen_loading_wh)));
-			gifImg.setMaxWidth(Math.round(getResources().getDimension(R.dimen.actsplash_dimen_loading_wh)));
 			resultElement.addView(gifImg);
 
 			TextView textView = new TextView(DiagnoseActivity.this);
@@ -309,8 +288,8 @@ public class DiagnoseActivity extends MylexzActivity
 					LinearLayout.LayoutParams.WRAP_CONTENT,
 					LinearLayout.LayoutParams.WRAP_CONTENT
 			);
-			paramsText.leftMargin = 10;
-			paramsText.gravity = Gravity.CENTER_VERTICAL;
+			paramsText.topMargin = 10;
+			paramsText.gravity = Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL;
 			textView.setLayoutParams(paramsText);
 			textView.setGravity(Gravity.CENTER_VERTICAL);
 			resultElement.addView(textView);

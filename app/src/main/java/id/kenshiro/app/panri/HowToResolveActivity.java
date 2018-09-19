@@ -151,6 +151,11 @@ public class HowToResolveActivity extends MylexzActivity {
 
     @Override
     protected void onDestroy() {
+        try {
+            tampil.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         super.onDestroy();
     }
 

@@ -19,6 +19,8 @@ import android.widget.TextView;
 
 import com.mylexz.utils.MylexzActivity;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +32,7 @@ import id.kenshiro.app.panri.adapter.ImageAssetsFragmentAdapter;
 import id.kenshiro.app.panri.adapter.ImageFragmentAdapter;
 import id.kenshiro.app.panri.adapter.ImageGridViewAdapter;
 
-public class ShowPenyakitDiagnoseHelper {
+public class ShowPenyakitDiagnoseHelper implements Closeable{
     private MylexzActivity activity;
     private SQLiteDatabase sqLiteDatabase;
     private static final String path_to_asset = "file:///android_asset/";
@@ -127,8 +129,9 @@ public class ShowPenyakitDiagnoseHelper {
         Point p = new Point();
         activity.getWindowManager().getDefaultDisplay().getSize(p);
         if (imageViewPenyakit == null)
-            imageViewPenyakit = new ImageGridViewAdapter(activity, mListResImage, p, R.id.actgallery_id_gridimage, null);
+            imageViewPenyakit = new ImageGridViewAdapter(activity, p, R.id.actgallery_id_gridimage);
         imageViewPenyakit.setColumnCount(2);
+        imageViewPenyakit.setListLocationAssetsImages(mListResImage);
         int dimen = Math.round(activity.getResources().getDimension(R.dimen.margin_img_penyakit));
         imageViewPenyakit.setMargin(dimen, dimen, dimen, dimen);
         imageViewPenyakit.buildAndShow();
@@ -244,6 +247,11 @@ public class ShowPenyakitDiagnoseHelper {
             }
         });
 
+    }
+
+    @Override
+    public void close() throws IOException {
+        imageViewPenyakit.close();
     }
 
     private class DataPath{

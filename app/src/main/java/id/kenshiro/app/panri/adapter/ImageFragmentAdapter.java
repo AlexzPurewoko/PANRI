@@ -9,6 +9,8 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.util.LruCache;
 
+import com.mylexz.utils.MylexzActivity;
+
 import java.util.List;
 
 public class ImageFragmentAdapter extends FragmentStatePagerAdapter {
@@ -36,6 +38,8 @@ public class ImageFragmentAdapter extends FragmentStatePagerAdapter {
         this.requestedSize = requestedSize;
         this.mode_operations = LIST_CACHE_BITMAP;
     }
+
+
     @Override
     public Fragment getItem(int i) {
         if(mode_operations == LIST_DATA_INTEGER_RES) {

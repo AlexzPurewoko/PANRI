@@ -40,7 +40,7 @@ public class GalleryActivity extends MylexzActivity {
         l.add(R.drawable.viewpager_area_2);
         l.add(R.drawable.viewpager_area_3);
         l.add(R.drawable.viewpager_area_4);
-        adapterGrid = new ImageGridViewAdapter(this, l, p, R.id.actgallery_id_gridimage);
+        adapterGrid = new ImageGridViewAdapter(this, p, R.id.actgallery_id_gridimage);
         adapterGrid.setColumnCount(2);
         adapterGrid.setOnItemClickListener(new ImageGridViewAdapter.OnItemClickListener() {
                                                @Override
@@ -50,6 +50,7 @@ public class GalleryActivity extends MylexzActivity {
                                                }
                                            }
         );
+        adapterGrid.setListLocationResImages(l);
         adapterGrid.buildAndShow();
     }
 
@@ -65,6 +66,7 @@ public class GalleryActivity extends MylexzActivity {
 
     @Override
     protected void onDestroy() {
+        adapterGrid.close();
         super.onDestroy();
     }
 

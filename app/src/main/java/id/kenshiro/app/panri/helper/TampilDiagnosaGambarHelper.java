@@ -2,15 +2,19 @@ package id.kenshiro.app.panri.helper;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Typeface;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.CardView;
 import android.text.Html;
 import android.text.SpannableString;
 import android.text.style.BulletSpan;
+import android.support.v4.util.LruCache;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,8 +27,14 @@ import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.mylexz.utils.DiskLruObjectCache;
 import com.mylexz.utils.MylexzActivity;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,6 +53,7 @@ public class TampilDiagnosaGambarHelper {
     public ScrollView mContentView;
     DataCiriPenyakit dataCiriPenyakit;
     private AdapterRecycler.OnItemClickListener onItemClickListener;
+    private LruCache<Integer, Bitmap> mImagecache = null;
 
     private static final int ON_BTN_YA = 0x6;
     private static final int ON_BTN_TIDAK = 0x6f;
@@ -50,6 +61,8 @@ public class TampilDiagnosaGambarHelper {
     private int mPositionList = 1;
     private CardView content;
     private OnItemListener onItemListener;
+    private int modes = 0;
+    private int finished_mods = 0;
 
     public TampilDiagnosaGambarHelper(MylexzActivity activity, RelativeLayout mRootView, SQLiteDatabase sqlDB) {
         this.mRootView = mRootView;
@@ -62,6 +75,15 @@ public class TampilDiagnosaGambarHelper {
         getsTheSizeData();
         getDataFromDB(mPositionList);
         buildContent();
+    }
+    private void recycleBitmaps(){
+        if(mImagecache != null) {
+            for (int x = 0; x < mImagecache.size(); x++) {
+                mImagecache.get(x).recycle();
+            }
+            mImagecache.evictAll();
+        }
+        mImagecache = null;
     }
 
     private void getsTheSizeData() {
@@ -96,29 +118,7 @@ public class TampilDiagnosaGambarHelper {
     }
 
     private void buildContent() {
-        //Load CardView
-        content = (CardView) activity.getLayoutInflater().inflate(R.layout.adapter_imgdiagnose, mRootView, false);
-        TextView judul = content.findViewById(R.id.actimgdiagnose_judulpenyakit);
-        CustomViewPager customViewPager = content.findViewById(R.id.actimgdiagnose_id_viewpagerimg);
-        LinearLayout indicators = content.findViewById(R.id.actimgdiagnose_id_layoutIndicators);
-        WebView ciriP = content.findViewById(R.id.actimgdiagnose_ciriciri);
-        Button btnYa = btnBawah.findViewById(R.id.actimgdiagnose_buttonya);
-        Button btnTidak = btnBawah.findViewById(R.id.actimgdiagnose_buttontidak);
 
-        // sets the judul
-        setJudulText(judul, dataCiriPenyakit.nama_penyakit);
-
-        // sets the largeImage
-        setViewPagerImage(customViewPager, dataCiriPenyakit.listGambarId, indicators);
-
-        // sets the TextView CiriP
-        setCiriPenyakitText(ciriP, dataCiriPenyakit.listCiriHtml);
-
-        // sets the button
-        setBtn(btnYa, btnTidak);
-
-        // add and apply into view
-        mChildView.addView(content);
     }
 
     public void setItemPosition(int position) {
@@ -126,25 +126,9 @@ public class TampilDiagnosaGambarHelper {
     }
 
     public void updateContentAfter() {
-        if (mPositionList <= mSizeList) {
-            dataCiriPenyakit = null;
-            getDataFromDB(mPositionList);
-            mContentView.pageScroll(0);
-            TextView judul = content.findViewById(R.id.actimgdiagnose_judulpenyakit);
-            CustomViewPager customViewPager = content.findViewById(R.id.actimgdiagnose_id_viewpagerimg);
-            LinearLayout indicators = content.findViewById(R.id.actimgdiagnose_id_layoutIndicators);
-            WebView ciriP = content.findViewById(R.id.actimgdiagnose_ciriciri);
-            // sets the judul
-            setJudulText(judul, dataCiriPenyakit.nama_penyakit);
-
-            // sets the largeImage
-            setViewPagerImage(customViewPager, dataCiriPenyakit.listGambarId, indicators);
-
-            // sets the TextView CiriP
-            setCiriPenyakitText(ciriP, dataCiriPenyakit.listCiriHtml);
-            System.gc();
-        } else if (onItemListener != null)
-            onItemListener.onIsAfterLastListPosition(mContentView, btnBawah, mPositionList, mSizeList);
+        if(finished_mods != 0) return;
+        finished_mods = 1;
+        new BuilderTaskUpdaterContent().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     private void onClickBtn(int whichType, int x) {
@@ -199,13 +183,13 @@ public class TampilDiagnosaGambarHelper {
         ciriP.loadData(html, "text/html", "utf-8");
     }
 
-    private void setViewPagerImage(final CustomViewPager customViewPager, final List<Integer> listGambar, LinearLayout indicators) {
-        final int mDotCount = listGambar.size();
+    private void setViewPagerImage(final CustomViewPager customViewPager, LinearLayout indicators) {
+        final int mDotCount = mImagecache.size();
         final LinearLayout[] mDots = new LinearLayout[mDotCount];
         Point reqSize = new Point();
         activity.getWindowManager().getDefaultDisplay().getSize(reqSize);
         reqSize.y = Math.round(activity.getResources().getDimension(R.dimen.actmain_dimen_viewpager_height));
-        ImageFragmentAdapter mImageControllerFragment = new ImageFragmentAdapter(activity, activity.getSupportFragmentManager(), listGambar, reqSize);
+        ImageFragmentAdapter mImageControllerFragment = new ImageFragmentAdapter(activity, activity.getSupportFragmentManager(), mImagecache, reqSize);
         customViewPager.setAdapter(mImageControllerFragment);
         customViewPager.setCurrentItem(0);
         customViewPager.setOnClickListener(new View.OnClickListener() {
@@ -213,7 +197,7 @@ public class TampilDiagnosaGambarHelper {
             public void onClick(View v) {
                 int curr_img = customViewPager.getCurrentItem();
                 customViewPager.setPageTransformer(true, new FadePageViewTransformer());
-                if (++curr_img == listGambar.size())
+                if (++curr_img == mImagecache.size())
                     curr_img = 0;
                 customViewPager.setCurrentItem(curr_img);
                 System.gc();
@@ -237,7 +221,7 @@ public class TampilDiagnosaGambarHelper {
             public void onPageScrollStateChanged(int i) {
                 int pos = customViewPager.getCurrentItem();
                 // if reaching last and state is DRAGGING, back into first
-                if (pos == listGambar.size() - 1 && i == ViewPager.SCROLL_STATE_DRAGGING)
+                if (pos == mImagecache.size() - 1 && i == ViewPager.SCROLL_STATE_DRAGGING)
                     customViewPager.setCurrentItem(0, true);
             }
         });
@@ -330,7 +314,7 @@ public class TampilDiagnosaGambarHelper {
         void onIsAfterLastListPosition(View v, View button, int position, int size_list);
     }
 
-    private class DataCiriPenyakit {
+    private class DataCiriPenyakit implements Serializable{
         String nama_penyakit;
         String nama_latin;
         String listCiriHtml;
@@ -381,6 +365,146 @@ public class TampilDiagnosaGambarHelper {
 
         public void setNama_latin(String nama_latin) {
             this.nama_latin = nama_latin;
+        }
+    }
+    private class BuilderTaskUpdaterContent extends AsyncTask<Void, Void, Integer>{
+        DiskLruObjectCache diskLruObjectCache;
+        private static final int QUALITY_FACTOR = 10;
+
+        private static final long MAX_CACHE_BUFFERED_SIZE = 1048576;
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            File fileCache = new File(activity.getCacheDir(),"cache");
+            fileCache.mkdir();
+            try {
+                diskLruObjectCache = new DiskLruObjectCache(fileCache, 1, MAX_CACHE_BUFFERED_SIZE);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+        @Override
+        protected Integer doInBackground(Void... voids) {
+            recycleBitmaps();
+            if(modes == 0){
+                getsTheSizeData();
+                getDataFromDB(mPositionList);
+                try {
+                    checkAndLoadAllBitmaps();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                dataCiriPenyakit = null;
+            }
+            if (mPositionList <= mSizeList) {
+                try {
+                    checkAndLoadAllBitmaps();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                dataCiriPenyakit = null;
+                getDataFromDB(mPositionList);
+
+                return 1;
+            } else if (onItemListener != null)
+                onItemListener.onIsAfterLastListPosition(mContentView, btnBawah, mPositionList, mSizeList);
+            return 0;
+        }
+        private void checkAndLoadAllBitmaps() throws IOException {
+            Point reqSize = new Point();
+            activity.getWindowManager().getDefaultDisplay().getSize(reqSize);
+            reqSize.y = Math.round(activity.getResources().getDimension(R.dimen.actmain_dimen_viewpager_height));
+            mImagecache = new LruCache<Integer, Bitmap>(reqSize.x * reqSize.y);
+            int sizeslist = dataCiriPenyakit.listGambarId.size();
+            for(int x = 0; x < sizeslist; x++){
+                int resID = dataCiriPenyakit.listGambarId.get(x);
+                String nameID = activity.getResources().getResourceName(resID);
+                if(!diskLruObjectCache.isKeyExists(nameID)){
+                    final Bitmap bitmap = DecodeBitmapHelper.decodeAndResizeBitmapsResources(activity.getResources(), resID, reqSize.y, reqSize.x);
+                    Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, reqSize.x, reqSize.y, false);
+                    //gets the byte of bitmap
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    float scaling = bitmap.getHeight() / reqSize.y;
+                    scaledBitmap.compress(Bitmap.CompressFormat.JPEG, Math.round(QUALITY_FACTOR / scaling), bos);
+                    // put into cache
+                    try {
+                        diskLruObjectCache.put(nameID, bos.toByteArray());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        bos.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    mImagecache.put(x, scaledBitmap);
+                    bitmap.recycle();
+                    System.gc();
+                }
+                else{
+                    InputStream is = null;
+                    try {
+                        is = diskLruObjectCache.get(nameID);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    if(is == null){
+                        diskLruObjectCache.closeReading();
+                        continue;
+                    }
+                    mImagecache.put(x, BitmapFactory.decodeStream(is));
+                    diskLruObjectCache.closeReading();
+                }
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Integer integer) {
+            super.onPostExecute(integer);
+            if(integer == 1) {
+                mContentView.pageScroll(0);
+                TextView judul = content.findViewById(R.id.actimgdiagnose_judulpenyakit);
+                CustomViewPager customViewPager = content.findViewById(R.id.actimgdiagnose_id_viewpagerimg);
+                LinearLayout indicators = content.findViewById(R.id.actimgdiagnose_id_layoutIndicators);
+                WebView ciriP = content.findViewById(R.id.actimgdiagnose_ciriciri);
+                // sets the judul
+                setJudulText(judul, dataCiriPenyakit.nama_penyakit);
+
+                // sets the largeImage
+                setViewPagerImage(customViewPager, indicators);
+
+                // sets the TextView CiriP
+                setCiriPenyakitText(ciriP, dataCiriPenyakit.listCiriHtml);
+                System.gc();
+            }
+            else if(integer == 2){
+                createAndApplyContentLayout();
+                //Load CardView
+                content = (CardView) activity.getLayoutInflater().inflate(R.layout.adapter_imgdiagnose, mRootView, false);
+                TextView judul = content.findViewById(R.id.actimgdiagnose_judulpenyakit);
+                CustomViewPager customViewPager = content.findViewById(R.id.actimgdiagnose_id_viewpagerimg);
+                LinearLayout indicators = content.findViewById(R.id.actimgdiagnose_id_layoutIndicators);
+                WebView ciriP = content.findViewById(R.id.actimgdiagnose_ciriciri);
+                Button btnYa = btnBawah.findViewById(R.id.actimgdiagnose_buttonya);
+                Button btnTidak = btnBawah.findViewById(R.id.actimgdiagnose_buttontidak);
+
+                // sets the judul
+                setJudulText(judul, dataCiriPenyakit.nama_penyakit);
+
+                // sets the largeImage
+                setViewPagerImage(customViewPager, indicators);
+
+                // sets the TextView CiriP
+                setCiriPenyakitText(ciriP, dataCiriPenyakit.listCiriHtml);
+
+                // sets the button
+                setBtn(btnYa, btnTidak);
+
+                // add and apply into view
+                mChildView.addView(content);
+            }
+            finished_mods = 0;
         }
     }
 }

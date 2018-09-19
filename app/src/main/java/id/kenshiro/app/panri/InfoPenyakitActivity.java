@@ -108,6 +108,12 @@ public class InfoPenyakitActivity extends MylexzActivity {
 
     @Override
     protected void onDestroy() {
+        sqlDB.close();
+        try {
+            tampil.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         super.onDestroy();
     }
 
