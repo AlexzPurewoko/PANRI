@@ -17,6 +17,7 @@ import android.widget.TextView;
 
 import com.mylexz.utils.DiskLruObjectCache;
 import com.mylexz.utils.MylexzActivity;
+import com.mylexz.utils.SimpleDiskLruCache;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -51,7 +52,7 @@ public class TampilListPenyakitHelper implements Closeable{
         setContentViewer();
         if(finished_mode != 0) return;
         finished_mode = 1;
-        new BuilderTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        new BuilderTask(this).execute();//OnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
     private void recycleBitmaps(){
         if(mImagecache != null) {
@@ -154,44 +155,55 @@ public class TampilListPenyakitHelper implements Closeable{
     public void close() throws IOException {
         recycleBitmaps();
     }
-    private class BuilderTask extends AsyncTask<Void, Void, Void>{
-        DiskLruObjectCache diskLruObjectCache;
+    private static class BuilderTask extends AsyncTask<Void, Void, Void>{
+        SimpleDiskLruCache diskLruObjectCache;
         private static final int QUALITY_FACTOR = 10;
-
+        File fileCache;
         private static final long MAX_CACHE_BUFFERED_SIZE = 1048576;
+        TampilListPenyakitHelper tampilListPenyakitHelper;
+        BuilderTask(TampilListPenyakitHelper tampilListPenyakitHelper){
+            this.tampilListPenyakitHelper = tampilListPenyakitHelper;
+        }
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            File fileCache = new File(activity.getCacheDir(),"cache");
+            fileCache = new File(tampilListPenyakitHelper.activity.getCacheDir(),"cache");
             fileCache.mkdir();
-            try {
-                diskLruObjectCache = new DiskLruObjectCache(fileCache, 1, MAX_CACHE_BUFFERED_SIZE);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
         }
 
         @Override
         protected Void doInBackground(Void... voids) {
-            getDataPenyakitFromDB();
+            synchronized (this){
             try {
-                checkAndLoadAllBitmaps();
-                diskLruObjectCache.close();
+                diskLruObjectCache = new SimpleDiskLruCache(fileCache);
             } catch (IOException e) {
                 e.printStackTrace();
+            }
+        }
+            tampilListPenyakitHelper.getDataPenyakitFromDB();
+            try {
+                checkAndLoadAllBitmaps();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            synchronized (diskLruObjectCache){
+                try {
+                    diskLruObjectCache.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
             return null;
         }
 
         private void checkAndLoadAllBitmaps() throws IOException {
-            int size_images = Math.round(activity.getResources().getDimension(R.dimen.actmain_dimen_opimg_incard_wh));
-            mImagecache = new LruCache<Integer, Bitmap>(size_images * 2);
-            for(int x = 0; x < dataPenyakitList.size(); x++){
-                String name = dataPenyakitList.get(x).path_image;
+            int size_images = Math.round(tampilListPenyakitHelper.activity.getResources().getDimension(R.dimen.actmain_dimen_opimg_incard_wh));
+            tampilListPenyakitHelper.mImagecache = new LruCache<Integer, Bitmap>(size_images * 2);
+            for(int x = 0; x < tampilListPenyakitHelper.dataPenyakitList.size(); x++){
+                String name = tampilListPenyakitHelper.dataPenyakitList.get(x).path_image;
                 String nameID = getLasts(name);
                 if(!diskLruObjectCache.isKeyExists(nameID)){
-                    final Bitmap bitmap = DecodeBitmapHelper.decodeAndResizeBitmapsAssets(activity.getAssets(), name, size_images, size_images);
+                    final Bitmap bitmap = DecodeBitmapHelper.decodeAndResizeBitmapsAssets(tampilListPenyakitHelper.activity.getAssets(), name, size_images, size_images);
                     Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, size_images, size_images, false);
                     //gets the byte of bitmap
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -208,7 +220,7 @@ public class TampilListPenyakitHelper implements Closeable{
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    mImagecache.put(x, scaledBitmap);
+                    tampilListPenyakitHelper.mImagecache.put(x, scaledBitmap);
                     bitmap.recycle();
                     System.gc();
                 }
@@ -223,7 +235,7 @@ public class TampilListPenyakitHelper implements Closeable{
                         diskLruObjectCache.closeReading();
                         continue;
                     }
-                    mImagecache.put(x, BitmapFactory.decodeStream(is));
+                    tampilListPenyakitHelper.mImagecache.put(x, BitmapFactory.decodeStream(is));
                     diskLruObjectCache.closeReading();
                 }
             }
@@ -244,11 +256,11 @@ public class TampilListPenyakitHelper implements Closeable{
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             try {
-                inflateListAndAddTouchable();
+                tampilListPenyakitHelper.inflateListAndAddTouchable();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            finished_mode = 0;
+            tampilListPenyakitHelper.finished_mode = 0;
         }
     }
     private class DataPenyakit {

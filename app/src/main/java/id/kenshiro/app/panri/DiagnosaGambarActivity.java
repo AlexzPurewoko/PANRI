@@ -27,6 +27,8 @@ import android.widget.Toast;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
+import java.io.IOException;
+
 import id.kenshiro.app.panri.helper.ShowPenyakitDiagnoseHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 import id.kenshiro.app.panri.helper.TampilDiagnosaGambarHelper;
@@ -118,6 +120,11 @@ public class DiagnosaGambarActivity extends MylexzActivity {
     }
     @Override
     protected void onDestroy() {
+        try {
+            tampilDiagnosaGambarHelper.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         super.onDestroy();
     }
 

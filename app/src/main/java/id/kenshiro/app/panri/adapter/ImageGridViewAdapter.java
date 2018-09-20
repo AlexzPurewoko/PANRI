@@ -19,6 +19,7 @@ import android.widget.LinearLayout;
 
 import com.mylexz.utils.DiskLruObjectCache;
 import com.mylexz.utils.MylexzActivity;
+import com.mylexz.utils.SimpleDiskLruCache;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -102,7 +103,7 @@ public class ImageGridViewAdapter implements Closeable{
         if(finished_mode != 0) return;
         recycleBitmaps();
         finished_mode = 1;
-        new TaskLoadingBitmap().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        new TaskLoadingBitmap(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
     private int getRoundedUp(float num){
         return (num / Math.round(num) == 0)?Math.round(num):Math.round(num)+1;
@@ -164,18 +165,22 @@ public class ImageGridViewAdapter implements Closeable{
     public interface OnItemClickListener {
         public void onItemClick(View v, int position);
     }
-    private class TaskLoadingBitmap extends AsyncTask<Void, Void, Void> {
-        DiskLruObjectCache diskLruObjectCache;
+    private static class TaskLoadingBitmap extends AsyncTask<Void, Void, Void> {
+        SimpleDiskLruCache diskLruObjectCache;
         private static final int QUALITY_FACTOR = 30;
 
         private static final long MAX_CACHE_BUFFERED_SIZE = 1048576;
+        ImageGridViewAdapter ctxCls;
+        TaskLoadingBitmap(ImageGridViewAdapter ctxCls){
+            this.ctxCls = ctxCls;
+        }
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            File fileCache = new File(ctx.getCacheDir(),"cache");
+            File fileCache = new File(ctxCls.ctx.getCacheDir(),"cache");
             fileCache.mkdir();
             try {
-                diskLruObjectCache = new DiskLruObjectCache(fileCache, 1, MAX_CACHE_BUFFERED_SIZE);
+                diskLruObjectCache = new SimpleDiskLruCache(fileCache);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -185,8 +190,8 @@ public class ImageGridViewAdapter implements Closeable{
         @Override
         protected Void doInBackground(Void... voids) {
             checkAndLoadAllBitmaps();
-            if (rootElement != null) {
-                rootElement.removeViewsInLayout(0, rootElement.getChildCount());
+            if (ctxCls.rootElement != null) {
+                ctxCls.rootElement.removeViewsInLayout(0, ctxCls.rootElement.getChildCount());
             }
             try {
                 diskLruObjectCache.close();
@@ -198,8 +203,8 @@ public class ImageGridViewAdapter implements Closeable{
 
         private void checkAndLoadAllBitmaps() {
             settingSize();
-            mImagecache = new LruCache<Integer, Bitmap>(imageItemSize.x * imageItemSize.y);
-            switch (mode){
+            ctxCls.mImagecache = new LruCache<Integer, Bitmap>(ctxCls.imageItemSize.x * ctxCls.imageItemSize.y);
+            switch (ctxCls.mode){
                 case 0:
                     checkAndLoadAllBitmapsFromRes();
                     break;
@@ -214,15 +219,15 @@ public class ImageGridViewAdapter implements Closeable{
         }
 
         private void checkAndLoadAllBitmapsFromAssets() throws IOException {
-            for(int x = 0; x < listLocationAssetsImages.size(); x++){
-                String name = listLocationAssetsImages.get(x);
+            for(int x = 0; x < ctxCls.listLocationAssetsImages.size(); x++){
+                String name = ctxCls.listLocationAssetsImages.get(x);
                 String nameID = getLasts(name);
                 if(!diskLruObjectCache.isKeyExists(nameID)){
-                    final Bitmap bitmap = DecodeBitmapHelper.decodeAndResizeBitmapsAssets(ctx.getAssets(), name, imageItemSize.y, imageItemSize.x);
-                    Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, imageItemSize.x, imageItemSize.y, false);
+                    final Bitmap bitmap = DecodeBitmapHelper.decodeAndResizeBitmapsAssets(ctxCls.ctx.getAssets(), name, ctxCls.imageItemSize.y, ctxCls.imageItemSize.x);
+                    Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, ctxCls.imageItemSize.x, ctxCls.imageItemSize.y, false);
                     //gets the byte of bitmap
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                    float scaling = bitmap.getHeight() / imageItemSize.y;
+                    float scaling = bitmap.getHeight() / ctxCls.imageItemSize.y;
                     scaledBitmap.compress(Bitmap.CompressFormat.JPEG, Math.round(QUALITY_FACTOR / scaling), bos);
                     // put into cache
                     try {
@@ -235,7 +240,7 @@ public class ImageGridViewAdapter implements Closeable{
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    mImagecache.put(x, scaledBitmap);
+                    ctxCls.mImagecache.put(x, scaledBitmap);
                     bitmap.recycle();
                     System.gc();
                 }
@@ -250,7 +255,7 @@ public class ImageGridViewAdapter implements Closeable{
                         diskLruObjectCache.closeReading();
                         continue;
                     }
-                    mImagecache.put(x, BitmapFactory.decodeStream(is));
+                    ctxCls.mImagecache.put(x, BitmapFactory.decodeStream(is));
                     diskLruObjectCache.closeReading();
                 }
             }
@@ -269,15 +274,15 @@ public class ImageGridViewAdapter implements Closeable{
         }
 
         private void checkAndLoadAllBitmapsFromRes() {
-            for(int x = 0; x < listLocationResImages.size(); x++){
-                int resId = listLocationResImages.get(x);
-                String name = ctx.getResources().getResourceName(resId);
+            for(int x = 0; x < ctxCls.listLocationResImages.size(); x++){
+                int resId = ctxCls.listLocationResImages.get(x);
+                String name = ctxCls.ctx.getResources().getResourceName(resId);
                 if(!diskLruObjectCache.isKeyExists(name)){
-                    final Bitmap bitmap = DecodeBitmapHelper.decodeAndResizeBitmapsResources(ctx.getResources(), resId, imageItemSize.y, imageItemSize.x);
-                    Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, imageItemSize.x, imageItemSize.y, false);
+                    final Bitmap bitmap = DecodeBitmapHelper.decodeAndResizeBitmapsResources(ctxCls.ctx.getResources(), resId, ctxCls.imageItemSize.y, ctxCls.imageItemSize.x);
+                    Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, ctxCls.imageItemSize.x, ctxCls.imageItemSize.y, false);
                     //gets the byte of bitmap
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                    float scaling = bitmap.getHeight() / imageItemSize.y;
+                    float scaling = bitmap.getHeight() / ctxCls.imageItemSize.y;
                     scaledBitmap.compress(Bitmap.CompressFormat.JPEG, Math.round(QUALITY_FACTOR / scaling), bos);
                     // put into cache
                     try {
@@ -290,7 +295,7 @@ public class ImageGridViewAdapter implements Closeable{
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    mImagecache.put(x, scaledBitmap);
+                    ctxCls.mImagecache.put(x, scaledBitmap);
                     bitmap.recycle();
                     scaledBitmap.recycle();
                     System.gc();
@@ -303,33 +308,37 @@ public class ImageGridViewAdapter implements Closeable{
                         e.printStackTrace();
                     }
                     if(is == null){
-                        diskLruObjectCache.closeReading();
+                        try {
+                            diskLruObjectCache.closeReading();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                         continue;
                     }
-                    mImagecache.put(x, BitmapFactory.decodeStream(is));
+                    ctxCls.mImagecache.put(x, BitmapFactory.decodeStream(is));
                 }
             }
         }
 
         private void settingSize(){
             // set size per images
-            int screenHeight = screenSize.y;
-            int screenWidth  = screenSize.x;
+            int screenHeight = ctxCls.screenSize.y;
+            int screenWidth  = ctxCls.screenSize.x;
             ///// section width
-            int imageWidth = screenWidth / columnCount - (columnCount * marginLeft + columnCount * marginRight);
-            imageItemSize.x = imageWidth;
+            int imageWidth = screenWidth / ctxCls.columnCount - (ctxCls.columnCount * ctxCls.marginLeft + ctxCls.columnCount * ctxCls.marginRight);
+            ctxCls.imageItemSize.x = imageWidth;
             ///// section height
-            if(imageItemSize.y == 0){
+            if(ctxCls.imageItemSize.y == 0){
                 int imageHeight = imageWidth;
-                imageItemSize.y = imageHeight;
+                ctxCls.imageItemSize.y = imageHeight;
             }
         }
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            buildRootLayout();
-            buildContentLayout();
-            finished_mode = 0;
+            ctxCls.buildRootLayout();
+            ctxCls.buildContentLayout();
+            ctxCls.finished_mode = 0;
         }
     }
 }

@@ -298,6 +298,7 @@ public class DiskLruObjectCache implements Closeable
 	public void close() throws IOException
 	{
 		mCacheDisk.close();
+		mCacheDisk = null;
 		System.gc();
 	}
 	private final static class BaseEnDoc

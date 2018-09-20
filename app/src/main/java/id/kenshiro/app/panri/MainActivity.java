@@ -22,6 +22,7 @@ import android.text.SpannableString;
 
 import com.mylexz.utils.DiskLruObjectCache;
 import com.mylexz.utils.MylexzActivity;
+import com.mylexz.utils.SimpleDiskLruCache;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
 import android.graphics.Typeface;
 import android.widget.LinearLayout;
@@ -59,9 +60,9 @@ public class MainActivity extends MylexzActivity
     // for view image pager
     LinearLayout indicators;
     private CustomViewPager mImageSelector;
-    private int mDotCount;
-    private LinearLayout[] mDots;
-    private ImageFragmentAdapter mImageControllerFragment;
+    int mDotCount;
+    LinearLayout[] mDots;
+    ImageFragmentAdapter mImageControllerFragment;
     private TextView mTextDetails;
     private Handler handlerPetani;
     // for section petani
@@ -82,7 +83,7 @@ public class MainActivity extends MylexzActivity
     // Important Task
     private ImageAutoSwipe imgSw;
     private boolean doubleBackToExitPressedOnce;
-    private LruCache<Integer, Bitmap> mImageMemCache;
+    LruCache<Integer, Bitmap> mImageMemCache;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -282,7 +283,7 @@ public class MainActivity extends MylexzActivity
         return true;
     }
 
-    private void startTask() {
+    void startTask() {
         imgSw = new ImageAutoSwipe(mImageMemCache, mImageSelector);
         imgSw.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
@@ -396,7 +397,7 @@ public class MainActivity extends MylexzActivity
         // initialize the view container
         indicators = (LinearLayout) findViewById(R.id.actmain_id_layoutIndicators);
         mImageSelector = (CustomViewPager) findViewById(R.id.actmain_id_viewpagerimg);
-        TaskBitmapViewPager task = new TaskBitmapViewPager();
+        TaskBitmapViewPager task = new TaskBitmapViewPager(this);
         task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         // set the indicators
 
@@ -517,17 +518,20 @@ public class MainActivity extends MylexzActivity
 
     }
 
-    private class TaskBitmapViewPager extends AsyncTask<Void, Void, Point>{
+    private static class TaskBitmapViewPager extends AsyncTask<Void, Void, Point> {
         File fileCache;
-        DiskLruObjectCache diskCache;
+        SimpleDiskLruCache diskCache;
         private static final long MAX_CACHE_BUFFERED_SIZE = 1048576;
-        public TaskBitmapViewPager() {
+        MainActivity currAct;
+
+        public TaskBitmapViewPager(MainActivity currAct) {
+            this.currAct = currAct;
         }
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            fileCache = new File(getCacheDir(),"cache");
+            fileCache = new File(currAct.getCacheDir(), "cache");
             fileCache.mkdir();
         }
 
@@ -542,8 +546,8 @@ public class MainActivity extends MylexzActivity
             };
             //////////
             Point reqSize = new Point();
-            getWindowManager().getDefaultDisplay().getSize(reqSize);
-            reqSize.y = Math.round(getResources().getDimension(R.dimen.actmain_dimen_viewpager_height));
+            currAct.getWindowManager().getDefaultDisplay().getSize(reqSize);
+            reqSize.y = Math.round(currAct.getResources().getDimension(R.dimen.actmain_dimen_viewpager_height));
             // loads from a cache
             try {
                 loadBitmapIntoCache(key, reqSize.x * reqSize.y);
@@ -557,48 +561,52 @@ public class MainActivity extends MylexzActivity
 
         private void loadBitmapIntoCache(String[] key, int maxSize) throws IOException {
             try {
-                diskCache = new DiskLruObjectCache(fileCache, 1, MAX_CACHE_BUFFERED_SIZE);
+                synchronized (this) {
+                    diskCache = new SimpleDiskLruCache(fileCache);
+                }
             } catch (IOException e) {
-                MainActivity.this.LOGE("Task.background()", "IOException occured when initialize DiskLruObjectCache instance", e);
+                currAct.LOGE("Task.background()", "IOException occured when initialize DiskLruObjectCache instance", e);
                 return;
             }
-            mImageMemCache = new LruCache<Integer, Bitmap>(maxSize);
+            currAct.mImageMemCache = new LruCache<Integer, Bitmap>(maxSize);
             int x = 0;
             for(String result : key){
                 InputStream bis = diskCache.get(result);
                 /*byte[] imgBarr = new byte[bis.available()];
                 bis.read(imgBarr);
                 bis.close();*/
-                mImageMemCache.put(x++, BitmapFactory.decodeStream(bis));
+                currAct.mImageMemCache.put(x++, BitmapFactory.decodeStream(bis));
                 diskCache.closeReading();
                 bis.close();
             }
             System.gc();
-            int size = mImageMemCache.size();
-            diskCache.close();
+            int size = currAct.mImageMemCache.size();
+            synchronized (diskCache) {
+                diskCache.close();
+            }
         }
 
         @Override
         protected void onPostExecute(Point reqSize) {
             super.onPostExecute(reqSize);
-            mImageControllerFragment = new ImageFragmentAdapter(MainActivity.this, getSupportFragmentManager(), mImageMemCache, reqSize);
-            mImageSelector.setAdapter(mImageControllerFragment);
-            mImageSelector.setCurrentItem(0);
-            mImageSelector.setPageTransformer(true, new CustomPageViewTransformer());
-            mImageSelector.setOnClickListener(new View.OnClickListener() {
+            currAct.mImageControllerFragment = new ImageFragmentAdapter(currAct, currAct.getSupportFragmentManager(), currAct.mImageMemCache, reqSize);
+            currAct.mImageSelector.setAdapter(currAct.mImageControllerFragment);
+            currAct.mImageSelector.setCurrentItem(0);
+            currAct.mImageSelector.setPageTransformer(true, new CustomPageViewTransformer());
+            currAct.mImageSelector.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    int curr_img = mImageSelector.getCurrentItem();
-                    if (++curr_img == mImageMemCache.size())
+                    int curr_img = currAct.mImageSelector.getCurrentItem();
+                    if (++curr_img == currAct.mImageMemCache.size())
                         curr_img = 0;
-                    mImageSelector.setCurrentItem(curr_img);
+                    currAct.mImageSelector.setCurrentItem(curr_img);
 
                     System.gc();
-                    mImageSelector.setPageTransformer(true, new CustomPageViewTransformer());
+                    currAct.mImageSelector.setPageTransformer(true, new CustomPageViewTransformer());
                     System.gc();
                 }
             });
-            mImageSelector.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            currAct.mImageSelector.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
                 @Override
                 public void onPageScrolled(int i, float v, int i1) {
 
@@ -606,37 +614,37 @@ public class MainActivity extends MylexzActivity
 
                 @Override
                 public void onPageSelected(int i) {
-                    for (int x = 0; x < mDotCount; x++) {
-                        mDots[x].setBackgroundResource(R.drawable.indicator_unselected_item_oval);
+                    for (int x = 0; x < currAct.mDotCount; x++) {
+                        currAct.mDots[x].setBackgroundResource(R.drawable.indicator_unselected_item_oval);
                     }
-                    mDots[i].setBackgroundResource(R.drawable.indicator_selected_item_oval);
+                    currAct.mDots[i].setBackgroundResource(R.drawable.indicator_selected_item_oval);
                 }
 
                 @Override
                 public void onPageScrollStateChanged(int i) {
-                    int pos = mImageSelector.getCurrentItem();
+                    int pos = currAct.mImageSelector.getCurrentItem();
                     // if reaching last and state is DRAGGING, back into first
-                    if (pos == mImageMemCache.size() - 1 && i == ViewPager.SCROLL_STATE_DRAGGING)
-                        mImageSelector.setCurrentItem(0, true);
+                    if (pos == currAct.mImageMemCache.size() - 1 && i == ViewPager.SCROLL_STATE_DRAGGING)
+                        currAct.mImageSelector.setCurrentItem(0, true);
                 }
             });
-            mDotCount = mImageControllerFragment.getCount();
-            mDots = new LinearLayout[mDotCount];
-            for (int x = 0; x < mDotCount; x++) {
-                mDots[x] = new LinearLayout(MainActivity.this);
-                mDots[x].setBackgroundResource(R.drawable.indicator_unselected_item_oval);
+            currAct.mDotCount = currAct.mImageControllerFragment.getCount();
+            currAct.mDots = new LinearLayout[currAct.mDotCount];
+            for (int x = 0; x < currAct.mDotCount; x++) {
+                currAct.mDots[x] = new LinearLayout(currAct);
+                currAct.mDots[x].setBackgroundResource(R.drawable.indicator_unselected_item_oval);
                 LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
                 );
                 params.setMargins(0, 0, 4, 4);
-                mDots[x].setGravity(Gravity.RIGHT | Gravity.BOTTOM | Gravity.END);
-                indicators.addView(mDots[x], params);
+                currAct.mDots[x].setGravity(Gravity.RIGHT | Gravity.BOTTOM | Gravity.END);
+                currAct.indicators.addView(currAct.mDots[x], params);
 
             }
-            mDots[0].setBackgroundResource(R.drawable.indicator_selected_item_oval);
+            currAct.mDots[0].setBackgroundResource(R.drawable.indicator_selected_item_oval);
 
-            startTask();
+            currAct.startTask();
         }
     }
 }

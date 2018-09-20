@@ -35,6 +35,7 @@ import android.widget.Toast;
 
 import com.mylexz.utils.DiskLruObjectCache;
 import com.mylexz.utils.MylexzActivity;
+import com.mylexz.utils.SimpleDiskLruCache;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -89,7 +90,7 @@ public class SplashScreenActivity extends MylexzActivity {
                 getWindow().setStatusBarColor(getResources().getColor(R.color.color_status_white_dark));
         }
         // start a task into main activity
-        new LoaderTask().execute();
+        new LoaderTask(this).execute();
     }
 
     private void setAllViews() {
@@ -123,20 +124,24 @@ public class SplashScreenActivity extends MylexzActivity {
         indicators.setText("Mempersiapkan data...");
     }
 
-    private class LoaderTask extends AsyncTask<Void, Integer, Integer> {
+    private static class LoaderTask extends AsyncTask<Void, Integer, Integer> {
         private static final long MAX_CACHE_BUFFERED_SIZE = 1048576;
         private static final int QUALITY_FACTOR = 40;
         String folder_app_version = "app_version";
         String file_db_version = "db_version";
         File fileCache;
-        DiskLruObjectCache diskCache;
+        SimpleDiskLruCache diskCache;
         private SQLiteDatabase sqlDB;
         private HashMap<Integer, ListCiriCiriPenyakit> listCiriCiriPenyakitHashMap;
+        SplashScreenActivity ctx;
 
+        LoaderTask(SplashScreenActivity ctx) {
+            this.ctx = ctx;
+        }
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            fileCache = new File(getCacheDir(),"cache");
+            fileCache = new File(ctx.getCacheDir(), "cache");
             fileCache.mkdir();
         }
 
@@ -147,17 +152,17 @@ public class SplashScreenActivity extends MylexzActivity {
                 checkAndSaveAppVersion();
                 updateDBIfItsNewVersion();
             } catch (IOException e) {
-                SplashScreenActivity.this.LOGE("Task.background()", "IOException occured when executing checkAndSaveAppVersion() & updateDBIfItsNewVersion();", e);
+                ctx.LOGE("Task.background()", "IOException occured when executing checkAndSaveAppVersion() & updateDBIfItsNewVersion();", e);
             }
             // creates cache directory if not exists
             try {
-                diskCache = new DiskLruObjectCache(fileCache, 1, MAX_CACHE_BUFFERED_SIZE);
+                diskCache = new SimpleDiskLruCache(fileCache);
             } catch (IOException e) {
-                SplashScreenActivity.this.LOGE("Task.background()", "IOException occured when initialize DiskLruObjectCache instance", e);
+                ctx.LOGE("Task.background()", "IOException occured when initialize DiskLruObjectCache instance", e);
             }
             publishProgress(0);
             synchronized (this) {
-                switch (app_condition) {
+                switch (ctx.app_condition) {
                     case APP_IS_OLDER_VERSION:
                     case APP_IS_NEWER_VERSION: {
                         cleanCache();
@@ -180,14 +185,14 @@ public class SplashScreenActivity extends MylexzActivity {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                SplashScreenActivity.this.LOGE("Task.background()", "Interrupted signal exception!", e);
+                ctx.LOGE("Task.background()", "Interrupted signal exception!", e);
             }
             try {
                 diskCache.close();
             } catch (IOException e) {
-                SplashScreenActivity.this.LOGE("Task.background()", "IOException occured when closing diskCache", e);
+                ctx.LOGE("Task.background()", "IOException occured when closing diskCache", e);
             }
-            return app_condition;
+            return ctx.app_condition;
         }
 
         private boolean validateCacheDirs() {
@@ -203,7 +208,7 @@ public class SplashScreenActivity extends MylexzActivity {
             try {
                 cachingListPenyakit();
             } catch (IOException e) {
-                SplashScreenActivity.this.LOGE("Task.background()", "IOException occured when create listCiriCiriPenyakit Cache", e);
+                ctx.LOGE("Task.background()", "IOException occured when create listCiriCiriPenyakit Cache", e);
             }
         }
 
@@ -285,12 +290,12 @@ public class SplashScreenActivity extends MylexzActivity {
                     "viewpager_area_4"
             };
             Point point = new Point();
-            getWindowManager().getDefaultDisplay().getSize(point);
-            point.y = Math.round(getResources().getDimension(R.dimen.actmain_dimen_viewpager_height));
+            ctx.getWindowManager().getDefaultDisplay().getSize(point);
+            point.y = Math.round(ctx.getResources().getDimension(R.dimen.actmain_dimen_viewpager_height));
             for (String key : keyImageLists) {
-                int resDrawable = getResources().getIdentifier(key, "drawable", getPackageName());
+                int resDrawable = ctx.getResources().getIdentifier(key, "drawable", ctx.getPackageName());
                 //gets the Bitmap
-                Bitmap bitmap = DecodeBitmapHelper.decodeAndResizeBitmapsResources(getResources(), resDrawable, point.y, point.x);
+                Bitmap bitmap = DecodeBitmapHelper.decodeAndResizeBitmapsResources(ctx.getResources(), resDrawable, point.y, point.x);
                 // creates the scaled bitmaps
                 Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, point.x, point.y, false);
                 //gets the byte of bitmap
@@ -301,12 +306,12 @@ public class SplashScreenActivity extends MylexzActivity {
                 try {
                     diskCache.put(key, bos.toByteArray());
                 } catch (IOException e) {
-                    SplashScreenActivity.this.LOGE("Task.background()", "IOException occured when putting a cache image", e);
+                    ctx.LOGE("Task.background()", "IOException occured when putting a cache image", e);
                 }
                 try {
                     bos.close();
                 } catch (IOException e) {
-                    SplashScreenActivity.this.LOGE("Task.background()", "IOException occured when releasing ByteOutputStream", e);
+                    ctx.LOGE("Task.background()", "IOException occured when releasing ByteOutputStream", e);
                 }
                 bitmap.recycle();
                 scaledBitmap.recycle();
@@ -320,16 +325,16 @@ public class SplashScreenActivity extends MylexzActivity {
             /*try {
                 diskCache.clean();
             } catch (IOException e) {
-                SplashScreenActivity.this.LOGE("Task.background()", "IOException occured when cleaning a cache", e);
+                ctx.LOGE("Task.background()", "IOException occured when cleaning a cache", e);
             }*/
         }
 
         private void updateDBIfItsNewVersion() throws IOException {
-            File path = new File(SplashScreenActivity.this.getApplicationInfo().dataDir, "files");
+            File path = new File(ctx.getApplicationInfo().dataDir, "files");
             path.mkdir();
             File content = new File(path, this.file_db_version);
             if (!content.exists()) {
-                AssetManager assetManager = getAssets();
+                AssetManager assetManager = ctx.getAssets();
                 InputStream fis = assetManager.open(this.file_db_version);
                 FileOutputStream fos = new FileOutputStream(content);
                 int read;
@@ -338,9 +343,9 @@ public class SplashScreenActivity extends MylexzActivity {
                 }
                 fis.close();
                 fos.close();
-                db_condition = DB_IS_FIRST_USAGE;
+                ctx.db_condition = DB_IS_FIRST_USAGE;
                 // update into databases
-                new CheckAndMoveDB(SplashScreenActivity.this, "database_penyakitpadi.db").upgradeDB();
+                new CheckAndMoveDB(ctx, "database_penyakitpadi.db").upgradeDB();
             }
             // if exists
             else {
@@ -348,7 +353,7 @@ public class SplashScreenActivity extends MylexzActivity {
                 int available_db_version = getDBVersionInAssets();
                 // apply newer version
                 if (current_db_version < available_db_version) {
-                    AssetManager assetManager = getAssets();
+                    AssetManager assetManager = ctx.getAssets();
                     InputStream fis = assetManager.open(this.file_db_version);
                     FileOutputStream fos = new FileOutputStream(content);
                     int read;
@@ -358,19 +363,19 @@ public class SplashScreenActivity extends MylexzActivity {
                     fis.close();
                     fos.close();
                     // update into databases
-                    new CheckAndMoveDB(SplashScreenActivity.this, "database_penyakitpadi.db").upgradeDB();
-                    db_condition = DB_IS_NEWER_VERSION;
+                    new CheckAndMoveDB(ctx, "database_penyakitpadi.db").upgradeDB();
+                    ctx.db_condition = DB_IS_NEWER_VERSION;
                 } else if (current_db_version > available_db_version)
-                    db_condition = DB_IS_OLDER_IN_APP_VERSION;
+                    ctx.db_condition = DB_IS_OLDER_IN_APP_VERSION;
                 else
-                    db_condition = DB_IS_SAME_VERSION;
+                    ctx.db_condition = DB_IS_SAME_VERSION;
             }
 
         }
 
         private int getDBVersionInAssets() throws IOException {
             // gets the version
-            InputStream fis = getAssets().open(this.file_db_version);
+            InputStream fis = ctx.getAssets().open(this.file_db_version);
             byte[] available = new byte[fis.available()];
             fis.read(available);
             String out = new String(available);
@@ -379,7 +384,7 @@ public class SplashScreenActivity extends MylexzActivity {
         }
 
         private int getDBVersion() throws IOException {
-            File path = new File(SplashScreenActivity.this.getApplicationInfo().dataDir, "files");
+            File path = new File(ctx.getApplicationInfo().dataDir, "files");
             File content = new File(path, this.file_db_version);
             // gets the version
             FileInputStream fis = new FileInputStream(content);
@@ -392,11 +397,11 @@ public class SplashScreenActivity extends MylexzActivity {
 
         private void checkAndSaveAppVersion() throws IOException {
             int version = BuildConfig.VERSION_CODE;
-            File path = new File(SplashScreenActivity.this.getApplicationInfo().dataDir, "files");
+            File path = new File(ctx.getApplicationInfo().dataDir, "files");
             path.mkdir();
             File content = new File(path, this.folder_app_version);
             if (!content.exists()) {
-                app_condition = APP_IS_FIRST_USAGE;
+                ctx.app_condition = APP_IS_FIRST_USAGE;
                 String data = String.valueOf(version);
                 FileOutputStream fos = new FileOutputStream(content);
                 fos.write(data.getBytes());
@@ -409,15 +414,15 @@ public class SplashScreenActivity extends MylexzActivity {
                 int current_version = Integer.parseInt(new String(buf));
                 fis.close();
                 if (current_version < version) {
-                    app_condition = APP_IS_NEWER_VERSION;
+                    ctx.app_condition = APP_IS_NEWER_VERSION;
                     String data = String.valueOf(version);
                     FileOutputStream fos = new FileOutputStream(content);
                     fos.write(data.getBytes());
                     fos.close();
                 } else if (current_version > version) {
-                    app_condition = APP_IS_OLDER_VERSION;
+                    ctx.app_condition = APP_IS_OLDER_VERSION;
                 } else
-                    app_condition = APP_IS_SAME_VERSION;
+                    ctx.app_condition = APP_IS_SAME_VERSION;
             }
         }
 
@@ -434,24 +439,24 @@ public class SplashScreenActivity extends MylexzActivity {
         protected void onProgressUpdate(Integer... values) {
             super.onProgressUpdate(values);
             if (values[0] == 0) {
-                indicators.setText("Membuat cache...");
+                ctx.indicators.setText("Membuat cache...");
             } else if (values[0] == 1) {
-                indicators.setText("Membuka aplikasi");
+                ctx.indicators.setText("Membuka aplikasi");
             }
         }
 
         private void animateAndForward() {
             Fade in = new Fade(Fade.IN);
             in.setDuration(1200);
-            TransitionManager.beginDelayedTransition((RelativeLayout) findViewById(R.id.actsplash_id_bawah_layout), in);
-            linearIndicator.setVisibility(View.GONE);
-            if (app_condition == APP_IS_FIRST_USAGE)
-                btnNext.setVisibility(View.VISIBLE);
+            TransitionManager.beginDelayedTransition((RelativeLayout) ctx.findViewById(R.id.actsplash_id_bawah_layout), in);
+            ctx.linearIndicator.setVisibility(View.GONE);
+            if (ctx.app_condition == APP_IS_FIRST_USAGE)
+                ctx.btnNext.setVisibility(View.VISIBLE);
             else {
                 Bundle args = new Bundle();
-                args.putInt(APP_CONDITION_KEY, app_condition);
-                args.putInt(DB_CONDITION_KEY, db_condition);
-                MylexzActivity activity = SplashScreenActivity.this;
+                args.putInt(APP_CONDITION_KEY, ctx.app_condition);
+                args.putInt(DB_CONDITION_KEY, ctx.db_condition);
+                MylexzActivity activity = ctx;
                 activity.finish();
                 System.gc();
                 Intent a = new Intent(activity, MainActivity.class);

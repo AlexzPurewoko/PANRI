@@ -25,6 +25,7 @@ import android.widget.Toast;
 
 import com.mylexz.utils.DiskLruObjectCache;
 import com.mylexz.utils.MylexzActivity;
+import com.mylexz.utils.SimpleDiskLruCache;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
 import java.io.File;
@@ -51,7 +52,7 @@ public class DiagnoseActivity extends MylexzActivity
 	private HashMap<Integer, ListCiriCiriPenyakit> listCiriCiriPenyakitHashMap;
 	private DiagnoseActivityHelper diagnoseActivityHelper;
 	private ShowPenyakitDiagnoseHelper showPenyakitDiagnoseHelper;
-	private DiskLruObjectCache diskCache;
+	private SimpleDiskLruCache diskCache;
 	Button mTextPetaniDesc;
 	private boolean doubleBackToExitPressedOnce;
 	private boolean isDiagnosting = true;
@@ -250,7 +251,7 @@ public class DiagnoseActivity extends MylexzActivity
 		private void prepareDiskLruCache() throws IOException {
 			File fileCache = new File(getCacheDir(),"cache");
 			fileCache.mkdir();
-			diskCache = new DiskLruObjectCache(fileCache, 1, MAX_CACHE_BUFFERED_SIZE);
+			diskCache = new SimpleDiskLruCache(fileCache);
 		}
 
 		private void buildLoadingLayout() {

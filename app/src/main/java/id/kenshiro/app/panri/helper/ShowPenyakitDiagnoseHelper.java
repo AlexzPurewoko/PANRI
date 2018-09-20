@@ -251,7 +251,8 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
 
     @Override
     public void close() throws IOException {
-        imageViewPenyakit.close();
+        if(imageViewPenyakit != null)
+            imageViewPenyakit.close();
     }
 
     private class DataPath{
