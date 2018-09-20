@@ -65,6 +65,7 @@ public class TampilDiagnosaGambarHelper implements Closeable{
     private OnItemListener onItemListener;
     private int modes = 0;
     private int finished_mods = 0;
+    private BuilderTaskUpdaterContent builderTask = null;
 
     public TampilDiagnosaGambarHelper(MylexzActivity activity, RelativeLayout mRootView, SQLiteDatabase sqlDB) {
         this.mRootView = mRootView;
@@ -130,7 +131,8 @@ public class TampilDiagnosaGambarHelper implements Closeable{
     public void updateContentAfter() {
         if(finished_mods != 0) return;
         finished_mods = 1;
-        new BuilderTaskUpdaterContent(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        builderTask = new BuilderTaskUpdaterContent(this);
+        builderTask.execute();
     }
 
     private void onClickBtn(int whichType, int x) {
@@ -534,6 +536,8 @@ public class TampilDiagnosaGambarHelper implements Closeable{
                 tampilDiagnosaGambarHelper.mChildView.addView(tampilDiagnosaGambarHelper.content);
             }
             tampilDiagnosaGambarHelper.finished_mods = 0;
+            tampilDiagnosaGambarHelper.builderTask = null;
+            System.gc();
         }
     }
 }

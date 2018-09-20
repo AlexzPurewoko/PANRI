@@ -84,7 +84,7 @@ public class MainActivity extends MylexzActivity
     private ImageAutoSwipe imgSw;
     private boolean doubleBackToExitPressedOnce;
     LruCache<Integer, Bitmap> mImageMemCache;
-
+    TaskBitmapViewPager task;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -397,15 +397,14 @@ public class MainActivity extends MylexzActivity
         // initialize the view container
         indicators = (LinearLayout) findViewById(R.id.actmain_id_layoutIndicators);
         mImageSelector = (CustomViewPager) findViewById(R.id.actmain_id_viewpagerimg);
-        TaskBitmapViewPager task = new TaskBitmapViewPager(this);
-        task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        task = new TaskBitmapViewPager(this);
+        task.execute();
         // set the indicators
 
     }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        // TODO: Implement this method
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             if (doubleBackToExitPressedOnce) {
                 showExitDialog();
@@ -643,7 +642,8 @@ public class MainActivity extends MylexzActivity
 
             }
             currAct.mDots[0].setBackgroundResource(R.drawable.indicator_selected_item_oval);
-
+            currAct.task = null;
+            System.gc();
             currAct.startTask();
         }
     }
