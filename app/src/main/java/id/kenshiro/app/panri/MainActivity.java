@@ -1,11 +1,13 @@
 package id.kenshiro.app.panri;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.util.LruCache;
@@ -31,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import id.kenshiro.app.panri.adapter.CustomViewPager;
 import id.kenshiro.app.panri.adapter.ImageFragmentAdapter;
@@ -588,6 +591,10 @@ public class MainActivity extends MylexzActivity
         @Override
         protected void onPostExecute(Point reqSize) {
             super.onPostExecute(reqSize);
+            // sets the image for nav header
+            int current = currAct.getSharedPreferences(SplashScreenActivity.SHARED_PREF_NAME, Context.MODE_PRIVATE).getInt(SplashScreenActivity.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, 0);
+            current = (current == currAct.mImageMemCache.size()) ? 0 : current;
+            ((LinearLayout) currAct.findViewById(R.id.actmain_id_navheadermain_layout)).setBackground(new BitmapDrawable(currAct.getResources(), currAct.mImageMemCache.get(current)));
             currAct.mImageControllerFragment = new ImageFragmentAdapter(currAct, currAct.getSupportFragmentManager(), currAct.mImageMemCache, reqSize);
             currAct.mImageSelector.setAdapter(currAct.mImageControllerFragment);
             currAct.mImageSelector.setCurrentItem(0);

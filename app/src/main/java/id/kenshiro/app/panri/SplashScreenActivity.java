@@ -1,6 +1,8 @@
 package id.kenshiro.app.panri;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
 import android.database.Cursor;
@@ -63,6 +65,8 @@ public class SplashScreenActivity extends MylexzActivity {
     public static final int DB_IS_FIRST_USAGE = 0xaac;
     public static final int DB_IS_NEWER_VERSION = 0xaab;
     public static final int DB_IS_OLDER_IN_APP_VERSION = 0xaaf;
+    public static final String KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER = "key_nav";
+    public static final String SHARED_PREF_NAME = "panri_data";
     public static final int DB_IS_SAME_VERSION = 0xaca;
     public static final String APP_CONDITION_KEY = "APP_CONDITION_KEY_EXTRAS";
     public static final String DB_CONDITION_KEY = "DB_CONDITION_KEY_EXTRAS";
@@ -138,6 +142,7 @@ public class SplashScreenActivity extends MylexzActivity {
         LoaderTask(SplashScreenActivity ctx) {
             this.ctx = ctx;
         }
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -175,7 +180,7 @@ public class SplashScreenActivity extends MylexzActivity {
                     break;
                     case APP_IS_SAME_VERSION: {
                         boolean status_cache_dirs = validateCacheDirs();
-                        if (!status_cache_dirs) {
+                        if (status_cache_dirs) {
                             createCacheOperation();
                         }
                     }
@@ -192,6 +197,15 @@ public class SplashScreenActivity extends MylexzActivity {
             } catch (IOException e) {
                 ctx.LOGE("Task.background()", "IOException occured when closing diskCache", e);
             }
+            SharedPreferences shareds = ctx.getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
+            if (!shareds.contains(ctx.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER))
+                shareds.edit().putInt(ctx.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, 0).commit();
+            int curr = shareds.getInt(ctx.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, 0);
+            if (curr == 4)
+                curr = 0;
+            else
+                curr++;
+            shareds.edit().putInt(ctx.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, curr).commit();
             return ctx.app_condition;
         }
 
@@ -318,6 +332,7 @@ public class SplashScreenActivity extends MylexzActivity {
                 scaledBitmap.recycle();
                 System.gc();
             }
+            // for nav header background
         }
 
         private void cleanCache() {
