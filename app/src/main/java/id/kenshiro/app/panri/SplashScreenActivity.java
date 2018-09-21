@@ -301,6 +301,7 @@ public class SplashScreenActivity extends MylexzActivity {
                 //gets the byte of bitmap
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 float scaling = bitmap.getHeight() / point.y;
+                scaling = ((scaling < 1.0f) ? 1.0f : scaling);
                 scaledBitmap.compress(Bitmap.CompressFormat.JPEG, Math.round(QUALITY_FACTOR / scaling), bos);
                 // put into cache
                 try {
