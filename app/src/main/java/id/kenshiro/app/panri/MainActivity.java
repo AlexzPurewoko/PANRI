@@ -553,7 +553,9 @@ public class MainActivity extends MylexzActivity
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            postExecute();
+            final int current = mainActivity.get().getSharedPreferences(SplashScreenActivity.SHARED_PREF_NAME, Context.MODE_PRIVATE).getInt(SplashScreenActivity.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, 0);
+            final int current1 = (current == memCache.size()) ? 0 : current;
+            postExecute(memCache.get(current1));
         }
         private void loadBitmapIntoCache(String[] key) throws IOException {
             try {
@@ -578,24 +580,20 @@ public class MainActivity extends MylexzActivity
                 }
             }
             System.gc();
-            /*int size = currAct.mImageMemCache.size();
-            current = currAct.getSharedPreferences(SplashScreenActivity.SHARED_PREF_NAME, Context.MODE_PRIVATE).getInt(SplashScreenActivity.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, 0);
-            current = (current == currAct.mImageMemCache.size()) ? 0 : current;
-            */
-            //bitmapResult = currAct.mImageMemCache.get(current);
+
             synchronized (diskLruCache) {
                 diskLruCache.close();
             }
         }
-        private void postExecute(){
-            /*
+        private void postExecute(final Bitmap bitmapResult){
+
             // sets the image for nav header
-            ImageView img = (ImageView) currAct.findViewById(R.id.actmain_id_navheadermain_layoutimg);
+            ImageView img = (ImageView) mainActivity.get().findViewById(R.id.actmain_id_navheadermain_layoutimg);
             synchronized (img) {
                 if(bitmapResult != null){
                     img.setImageBitmap(bitmapResult);
                 }
-            }*/
+            }
             mImageControllerFragment = new ImageFragmentAdapter(mainActivity.get(), mainActivity.get().getSupportFragmentManager(), memCache, reqSize.get());
             mImageSelector.get().setAdapter(mImageControllerFragment);
             mImageSelector.get().setCurrentItem(0);
@@ -653,153 +651,6 @@ public class MainActivity extends MylexzActivity
             System.gc();
             mainActivity.get().has_finished = 1;
             mainActivity.get().startTask();
-        }
-    }
-
-    private static class TaskBitmapViewPager extends AsyncTask<Void, Void, Point> {
-        File fileCache;
-        SimpleDiskLruCache diskCache;
-        private static final long MAX_CACHE_BUFFERED_SIZE = 1048576;
-        MainActivity currAct;
-        //Bitmap bitmapResult;
-        int current;
-        public TaskBitmapViewPager(MainActivity currAct) {
-            this.currAct = currAct;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            fileCache = new File(currAct.getCacheDir(), "cache");
-            fileCache.mkdir();
-        }
-
-        @Override
-        protected Point doInBackground(Void... voids) {
-            //add your items here
-            String[] key = {
-                    "viewpager_area_1",
-                    "viewpager_area_2",
-                    "viewpager_area_3",
-                    "viewpager_area_4"
-            };
-            //////////
-            Point reqSize = new Point();
-            currAct.getWindowManager().getDefaultDisplay().getSize(reqSize);
-            reqSize.y = Math.round(currAct.getResources().getDimension(R.dimen.actmain_dimen_viewpager_height));
-            // loads from a cache
-            try {
-                loadBitmapIntoCache(key, reqSize.x * reqSize.y);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            //publishProgress();
-            return reqSize;
-        }
-
-        private void loadBitmapIntoCache(String[] key, int maxSize) throws IOException {
-            try {
-                synchronized (this) {
-                    diskCache = SimpleDiskLruCache.getsInstance(fileCache);
-                }
-            } catch (IOException e) {
-                currAct.LOGE("Task.background()", "IOException occured when initialize DiskLruObjectCache instance", e);
-                return;
-            }
-            currAct.mImageMemCache = new LruCache<Integer, Bitmap>(maxSize);
-            int x = 0;
-            for(String result : key){
-                InputStream bis = diskCache.get(result);
-                /*byte[] imgBarr = new byte[bis.available()];
-                bis.read(imgBarr);
-                bis.close();*/
-                synchronized (this) {
-                    currAct.mImageMemCache.put(x++, BitmapFactory.decodeStream(bis));
-                }
-                diskCache.closeReading();
-                bis.close();
-            }
-            System.gc();
-            /*int size = currAct.mImageMemCache.size();
-            current = currAct.getSharedPreferences(SplashScreenActivity.SHARED_PREF_NAME, Context.MODE_PRIVATE).getInt(SplashScreenActivity.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, 0);
-            current = (current == currAct.mImageMemCache.size()) ? 0 : current;
-            */
-            //bitmapResult = currAct.mImageMemCache.get(current);
-            synchronized (diskCache) {
-                diskCache.close();
-            }
-        }
-
-        @Override
-        protected void onPostExecute(Point reqSize) {
-            super.onPostExecute(reqSize);
-            /*
-            // sets the image for nav header
-            ImageView img = (ImageView) currAct.findViewById(R.id.actmain_id_navheadermain_layoutimg);
-            synchronized (img) {
-                if(bitmapResult != null){
-                    img.setImageBitmap(bitmapResult);
-                }
-            }*/
-            currAct.mImageControllerFragment = new ImageFragmentAdapter(currAct, currAct.getSupportFragmentManager(), currAct.mImageMemCache, reqSize);
-            currAct.mImageSelector.setAdapter(currAct.mImageControllerFragment);
-            currAct.mImageSelector.setCurrentItem(0);
-            currAct.mImageSelector.setPageTransformer(true, new CustomPageViewTransformer());
-            currAct.mImageSelector.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    int curr_img = currAct.mImageSelector.getCurrentItem();
-                    if (++curr_img == currAct.mImageMemCache.size())
-                        curr_img = 0;
-                    currAct.mImageSelector.setCurrentItem(curr_img);
-
-                    System.gc();
-                    currAct.mImageSelector.setPageTransformer(true, new CustomPageViewTransformer());
-                    System.gc();
-                }
-            });
-            currAct.mImageSelector.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-                @Override
-                public void onPageScrolled(int i, float v, int i1) {
-
-                }
-
-                @Override
-                public void onPageSelected(int i) {
-                    for (int x = 0; x < currAct.mDotCount; x++) {
-                        currAct.mDots[x].setBackgroundResource(R.drawable.indicator_unselected_item_oval);
-                    }
-                    currAct.mDots[i].setBackgroundResource(R.drawable.indicator_selected_item_oval);
-                }
-
-                @Override
-                public void onPageScrollStateChanged(int i) {
-                    int pos = currAct.mImageSelector.getCurrentItem();
-                    // if reaching last and state is DRAGGING, back into first
-                    if (pos == currAct.mImageMemCache.size() - 1 && i == ViewPager.SCROLL_STATE_DRAGGING)
-                        currAct.mImageSelector.setCurrentItem(0, true);
-                }
-            });
-            currAct.mDotCount = currAct.mImageControllerFragment.getCount();
-            currAct.mDots = new LinearLayout[currAct.mDotCount];
-            for (int x = 0; x < currAct.mDotCount; x++) {
-                currAct.mDots[x] = new LinearLayout(currAct);
-                currAct.mDots[x].setBackgroundResource(R.drawable.indicator_unselected_item_oval);
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-                params.setMargins(0, 0, 4, 4);
-                currAct.mDots[x].setGravity(Gravity.RIGHT | Gravity.BOTTOM | Gravity.END);
-                currAct.indicators.addView(currAct.mDots[x], params);
-
-            }
-            currAct.mDots[0].setBackgroundResource(R.drawable.indicator_selected_item_oval);
-            //currAct.task = null;
-            System.gc();
-            currAct.has_finished = 1;
-            currAct.startTask();
         }
     }
 }

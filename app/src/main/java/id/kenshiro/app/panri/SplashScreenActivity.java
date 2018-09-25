@@ -197,7 +197,7 @@ public class SplashScreenActivity extends MylexzActivity {
             } catch (IOException e) {
                 ctx.LOGE("Task.background()", "IOException occured when closing diskCache", e);
             }
-            /*SharedPreferences shareds = ctx.getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
+            SharedPreferences shareds = ctx.getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
             if (!shareds.contains(ctx.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER))
                 shareds.edit().putInt(ctx.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, 0).commit();
             int curr = shareds.getInt(ctx.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, 0);
@@ -206,7 +206,6 @@ public class SplashScreenActivity extends MylexzActivity {
             else
                 curr++;
             shareds.edit().putInt(ctx.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, curr).commit();
-            */
             return ctx.app_condition;
         }
 
