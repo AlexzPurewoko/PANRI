@@ -251,7 +251,7 @@ public class DiagnoseActivity extends MylexzActivity
 		private void prepareDiskLruCache() throws IOException {
 			File fileCache = new File(getCacheDir(),"cache");
 			fileCache.mkdir();
-			diskCache = new SimpleDiskLruCache(fileCache);
+			diskCache = SimpleDiskLruCache.getsInstance(fileCache);
 		}
 
 		private void buildLoadingLayout() {
@@ -273,7 +273,7 @@ public class DiagnoseActivity extends MylexzActivity
 			);
 			resultElement.setLayoutParams(paramRoot);
 			resultElement.setPadding(10, 10, 10, 10);
-			resultElement.setOrientation(LinearLayout.VERTICAL);
+			resultElement.setOrientation(LinearLayout.HORIZONTAL);
 
 			GifImageView gifImg = new GifImageView(DiagnoseActivity.this);
 			gifImg.setLayoutParams(new LinearLayout.LayoutParams(
@@ -289,7 +289,7 @@ public class DiagnoseActivity extends MylexzActivity
 					LinearLayout.LayoutParams.WRAP_CONTENT,
 					LinearLayout.LayoutParams.WRAP_CONTENT
 			);
-			paramsText.topMargin = 10;
+			//paramsText.leftMargin = 40;
 			paramsText.gravity = Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL;
 			textView.setLayoutParams(paramsText);
 			textView.setGravity(Gravity.CENTER_VERTICAL);

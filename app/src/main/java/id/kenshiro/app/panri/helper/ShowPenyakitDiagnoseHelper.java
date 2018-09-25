@@ -131,7 +131,7 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         if (imageViewPenyakit == null)
             imageViewPenyakit = new ImageGridViewAdapter(activity, p, R.id.actgallery_id_gridimage);
         imageViewPenyakit.setColumnCount(2);
-        imageViewPenyakit.setListLocationAssetsImages(mListResImage);
+        imageViewPenyakit.setListLocationAssetsImages(mListResImage, "show_diagnose");
         int dimen = Math.round(activity.getResources().getDimension(R.dimen.margin_img_penyakit));
         imageViewPenyakit.setMargin(dimen, dimen, dimen, dimen);
         imageViewPenyakit.buildAndShow();

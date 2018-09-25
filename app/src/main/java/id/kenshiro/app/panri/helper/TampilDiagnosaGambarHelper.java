@@ -109,6 +109,7 @@ public class TampilDiagnosaGambarHelper implements Closeable{
 
     public void hideContentView() {
         mContentView.setVisibility(View.GONE);
+        btnBawah.setVisibility(View.GONE);
     }
 
     public void showContentView() {
@@ -391,7 +392,7 @@ public class TampilDiagnosaGambarHelper implements Closeable{
             File fileCache = new File(tampilDiagnosaGambarHelper.activity.getCacheDir(),"cache");
             fileCache.mkdir();
             try {
-                diskLruObjectCache = new SimpleDiskLruCache(fileCache);
+                diskLruObjectCache = SimpleDiskLruCache.getsInstance(fileCache);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -511,7 +512,7 @@ public class TampilDiagnosaGambarHelper implements Closeable{
                 System.gc();
             }
             else if(integer == 2){
-                tampilDiagnosaGambarHelper.createAndApplyContentLayout();
+                //tampilDiagnosaGambarHelper.createAndApplyContentLayout();
                 //Load CardView
                 tampilDiagnosaGambarHelper.content = (CardView) tampilDiagnosaGambarHelper.activity.getLayoutInflater().inflate(R.layout.adapter_imgdiagnose, tampilDiagnosaGambarHelper.mRootView, false);
                 TextView judul = tampilDiagnosaGambarHelper.content.findViewById(R.id.actimgdiagnose_judulpenyakit);

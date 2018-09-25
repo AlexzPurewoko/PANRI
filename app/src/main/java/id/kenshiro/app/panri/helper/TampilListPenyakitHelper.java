@@ -175,7 +175,7 @@ public class TampilListPenyakitHelper implements Closeable{
         protected Void doInBackground(Void... voids) {
             synchronized (this){
             try {
-                diskLruObjectCache = new SimpleDiskLruCache(fileCache);
+                diskLruObjectCache = SimpleDiskLruCache.getsInstance(fileCache);
             } catch (IOException e) {
                 e.printStackTrace();
             }

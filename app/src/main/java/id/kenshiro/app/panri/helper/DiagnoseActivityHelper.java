@@ -6,6 +6,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -50,6 +51,8 @@ public class DiagnoseActivityHelper{
     private List<AdapterRecycler.DataPerItems> data;
 
     private OnPenyakitHaveSelected onPenyakitHaveSelected = null;
+    private LinearLayout btnBawah;
+
     public DiagnoseActivityHelper(MylexzActivity activity, HashMap<Integer, ListNamaPenyakit> listNamaPenyakitHashMap, HashMap<Integer, ListCiriCiriPenyakit> listCiriCiriPenyakitHashMap){
         this.activity = activity;
         this.listNamaPenyakitHashMap = listNamaPenyakitHashMap;
@@ -384,9 +387,15 @@ public class DiagnoseActivityHelper{
     }
     private void createAskLayout() {
 
-        mAskLayout = (RelativeLayout) activity.getLayoutInflater().inflate(R.layout.actdiagnose_dialog_ask, null);
-        yes = (Button) mAskLayout.findViewById(R.id.actdiagnose_id_btnyes);
-        no = (Button) mAskLayout.findViewById(R.id.actdiagnose_id_btnno);
+        mAskLayout = (RelativeLayout) activity.getLayoutInflater().inflate(R.layout.actdiagnose_dialog_ask, mRootView, false);
+        btnBawah = (LinearLayout) activity.getLayoutInflater().inflate(R.layout.adapter_btnbawahdiag, mAskLayout, false);
+        RelativeLayout.LayoutParams paramsbtn = new RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.MATCH_PARENT,
+                RelativeLayout.LayoutParams.WRAP_CONTENT
+        );
+        paramsbtn.addRule(RelativeLayout.ABOVE, R.id.adapter_id_imgdiag_layout);
+        yes = (Button) btnBawah.findViewById(R.id.actimgdiagnose_buttonya);
+        no = (Button) btnBawah.findViewById(R.id.actimgdiagnose_buttontidak);
         mDescCiri = (TextView) mAskLayout.findViewById(R.id.actdiagnose_id_contentforask);
         yes.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -402,6 +411,7 @@ public class DiagnoseActivityHelper{
         });
         mDescCiri.setTextColor(Color.BLACK);
         mDescCiri.setTextSize(16.5f);
+        mAskLayout.addView(btnBawah);
     }
     public interface OnPenyakitHaveSelected{
         void onPenyakitSelected(RecyclerView list, RelativeLayout mAskLayout, HashMap<Integer, ListNamaPenyakit> listNamaPenyakitHashMap, int keyId, double percentage);

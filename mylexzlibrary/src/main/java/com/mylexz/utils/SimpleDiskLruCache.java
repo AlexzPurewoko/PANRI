@@ -1,6 +1,8 @@
 package com.mylexz.utils;
 
 
+import android.util.Log;
+
 import org.apache.commons.codec.binary.Base64;
 
 import java.io.ByteArrayInputStream;
@@ -14,15 +16,22 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.lang.ref.WeakReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SimpleDiskLruCache implements Closeable{
     private File source;
     public static final long MAX_BUFFER_SIZE = 512 * 1024;
-    File fileSource;
+    private final File fileSource;
     InputStream currentStream = null;
-    public SimpleDiskLruCache(File fileSource) throws IOException
+    private static volatile SimpleDiskLruCache sInstance;
+
+    public static SimpleDiskLruCache getsInstance(File fileSource) throws IOException {
+        sInstance = new SimpleDiskLruCache(fileSource);
+        return sInstance;
+    }
+    private SimpleDiskLruCache(File fileSource) throws IOException
     {
         this.fileSource = fileSource;
     }
@@ -144,7 +153,7 @@ public class SimpleDiskLruCache implements Closeable{
         }
         return result;
     }
-    public InputStream get(String key) throws IOException
+    public synchronized InputStream get(String key) throws IOException
     {
         if(!isKeyExists(key))throw new IOException(String.format("The key %s is not found", key));
         if(currentStream != null)throw new IOException("currentStream is opened, must close it");
@@ -183,11 +192,16 @@ public class SimpleDiskLruCache implements Closeable{
     {
         return fileSource;
     }
-    public boolean isKeyExists(String key)
+    public synchronized boolean isKeyExists(String key)
     {
+
         String encode_key = BaseEnDoc.encode(key);
+        Log.i(this.getClass().getSimpleName(), String.format("The Absolute path is %s", fileSource.getAbsolutePath()));
         File f = new File(fileSource, encode_key);
-        return f.exists();
+        Log.i(this.getClass().getSimpleName(), String.format("The key is %s and encoded key is %s and is exists? : %s", f.getAbsolutePath(), key, String.valueOf(f.exists())));
+
+        boolean results = f.exists();
+        return results;
     }
     @Override
     public void close() throws IOException

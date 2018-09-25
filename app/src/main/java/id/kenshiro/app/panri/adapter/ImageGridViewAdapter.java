@@ -54,6 +54,7 @@ public class ImageGridViewAdapter implements Closeable{
     private int marginRight = 15;
     private int mode = 0;
     private int finished_mode = 0;
+    private String idSuffix = null;
 
     public ImageGridViewAdapter(MylexzActivity ctx, Point screenSize, @IdRes int resRootLayout){
         this.ctx = ctx;
@@ -86,13 +87,15 @@ public class ImageGridViewAdapter implements Closeable{
         recycleBitmaps();
     }
 
-    public void setListLocationAssetsImages(List<String> listLocationAssetsImages) {
+    public void setListLocationAssetsImages(List<String> listLocationAssetsImages, String idSuffix) {
         this.listLocationAssetsImages = listLocationAssetsImages;
+        this.idSuffix = idSuffix;
         mode = 1;
     }
 
-    public void setListLocationResImages(List<Integer> listLocationResImages) {
+    public void setListLocationResImages(List<Integer> listLocationResImages, String idSuffix) {
         this.listLocationResImages = listLocationResImages;
+        this.idSuffix = idSuffix;
         mode = 0;
     }
 
@@ -101,7 +104,6 @@ public class ImageGridViewAdapter implements Closeable{
     }
     public void buildAndShow(){
         if(finished_mode != 0) return;
-        recycleBitmaps();
         finished_mode = 1;
         new TaskLoadingBitmap(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
@@ -180,7 +182,7 @@ public class ImageGridViewAdapter implements Closeable{
             File fileCache = new File(ctxCls.ctx.getCacheDir(),"cache");
             fileCache.mkdir();
             try {
-                diskLruObjectCache = new SimpleDiskLruCache(fileCache);
+                diskLruObjectCache = SimpleDiskLruCache.getsInstance(fileCache);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -189,6 +191,10 @@ public class ImageGridViewAdapter implements Closeable{
 
         @Override
         protected Void doInBackground(Void... voids) {
+            // recycle if necessary
+            synchronized (this){
+                ctxCls.recycleBitmaps();
+            }
             checkAndLoadAllBitmaps();
             if (ctxCls.rootElement != null) {
                 ctxCls.rootElement.removeViewsInLayout(0, ctxCls.rootElement.getChildCount());
@@ -201,8 +207,9 @@ public class ImageGridViewAdapter implements Closeable{
             return null;
         }
 
-        private void checkAndLoadAllBitmaps() {
+        private void checkAndLoadAllBitmaps() throws IllegalStateException{
             settingSize();
+            if(ctxCls.idSuffix == null || ctxCls.idSuffix.equals(""))throw new IllegalStateException("The argument idSuffix in setListLocationAssetsImages() or setListLocationResImages() is null or empty string.");
             ctxCls.mImagecache = new LruCache<Integer, Bitmap>(ctxCls.imageItemSize.x * ctxCls.imageItemSize.y);
             switch (ctxCls.mode){
                 case 0:
@@ -221,7 +228,7 @@ public class ImageGridViewAdapter implements Closeable{
         private void checkAndLoadAllBitmapsFromAssets() throws IOException {
             for(int x = 0; x < ctxCls.listLocationAssetsImages.size(); x++){
                 String name = ctxCls.listLocationAssetsImages.get(x);
-                String nameID = getLasts(name);
+                String nameID = getLasts(name) + ctxCls.idSuffix;
                 if(!diskLruObjectCache.isKeyExists(nameID)){
                     final Bitmap bitmap = DecodeBitmapHelper.decodeAndResizeBitmapsAssets(ctxCls.ctx.getAssets(), name, ctxCls.imageItemSize.y, ctxCls.imageItemSize.x);
                     Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, ctxCls.imageItemSize.x, ctxCls.imageItemSize.y, false);
@@ -277,7 +284,7 @@ public class ImageGridViewAdapter implements Closeable{
         private void checkAndLoadAllBitmapsFromRes() {
             for(int x = 0; x < ctxCls.listLocationResImages.size(); x++){
                 int resId = ctxCls.listLocationResImages.get(x);
-                String name = ctxCls.ctx.getResources().getResourceName(resId);
+                String name = ctxCls.ctx.getResources().getResourceName(resId) + ctxCls.idSuffix;
                 if(!diskLruObjectCache.isKeyExists(name)){
                     final Bitmap bitmap = DecodeBitmapHelper.decodeAndResizeBitmapsResources(ctxCls.ctx.getResources(), resId, ctxCls.imageItemSize.y, ctxCls.imageItemSize.x);
                     Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, ctxCls.imageItemSize.x, ctxCls.imageItemSize.y, false);

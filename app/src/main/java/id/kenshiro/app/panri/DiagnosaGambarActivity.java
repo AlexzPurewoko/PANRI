@@ -62,8 +62,9 @@ public class DiagnosaGambarActivity extends MylexzActivity {
         tampilDiagnosaGambarHelper.setOnItemListener(new TampilDiagnosaGambarHelper.OnItemListener() {
                                                          @Override
                                                          public void onBtnYaClicked(View v, View btn, int position) {
-                                                             v.setVisibility(View.GONE);
-                                                             btn.setVisibility(View.GONE);
+                                                             //v.setVisibility(View.GONE);
+                                                             //btn.setVisibility(View.GONE);
+                                                             tampilDiagnosaGambarHelper.hideContentView();
                                                              TOAST(Toast.LENGTH_LONG, "position at %d", position);
                                                              showPenyakitDiagnoseHelper.setmTextPetaniDesc(mTextPetaniDesc);
                                                              showPenyakitDiagnoseHelper.show(position);
@@ -99,6 +100,7 @@ public class DiagnosaGambarActivity extends MylexzActivity {
         showPenyakitDiagnoseHelper.build();
         tampilDiagnosaGambarHelper.buildAndShow();
         tampilDiagnosaGambarHelper.showContentView();
+        //showPenyakitDiagnoseHelper.show(1);
     }
     @Override
     protected void onResume() {
