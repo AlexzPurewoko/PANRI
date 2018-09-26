@@ -9,8 +9,10 @@ import android.graphics.Point;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.CardView;
 import android.text.Html;
@@ -59,7 +61,9 @@ public class TampilDiagnosaGambarHelper implements Closeable{
     DataCiriPenyakit dataCiriPenyakit;
     private AdapterRecycler.OnItemClickListener onItemClickListener;
     private LruCache<Integer, Bitmap> mImagecache = null;
+    Handler switchGambar = null;
 
+    private static final int TIME_BETWEEN_IMAGE = 3000; // 3s
     private static final int ON_BTN_YA = 0x6;
     private static final int ON_BTN_TIDAK = 0x6f;
     private int mSizeList = 0;
@@ -68,7 +72,8 @@ public class TampilDiagnosaGambarHelper implements Closeable{
     private OnItemListener onItemListener;
     private int modes = 0;
     private int finished_mods = 0;
-
+    private volatile int curr_pos_image = 0;
+    private volatile Runnable mSwitcherImages = null;
     public TampilDiagnosaGambarHelper(MylexzActivity activity, RelativeLayout mRootView, SQLiteDatabase sqlDB) {
         this.mRootView = mRootView;
         this.sqlDB = sqlDB;
@@ -197,6 +202,7 @@ public class TampilDiagnosaGambarHelper implements Closeable{
     }
 
     private void setViewPagerImage(final CustomViewPager customViewPager, LinearLayout indicators) {
+        clearHandlers(mSwitcherImages);
         final int mDotCount = mImagecache.size();
         final LinearLayout[] mDots = new LinearLayout[mDotCount];
         Point reqSize = new Point();
@@ -254,6 +260,32 @@ public class TampilDiagnosaGambarHelper implements Closeable{
 
         }
         mDots[0].setBackgroundResource(R.drawable.indicator_selected_item_oval);
+        setHandlers(customViewPager, mDotCount);
+    }
+
+    private void setHandlers(final CustomViewPager customViewPager, final int size) {
+        mSwitcherImages = new Runnable() {
+            @Override
+            public void run() {
+                if(curr_pos_image >= size)
+                    curr_pos_image = 0;
+                customViewPager.setCurrentItem(curr_pos_image, true);
+                ++curr_pos_image;
+                clearHandlers(this);
+                switchGambar = new Handler(Looper.getMainLooper());
+                switchGambar.postDelayed(mSwitcherImages, TIME_BETWEEN_IMAGE);
+            }
+        };
+        switchGambar = new Handler(Looper.getMainLooper());
+        switchGambar.postDelayed(mSwitcherImages, TIME_BETWEEN_IMAGE);
+    }
+
+    private void clearHandlers(Runnable runnable) {
+        if(switchGambar != null){
+            switchGambar.removeCallbacks(runnable);
+            switchGambar = null;
+            System.gc();
+        }
     }
 
     private void setJudulText(TextView judul, String txt) {
@@ -322,6 +354,7 @@ public class TampilDiagnosaGambarHelper implements Closeable{
     @Override
     public void close() throws IOException {
         recycleBitmaps();
+        clearHandlers(mSwitcherImages);
     }
 
     public interface OnItemListener {

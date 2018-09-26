@@ -27,8 +27,10 @@ import com.mylexz.utils.DiskLruObjectCache;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.SimpleDiskLruCache;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
+
 import android.graphics.Typeface;
 import android.widget.LinearLayout;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -114,6 +116,7 @@ public class MainActivity extends MylexzActivity
         navigationView.setNavigationItemSelectedListener(this);
         checkVersion();
     }
+
     private void checkVersion() {
         Bundle bundle = getIntent().getExtras();
         int app_cond = bundle.getInt(SplashScreenActivity.APP_CONDITION_KEY);
@@ -183,6 +186,7 @@ public class MainActivity extends MylexzActivity
         });
         alert.show();
     }
+
     private void setDB() {
         try {
             new CheckAndMoveDB(this, "database_penyakitpadi.db").upgradeDB();
@@ -194,7 +198,7 @@ public class MainActivity extends MylexzActivity
     @Override
     protected void onResume() {
         super.onResume();
-        if(has_finished == 1)
+        if (has_finished == 1)
             startTask();
     }
 
@@ -340,7 +344,7 @@ public class MainActivity extends MylexzActivity
             mPosTxtPetani = 0;
         mTextPetaniDesc.setText(TextPetaniDesc[mPosTxtPetani]);
         imgPetaniKedipView.setImageResource(R.drawable.petani_bicara);
-        if(handlerPetani == null){
+        if (handlerPetani == null) {
             handlerPetani = new Handler();
             handlerPetani.postDelayed(new Runnable() {
                 @Override
@@ -424,8 +428,8 @@ public class MainActivity extends MylexzActivity
     @Override
     protected void onDestroy() {
         stopTask();
-        if(mImageMemCache != null){
-            for(int x = 0; x < mImageMemCache.size(); x++){
+        if (mImageMemCache != null) {
+            for (int x = 0; x < mImageMemCache.size(); x++) {
                 mImageMemCache.get(x).recycle();
             }
             mImageMemCache.evictAll();
@@ -482,6 +486,7 @@ public class MainActivity extends MylexzActivity
             this.mListResImage1 = mListResImage1;
             this.mImageSelector1 = mImageSelector1;
         }
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -513,8 +518,8 @@ public class MainActivity extends MylexzActivity
 
 
     }
-    private static class PrepareBitmapViewPager implements Runnable
-    {
+
+    private static class PrepareBitmapViewPager implements Runnable {
         LruCache<Integer, Bitmap> memCache;
         private final File sourceCache;
         private ImageFragmentAdapter mImageControllerFragment;
@@ -526,7 +531,7 @@ public class MainActivity extends MylexzActivity
         private LinearLayout[] mDots;
         private WeakReference<LinearLayout> indicators;
 
-        PrepareBitmapViewPager(MainActivity mainActivity, Point reqSize, File cacheDirs){
+        PrepareBitmapViewPager(MainActivity mainActivity, Point reqSize, File cacheDirs) {
             this.mainActivity = new WeakReference<MainActivity>(mainActivity);
             this.memCache = mainActivity.mImageMemCache;
             this.sourceCache = cacheDirs;
@@ -537,6 +542,7 @@ public class MainActivity extends MylexzActivity
 
             sourceCache.mkdir();
         }
+
         @Override
         public void run() {
             //add your items here
@@ -557,11 +563,12 @@ public class MainActivity extends MylexzActivity
             final int current1 = (current == memCache.size()) ? 0 : current;
             postExecute(memCache.get(current1));
         }
+
         private void loadBitmapIntoCache(String[] key) throws IOException {
             try {
                 synchronized (this) {
                     //File source = sourceCache;
-                    Log.i("checkeraaa", "the curr cache dirs is "+sourceCache.getAbsolutePath());
+                    Log.i("checkeraaa", "the curr cache dirs is " + sourceCache.getAbsolutePath());
                     diskLruCache = SimpleDiskLruCache.getsInstance(sourceCache);
                 }
             } catch (IOException e) {
@@ -585,15 +592,17 @@ public class MainActivity extends MylexzActivity
                 diskLruCache.close();
             }
         }
-        private void postExecute(final Bitmap bitmapResult){
+
+        private void postExecute(final Bitmap bitmapResult) {
 
             // sets the image for nav header
             final ImageView img = (ImageView) mainActivity.get().findViewById(R.id.actmain_id_navheadermain_layoutimg);
-            synchronized (img) {
-                if(bitmapResult != null){
-                    img.setImageBitmap(bitmapResult);
+            if (img != null)
+                synchronized (img) {
+                    if (bitmapResult != null) {
+                        img.setImageBitmap(bitmapResult);
+                    }
                 }
-            }
             mImageControllerFragment = new ImageFragmentAdapter(mainActivity.get(), mainActivity.get().getSupportFragmentManager(), memCache, reqSize.get());
             mImageSelector.get().setAdapter(mImageControllerFragment);
             mImageSelector.get().setCurrentItem(0);

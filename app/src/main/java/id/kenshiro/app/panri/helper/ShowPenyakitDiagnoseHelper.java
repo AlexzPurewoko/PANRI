@@ -234,8 +234,11 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
             @Override
             public void onClick(View v) {
 
-                if (++countBtn == maxCount && onClickListener != null)
+                if (++countBtn >= maxCount && onClickListener != null) {
                     onClickListener.onClick(mContentView); // the 1st parameters is main Content View so if you unvisible the layout its become easier
+                    klikBawahText.setText(R.string.actdiagnose_string_klikcaramenanggulangi);
+                    countBtn = 0;
+                }
                 else {
                     // Do into cara_atasi
                     mContent1.setVisibility(View.GONE);
