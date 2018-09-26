@@ -1,5 +1,6 @@
 package id.kenshiro.app.panri;
 
+import android.app.AlertDialog;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.database.Cursor;
@@ -10,27 +11,29 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v7.widget.LinearLayoutManager;
+import android.os.Looper;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
-import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.mylexz.utils.DiskLruObjectCache;
 import com.mylexz.utils.MylexzActivity;
+import com.mylexz.utils.SimpleDiskLruCache;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
-import java.util.ArrayList;
+import java.io.File;
+import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.Executor;
 
 import id.kenshiro.app.panri.adapter.AdapterRecycler;
 import id.kenshiro.app.panri.helper.DiagnoseActivityHelper;
@@ -38,6 +41,7 @@ import id.kenshiro.app.panri.helper.ListCiriCiriPenyakit;
 import id.kenshiro.app.panri.helper.ListNamaPenyakit;
 import id.kenshiro.app.panri.helper.ShowPenyakitDiagnoseHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
+import pl.droidsonroids.gif.GifImageView;
 
 public class DiagnoseActivity extends MylexzActivity
 {
@@ -50,57 +54,45 @@ public class DiagnoseActivity extends MylexzActivity
 	private HashMap<Integer, ListCiriCiriPenyakit> listCiriCiriPenyakitHashMap;
 	private DiagnoseActivityHelper diagnoseActivityHelper;
 	private ShowPenyakitDiagnoseHelper showPenyakitDiagnoseHelper;
-	private ImgPetaniKedip imgPetaniKedip;
-	ImageView imgPetani;
+	private SimpleDiskLruCache diskCache;
+	private AlertDialog dialog;
 	Button mTextPetaniDesc;
 	private boolean doubleBackToExitPressedOnce;
 	private boolean isDiagnosting = true;
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
-		// TODO: Implement this method
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.actdiagnose_maincontent);
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		setMyActionBar();
 		setDB();
-		loadListPenyakit();
-		loadAllDataCiri();
-		loadLayoutAndShow();
+		buildLoadingLayout();
+		try {
+			PrepareHandlerTask prepareHandlerTask = new PrepareHandlerTask(this);
+			Handler handler = new Handler(Looper.getMainLooper());
+			handler.postDelayed(prepareHandlerTask, 50);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-		setTask();
-	}
-
-	private void setTask() {
-		imgPetaniKedip = new ImgPetaniKedip();
-		imgPetaniKedip.execute();
-	}
-
-	private void stopTask() {
-		if (imgPetaniKedip != null) {
-			imgPetaniKedip.cancel(true);
-			imgPetaniKedip = null;
-		}
 	}
 
 	@Override
 	protected void onPause() {
-		stopTask();
 		System.gc();
 		super.onPause();
 	}
 
 	private void loadLayoutAndShow() {
-		imgPetani = (ImageView) findViewById(R.id.actmain_id_section_petani_img);
 		mTextPetaniDesc = (Button) findViewById(R.id.actmain_id_section_petani_btn);
 		mTextPetaniDesc.setTextColor(Color.BLACK);
 		mTextPetaniDesc.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.NORMAL);
-		imgPetani.setImageResource(R.drawable.petani);
-		imgPetani.setImageLevel(4);
 	    diagnoseActivityHelper = new DiagnoseActivityHelper(this, this.listNamaPenyakitHashMap, this.listCiriCiriPenyakitHashMap);
 		showPenyakitDiagnoseHelper = new ShowPenyakitDiagnoseHelper(this, sqlDB, (RelativeLayout) this.findViewById(R.id.actdiagnose_id_layoutcontainer));
         diagnoseActivityHelper.setOnPenyakitHaveSelected(new DiagnoseActivityHelper.OnPenyakitHaveSelected() {
@@ -139,64 +131,9 @@ public class DiagnoseActivity extends MylexzActivity
 	    diagnoseActivityHelper.buildAndShow();
 		mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
 	}
-	private void loadAllDataCiri() {
-		listCiriCiriPenyakitHashMap = new HashMap<Integer, ListCiriCiriPenyakit>();
-		// input ciri ciri penyakit
-		Cursor curr = sqlDB.rawQuery("select ciri from ciriciri", null);
-		curr.moveToFirst();
-		while(!curr.isAfterLast()) {
-			String ciri = curr.getString(0);
-			listCiriCiriPenyakitHashMap.put(curr.getPosition()+1, new ListCiriCiriPenyakit(ciri, false, false));
-			curr.moveToNext();
-		}
-		curr.close();
-		System.gc();
-		///////////////////////////
-		// input usefirst flags
-		curr = sqlDB.rawQuery("select usefirst from ciriciri", null);
-		curr.moveToFirst();
-		while(!curr.isAfterLast()) {
-			String ciri = curr.getString(0);
-			listCiriCiriPenyakitHashMap.get(curr.getPosition()+1).setUsefirst_flags(Boolean.parseBoolean(ciri));
-			curr.moveToNext();
-		}
-		curr.close();
-		System.gc();
-		///////////////////////////
-		// input ask flags
-		curr = sqlDB.rawQuery("select ask from ciriciri", null);
-		curr.moveToFirst();
-		while(!curr.isAfterLast()) {
-			String ciri = curr.getString(0);
-			listCiriCiriPenyakitHashMap.get(curr.getPosition()+1).setAsk_flags(Boolean.parseBoolean(ciri));
-			curr.moveToNext();
-		}
-		curr.close();
-		System.gc();
-		///////////////////////////
-		// input listused flags
-		curr = sqlDB.rawQuery("select listused from ciriciri", null);
-		curr.moveToFirst();
-		while(!curr.isAfterLast()) {
-			String ciri = curr.getString(0);
-			listCiriCiriPenyakitHashMap.get(curr.getPosition()+1).setListused_flags(ciri);
-			curr.moveToNext();
-		}
-		curr.close();
-		System.gc();
-		///////////////////////////
-		// input pointo flags
-		curr = sqlDB.rawQuery("select pointo from ciriciri", null);
-		curr.moveToFirst();
-		while(!curr.isAfterLast()) {
-			String ciri = curr.getString(0);
-			listCiriCiriPenyakitHashMap.get(curr.getPosition()+1).setPointo_flags(ciri);
-			curr.moveToNext();
-		}
-		curr.close();
-		System.gc();
-		//////////////////////////
-		//////////////////////////////////////// load successfully
+	private void loadAllDataCiri() throws IOException, ClassNotFoundException {
+		listCiriCiriPenyakitHashMap = (HashMap<Integer, ListCiriCiriPenyakit>) diskCache.getObjectWithDecode(SplashScreenActivity.LIST_PENYAKIT_CIRI_KEY_CACHE);
+		diskCache.closeReading();
 	}
 
 	@Override
@@ -231,8 +168,6 @@ public class DiagnoseActivity extends MylexzActivity
 
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		int repeat = event.getRepeatCount();
-		int maxRepeat = 2;
 		if (keyCode == KeyEvent.KEYCODE_BACK) {
 			if (isDiagnosting) {
 				if (!diagnoseActivityHelper.setOnPushBackButtonPressed(true)) {
@@ -265,6 +200,7 @@ public class DiagnoseActivity extends MylexzActivity
 					showPenyakitDiagnoseHelper.getmContentView().setVisibility(View.GONE);
 					mTextPetaniDesc.setOnClickListener(null);
 					mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
+					diagnoseActivityHelper.setOnPushBackButtonPressed(true);
 					isDiagnosting = true;
 					return false;
 				}
@@ -272,39 +208,24 @@ public class DiagnoseActivity extends MylexzActivity
 
 			return false;
 		}
-		//else if(keyCode == )
 		return super.onKeyDown(keyCode, event);
 	}
 
 	@Override
 	protected void onDestroy() {
-		stopTask();
 		System.gc();
 		sqlDB.close();
+		try {
+			diskCache.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		try {
+			showPenyakitDiagnoseHelper.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		super.onDestroy();
-	}
-
-	private void setData() {
-	    data = new ArrayList<AdapterRecycler.DataPerItems>();
-		data.add(new AdapterRecycler.DataPerItems("Hello World"));
-		data.add(new AdapterRecycler.DataPerItems("Alexzander Purwoko Widiantoro"));
-		data.add(new AdapterRecycler.DataPerItems("Roman Av"));
-		data.add(new AdapterRecycler.DataPerItems("Anggi Mundita"));
-		data.add(new AdapterRecycler.DataPerItems("Catur lagi kentut"));
-		for(int x = 0; x < data.size(); x++)
-		    Log.i("MainActivity", String.format("position %d text %s.", x, data.get(x).items));
-		mListView = (RecyclerView) findViewById(R.id.actdiagnose_id_contentrecycler);
-		mListView.setHasFixedSize(true);
-		mListView.setLayoutManager(new LinearLayoutManager(this));
-		AdapterRecycler recycler = new AdapterRecycler(data);
-        recycler.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
-            @Override
-            public void onClick(View a, int b) {
-                Toast.makeText(DiagnoseActivity.this, "selected at position " + b, Toast.LENGTH_LONG).show();
-            }
-        });
-		mListView.setAdapter(recycler);
-
 	}
 
     private void setMyActionBar() {
@@ -327,34 +248,72 @@ public class DiagnoseActivity extends MylexzActivity
 		SwitchIntoMainActivity.switchToMain(this);
 		return true;
 	}
-
-	private class ImgPetaniKedip extends AsyncTask<Void, Integer, Void> {
-		private void sleep(int mil) {
-			try {
-				Thread.sleep(mil);
-			} catch (InterruptedException e) {
-				Log.e("Main_Exception", "Interrupted in method ImageAutoSwipe.doInBackground()", e);
-			}
-		}
-
-		@Override
-		protected Void doInBackground(Void[] p1) {
-			// TODO: Implement this method
-			while (true) {
-				sleep(400);
-				publishProgress(1);
-				sleep(2000);
-				publishProgress(4);
-			}
-		}
-
-		@Override
-		protected void onProgressUpdate(Integer[] values) {
-			// TODO: Implement this method
-			super.onProgressUpdate(values);
-			int pos = values[0];
-			imgPetani.setImageLevel(pos);
-		}
-
+	private void buildLoadingLayout() {
+		LinearLayout rootElement = buildAndConfigureRootelement();
+		AlertDialog.Builder builder = new AlertDialog.Builder(DiagnoseActivity.this);
+		builder.setView(rootElement);
+		builder.setCancelable(false);
+		dialog = builder.create();
+		dialog.show();
 	}
+
+	private LinearLayout buildAndConfigureRootelement() {
+		int sizeDialog =
+				Math.round(getResources().getDimension(R.dimen.actsplash_dimen_loading_wh));
+		LinearLayout resultElement = new LinearLayout(DiagnoseActivity.this);
+		LinearLayout.LayoutParams paramRoot = new LinearLayout.LayoutParams(
+				LinearLayout.LayoutParams.MATCH_PARENT,
+				LinearLayout.LayoutParams.WRAP_CONTENT
+		);
+		resultElement.setLayoutParams(paramRoot);
+		resultElement.setPadding(10, 10, 10, 10);
+		resultElement.setOrientation(LinearLayout.HORIZONTAL);
+
+		GifImageView gifImg = new GifImageView(DiagnoseActivity.this);
+		gifImg.setLayoutParams(new LinearLayout.LayoutParams(
+				sizeDialog,
+				sizeDialog
+		));
+		gifImg.setImageResource(R.drawable.loading);
+		resultElement.addView(gifImg);
+
+		TextView textView = new TextView(DiagnoseActivity.this);
+		textView.setText("Loading...");
+		LinearLayout.LayoutParams paramsText = new LinearLayout.LayoutParams(
+				LinearLayout.LayoutParams.WRAP_CONTENT,
+				LinearLayout.LayoutParams.WRAP_CONTENT
+		);
+		//paramsText.leftMargin = 40;
+		paramsText.gravity = Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL;
+		textView.setLayoutParams(paramsText);
+		textView.setGravity(Gravity.CENTER_VERTICAL);
+		resultElement.addView(textView);
+		return resultElement;
+	}
+
+	private static class PrepareHandlerTask implements Runnable {
+		private WeakReference<DiagnoseActivity> diagnoseActivity;
+		private WeakReference<SimpleDiskLruCache> diskLruCache;
+		PrepareHandlerTask(DiagnoseActivity diagnoseActivity) throws IOException {
+			this.diagnoseActivity = new WeakReference<>(diagnoseActivity);
+
+			final File cacheFile = new File(this.diagnoseActivity.get().getCacheDir(), "cache");
+			this.diagnoseActivity.get().diskCache = SimpleDiskLruCache.getsInstance(cacheFile);
+			diskLruCache = new WeakReference<>(this.diagnoseActivity.get().diskCache);
+		}
+		@Override
+		public void run() {
+			diagnoseActivity.get().loadListPenyakit();
+			try {
+				diagnoseActivity.get().loadAllDataCiri();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
+			diagnoseActivity.get().loadLayoutAndShow();
+			diagnoseActivity.get().dialog.cancel();
+		}
+	}
+
 }

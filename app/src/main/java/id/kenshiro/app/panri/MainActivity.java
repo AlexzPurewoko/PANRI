@@ -1,49 +1,56 @@
 package id.kenshiro.app.panri;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Point;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.os.Looper;
+import android.support.v4.util.LruCache;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatDialog;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.text.SpannableString;
 
+import com.mylexz.utils.DiskLruObjectCache;
 import com.mylexz.utils.MylexzActivity;
-import com.mylexz.utils.SystemBarTintManager;
+import com.mylexz.utils.SimpleDiskLruCache;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
 import android.graphics.Typeface;
 import android.widget.LinearLayout;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executor;
+import java.util.Random;
 
 import id.kenshiro.app.panri.adapter.CustomViewPager;
-import id.kenshiro.app.panri.adapter.FadePageViewTransformer;
 import id.kenshiro.app.panri.adapter.ImageFragmentAdapter;
 
 import android.view.Gravity;
 import android.widget.Button;
 import android.widget.Toast;
-import android.support.v4.view.PagerAdapter;
 
 import id.kenshiro.app.panri.adapter.CustomPageViewTransformer;
 import id.kenshiro.app.panri.helper.CheckAndMoveDB;
+import id.kenshiro.app.panri.helper.DecodeBitmapHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
+import pl.droidsonroids.gif.GifImageView;
 
 import android.os.AsyncTask;
 import android.util.Log;
@@ -53,8 +60,6 @@ import android.support.v7.widget.CardView;
 import android.support.v7.app.AlertDialog;
 import android.graphics.Color;
 import android.view.KeyEvent;
-import android.view.MotionEvent;
-import android.content.Intent;
 
 public class MainActivity extends MylexzActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -62,15 +67,14 @@ public class MainActivity extends MylexzActivity
     // for view image pager
     LinearLayout indicators;
     private CustomViewPager mImageSelector;
-    private int mDotCount;
-    private List<Integer> mListResImage;
-    private LinearLayout[] mDots;
-    private ImageFragmentAdapter mImageControllerFragment;
+    int mDotCount;
+    LinearLayout[] mDots;
+    ImageFragmentAdapter mImageControllerFragment;
     private TextView mTextDetails;
-
+    private Handler handlerPetani;
     // for section petani
-    private ImageView imgPetani;
     private Button mTextPetaniDesc;
+    private GifImageView imgPetaniKedipView;
     private int[] TextPetaniDesc = {
             R.string.actmain_string_speechfarmer_1,
             R.string.actmain_string_speechfarmer_2,
@@ -85,9 +89,11 @@ public class MainActivity extends MylexzActivity
     private List<CardView> mListCard;
     // Important Task
     private ImageAutoSwipe imgSw;
-    private ImgPetaniKedip imgKedip;
-    private TalkingFarmer imgFarmerTalk;
     private boolean doubleBackToExitPressedOnce;
+    LruCache<Integer, Bitmap> mImageMemCache;
+    //TaskBitmapViewPager task;
+    private WeakReference<PrepareBitmapViewPager> prepareBitmapViewPagerWeakReference;
+    private int has_finished = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,7 +114,6 @@ public class MainActivity extends MylexzActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        startTask();
         checkVersion();
     }
 
@@ -181,6 +186,7 @@ public class MainActivity extends MylexzActivity
         });
         alert.show();
     }
+
     private void setDB() {
         try {
             new CheckAndMoveDB(this, "database_penyakitpadi.db").upgradeDB();
@@ -192,7 +198,8 @@ public class MainActivity extends MylexzActivity
     @Override
     protected void onResume() {
         super.onResume();
-        startTask();
+        if (has_finished == 1)
+            startTask();
     }
 
     @Override
@@ -202,7 +209,6 @@ public class MainActivity extends MylexzActivity
     }
 
     private void setMyActionBar() {
-        // TODO: Implement this method
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         SpannableString strTitle = new SpannableString(getTitle());
         Typeface tTitle = Typeface.createFromAsset(getAssets(), "Gecko_PersonalUseOnly.ttf");
@@ -269,23 +275,15 @@ public class MainActivity extends MylexzActivity
         return true;
     }
 
-    private void startTask() {
-        imgSw = new ImageAutoSwipe(mListResImage, mImageSelector);
-        imgKedip = new ImgPetaniKedip(imgPetani);
+    void startTask() {
+        imgSw = new ImageAutoSwipe(mImageMemCache, mImageSelector);
         imgSw.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        imgKedip.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     private void stopTask() {
         if (imgSw != null)
             imgSw.cancel(true);
-        if (imgFarmerTalk != null)
-            imgFarmerTalk.cancel(true);
-        if (imgKedip != null)
-            imgKedip.cancel(true);
         imgSw = null;
-        imgFarmerTalk = null;
-        imgKedip = null;
         System.gc();
 
     }
@@ -345,36 +343,34 @@ public class MainActivity extends MylexzActivity
         if (++mPosTxtPetani == TextPetaniDesc.length)
             mPosTxtPetani = 0;
         mTextPetaniDesc.setText(TextPetaniDesc[mPosTxtPetani]);
-
-        if (imgKedip != null) {
-            imgKedip.cancel(true);
-            imgKedip = null;
-        }
-        if (imgFarmerTalk != null) {
-            imgFarmerTalk.cancel(true);
-            imgFarmerTalk = null;
+        imgPetaniKedipView.setImageResource(R.drawable.petani_bicara);
+        if (handlerPetani == null) {
+            handlerPetani = new Handler();
+            handlerPetani.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    handlerPetani = null;
+                    System.gc();
+                    imgPetaniKedipView.setImageResource(R.drawable.petani_kedip);
+                }
+            }, 2000);
         }
         System.gc();
-        imgFarmerTalk = new TalkingFarmer(imgPetani, imgKedip);
-        imgFarmerTalk.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-
     }
 
     private void setInitialSectPetani() {
         mTextPetaniDesc = (Button) findViewById(R.id.actmain_id_section_petani_btn);
-        imgPetani = (ImageView) findViewById(R.id.actmain_id_section_petani_img);
+        imgPetaniKedipView = findViewById(R.id.actsplash_id_gifpetanikedip);
         mTextPetaniDesc.setTextColor(Color.BLACK);
         mTextPetaniDesc.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.NORMAL);
         mTextPetaniDesc.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View p1) {
-                // TODO: Implement this method
                 onButtonPetaniClicked();
             }
         });
-        imgPetani.setImageResource(R.drawable.petani);
-        imgPetani.setImageLevel(4);
         mTextPetaniDesc.setText(TextPetaniDesc[mPosTxtPetani]);
+        imgPetaniKedipView.setVisibility(View.VISIBLE);
     }
 
     private void setInitialTextInds() {
@@ -391,76 +387,24 @@ public class MainActivity extends MylexzActivity
 
     private void setInitialPagerData() {
         // initialize the view container
-        mListResImage = new ArrayList<Integer>();
         indicators = (LinearLayout) findViewById(R.id.actmain_id_layoutIndicators);
         mImageSelector = (CustomViewPager) findViewById(R.id.actmain_id_viewpagerimg);
-        //add your items here
-        mListResImage.add(R.drawable.viewpager_area_1);
-        mListResImage.add(R.drawable.viewpager_area_2);
-        mListResImage.add(R.drawable.viewpager_area_3);
-        mListResImage.add(R.drawable.viewpager_area_4);
-        //////////
-        mImageControllerFragment = new ImageFragmentAdapter(this, getSupportFragmentManager(), mListResImage);
-        mImageSelector.setAdapter(mImageControllerFragment);
-        mImageSelector.setCurrentItem(0);
-        mImageSelector.setPageTransformer(true, new CustomPageViewTransformer());
-        mImageSelector.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int curr_img = mImageSelector.getCurrentItem();
-                mImageSelector.setPageTransformer(true, new FadePageViewTransformer());
-                if (++curr_img == mListResImage.size())
-                    curr_img = 0;
-                mImageSelector.setCurrentItem(curr_img);
-
-                System.gc();
-                mImageSelector.setPageTransformer(true, new CustomPageViewTransformer());
-                System.gc();
-            }
-        });
-        mImageSelector.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            @Override
-            public void onPageScrolled(int i, float v, int i1) {
-
-            }
-
-            @Override
-            public void onPageSelected(int i) {
-                for (int x = 0; x < mDotCount; x++) {
-                    mDots[x].setBackgroundResource(R.drawable.indicator_unselected_item_oval);
-                }
-                mDots[i].setBackgroundResource(R.drawable.indicator_selected_item_oval);
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int i) {
-                int pos = mImageSelector.getCurrentItem();
-                // if reaching last and state is DRAGGING, back into first
-                if (pos == mListResImage.size() - 1 && i == ViewPager.SCROLL_STATE_DRAGGING)
-                    mImageSelector.setCurrentItem(0, true);
-            }
-        });
+        Point reqSize = new Point();
+        getWindowManager().getDefaultDisplay().getSize(reqSize);
+        reqSize.y = Math.round(getResources().getDimension(R.dimen.actmain_dimen_viewpager_height));
+        mImageMemCache = new LruCache<Integer, Bitmap>(reqSize.x * reqSize.y);
+        //task = new TaskBitmapViewPager(this);
+        //task.execute();
+        has_finished = 0;
+        prepareBitmapViewPagerWeakReference = new WeakReference<>(new PrepareBitmapViewPager(this, reqSize, new File(getCacheDir(), "cache")));
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(prepareBitmapViewPagerWeakReference.get(), 50);
         // set the indicators
-        mDotCount = mImageControllerFragment.getCount();
-        mDots = new LinearLayout[mDotCount];
-        for (int x = 0; x < mDotCount; x++) {
-            mDots[x] = new LinearLayout(this);
-            mDots[x].setBackgroundResource(R.drawable.indicator_unselected_item_oval);
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-            );
-            params.setMargins(0, 0, 4, 4);
-            mDots[x].setGravity(Gravity.RIGHT | Gravity.BOTTOM | Gravity.END);
-            indicators.addView(mDots[x], params);
 
-        }
-        mDots[0].setBackgroundResource(R.drawable.indicator_selected_item_oval);
     }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        // TODO: Implement this method
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             if (doubleBackToExitPressedOnce) {
                 showExitDialog();
@@ -483,8 +427,13 @@ public class MainActivity extends MylexzActivity
 
     @Override
     protected void onDestroy() {
-        // TODO: Implement this method
         stopTask();
+        if (mImageMemCache != null) {
+            for (int x = 0; x < mImageMemCache.size(); x++) {
+                mImageMemCache.get(x).recycle();
+            }
+            mImageMemCache.evictAll();
+        }
         super.onDestroy();
     }
 
@@ -509,7 +458,6 @@ public class MainActivity extends MylexzActivity
 
             @Override
             public void onClick(View p1) {
-                // TODO: Implement this method
                 mAlert.cancel();
                 MainActivity.this.finish();
             }
@@ -520,7 +468,6 @@ public class MainActivity extends MylexzActivity
 
             @Override
             public void onClick(View p1) {
-                // TODO: Implement this method
                 mAlert.cancel();
             }
 
@@ -529,131 +476,25 @@ public class MainActivity extends MylexzActivity
         mAlert.show();
     }
 
-    static class TalkingFarmer extends AsyncTask<Void, Integer, Void> {
-        private ImageView imgPetani1;
-        private ImgPetaniKedip imgPetaniKedip;
-
-        TalkingFarmer(ImageView imgPetani1, ImgPetaniKedip imgPetaniKedip) {
-            this.imgPetani1 = imgPetani1;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            // TODO: Implement this method
-            super.onPreExecute();
-            imgPetani1.setImageLevel(2);
-        }
-
-        private void sleep(int mil) {
-            try {
-                Thread.sleep(mil);
-            } catch (InterruptedException e) {
-                Log.e("Main_Exception", "Interrupted in method ImageAutoSwipe.doInBackground()", e);
-            }
-        }
-
-        @Override
-        protected Void doInBackground(Void[] p1) {
-            // TODO: Implement this method
-            sleep(300);
-            publishProgress(1);
-            sleep(300);
-            publishProgress(3);
-            sleep(300);
-            publishProgress(1);
-            sleep(300);
-            publishProgress(3);
-            sleep(300);
-            publishProgress(1);
-            sleep(300);
-            publishProgress(2);
-            return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer[] values) {
-            // TODO: Implement this method
-            super.onProgressUpdate(values);
-            int x = values[0];
-            imgPetani1.setImageLevel(x);
-        }
-
-        @Override
-        protected void onPostExecute(Void result) {
-            // TODO: Implement this method
-            super.onPostExecute(result);
-            imgPetani1.setImageLevel(4);
-            this.imgPetaniKedip = null;
-            System.gc();
-            this.imgPetaniKedip = new ImgPetaniKedip(imgPetani1);
-            this.imgPetaniKedip.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        }
-
-        @Override
-        protected void onCancelled() {
-            // TODO: Implement this method
-            super.onCancelled();
-            imgPetani1.setImageLevel(4);
-        }
-
-
-    }
-
-    static class ImgPetaniKedip extends AsyncTask<Void, Integer, Void> {
-        ImageView imgPetani1;
-
-        ImgPetaniKedip(ImageView imgPetani1) {
-            this.imgPetani1 = imgPetani1;
-        }
-        private void sleep(int mil) {
-            try {
-                Thread.sleep(mil);
-            } catch (InterruptedException e) {
-                Log.e("Main_Exception", "Interrupted in method ImageAutoSwipe.doInBackground()", e);
-            }
-        }
-
-        @Override
-        protected Void doInBackground(Void[] p1) {
-            // TODO: Implement this method
-            while (true) {
-                sleep(400);
-                publishProgress(1);
-                sleep(3000);
-                publishProgress(4);
-            }
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer[] values) {
-            // TODO: Implement this method
-            super.onProgressUpdate(values);
-            int pos = values[0];
-            imgPetani1.setImageLevel(pos);
-        }
-
-    }
-
     static class ImageAutoSwipe extends AsyncTask<Void, Integer, Void> {
         private final long pause_swipe_in_millis = 6000;
         private int maxImages;
-        private List<Integer> mListResImage1;
+        private LruCache<Integer, Bitmap> mListResImage1;
         private CustomViewPager mImageSelector1;
 
-        ImageAutoSwipe(List<Integer> mListResImage1, CustomViewPager mImageSelector1) {
+        ImageAutoSwipe(LruCache<Integer, Bitmap> mListResImage1, CustomViewPager mImageSelector1) {
             this.mListResImage1 = mListResImage1;
             this.mImageSelector1 = mImageSelector1;
         }
+
         @Override
         protected void onPreExecute() {
-            // TODO: Implement this method
             super.onPreExecute();
             maxImages = mListResImage1.size();
         }//5s
 
         @Override
         protected Void doInBackground(Void[] p1) {
-            // TODO: Implement this method
             while (true) {
                 try {
                     Thread.sleep(pause_swipe_in_millis);
@@ -667,7 +508,6 @@ public class MainActivity extends MylexzActivity
 
         @Override
         protected void onProgressUpdate(Integer[] values) {
-            // TODO: Implement this method
             super.onProgressUpdate(values);
             int pos_result = values[0];
             if (++pos_result == maxImages)
@@ -677,5 +517,149 @@ public class MainActivity extends MylexzActivity
         }
 
 
+    }
+
+    private static class PrepareBitmapViewPager implements Runnable {
+        LruCache<Integer, Bitmap> memCache;
+        private final File sourceCache;
+        private ImageFragmentAdapter mImageControllerFragment;
+        private WeakReference<CustomViewPager> mImageSelector;
+        private WeakReference<Point> reqSize;
+        private static volatile SimpleDiskLruCache diskLruCache;
+        private WeakReference<MainActivity> mainActivity;
+        private int mDotCount;
+        private LinearLayout[] mDots;
+        private WeakReference<LinearLayout> indicators;
+
+        PrepareBitmapViewPager(MainActivity mainActivity, Point reqSize, File cacheDirs) {
+            this.mainActivity = new WeakReference<MainActivity>(mainActivity);
+            this.memCache = mainActivity.mImageMemCache;
+            this.sourceCache = cacheDirs;
+            this.mImageSelector = new WeakReference<CustomViewPager>(mainActivity.mImageSelector);
+            this.reqSize = new WeakReference<Point>(reqSize);
+            this.indicators = new WeakReference<LinearLayout>(mainActivity.indicators);
+
+
+            sourceCache.mkdir();
+        }
+
+        @Override
+        public void run() {
+            //add your items here
+            String[] key = {
+                    "viewpager_area_1",
+                    "viewpager_area_2",
+                    "viewpager_area_3",
+                    "viewpager_area_4"
+            };
+            //////////
+            // loads from a cache
+            try {
+                loadBitmapIntoCache(key);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            final int current = mainActivity.get().getSharedPreferences(SplashScreenActivity.SHARED_PREF_NAME, Context.MODE_PRIVATE).getInt(SplashScreenActivity.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, 0);
+            final int current1 = (current == memCache.size()) ? 0 : current;
+            postExecute(memCache.get(current1));
+        }
+
+        private void loadBitmapIntoCache(String[] key) throws IOException {
+            try {
+                synchronized (this) {
+                    //File source = sourceCache;
+                    Log.i("checkeraaa", "the curr cache dirs is " + sourceCache.getAbsolutePath());
+                    diskLruCache = SimpleDiskLruCache.getsInstance(sourceCache);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                return;
+            }
+            int x = 0;
+
+            synchronized (diskLruCache) {
+                for (String result : key) {
+                    InputStream bis = diskLruCache.get(result);
+                    memCache.put(x++, BitmapFactory.decodeStream(bis));
+                    diskLruCache.closeReading();
+                    bis.close();
+
+                }
+            }
+            System.gc();
+
+            synchronized (diskLruCache) {
+                diskLruCache.close();
+            }
+        }
+
+        private void postExecute(final Bitmap bitmapResult) {
+
+            // sets the image for nav header
+            final ImageView img = (ImageView) mainActivity.get().findViewById(R.id.actmain_id_navheadermain_layoutimg);
+            if (img != null)
+                synchronized (img) {
+                    if (bitmapResult != null) {
+                        img.setImageBitmap(bitmapResult);
+                    }
+                }
+            mImageControllerFragment = new ImageFragmentAdapter(mainActivity.get(), mainActivity.get().getSupportFragmentManager(), memCache, reqSize.get());
+            mImageSelector.get().setAdapter(mImageControllerFragment);
+            mImageSelector.get().setCurrentItem(0);
+            mImageSelector.get().setPageTransformer(true, new CustomPageViewTransformer());
+            mImageSelector.get().setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int curr_img = mImageSelector.get().getCurrentItem();
+                    if (++curr_img == memCache.size())
+                        curr_img = 0;
+                    mImageSelector.get().setCurrentItem(curr_img);
+
+                    System.gc();
+                    mImageSelector.get().setPageTransformer(true, new CustomPageViewTransformer());
+                    System.gc();
+                }
+            });
+            mImageSelector.get().addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+                @Override
+                public void onPageScrolled(int i, float v, int i1) {
+
+                }
+
+                @Override
+                public void onPageSelected(int i) {
+                    for (int x = 0; x < mDotCount; x++) {
+                        mDots[x].setBackgroundResource(R.drawable.indicator_unselected_item_oval);
+                    }
+                    mDots[i].setBackgroundResource(R.drawable.indicator_selected_item_oval);
+                }
+
+                @Override
+                public void onPageScrollStateChanged(int i) {
+                    int pos = mImageSelector.get().getCurrentItem();
+                    // if reaching last and state is DRAGGING, back into first
+                    if (pos == memCache.size() - 1 && i == ViewPager.SCROLL_STATE_DRAGGING)
+                        mImageSelector.get().setCurrentItem(0, true);
+                }
+            });
+            mDotCount = mImageControllerFragment.getCount();
+            mDots = new LinearLayout[mDotCount];
+            for (int x = 0; x < mDotCount; x++) {
+                mDots[x] = new LinearLayout(mainActivity.get());
+                mDots[x].setBackgroundResource(R.drawable.indicator_unselected_item_oval);
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                );
+                params.setMargins(0, 0, 4, 4);
+                mDots[x].setGravity(Gravity.RIGHT | Gravity.BOTTOM | Gravity.END);
+                indicators.get().addView(mDots[x], params);
+
+            }
+            mDots[0].setBackgroundResource(R.drawable.indicator_selected_item_oval);
+            System.gc();
+            mainActivity.get().has_finished = 1;
+            mainActivity.get().startTask();
+        }
     }
 }

@@ -1,6 +1,8 @@
 package id.kenshiro.app.panri;
 
 import android.content.pm.ActivityInfo;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Point;
 import android.graphics.Typeface;
 import android.os.Build;
@@ -26,6 +28,9 @@ public class GalleryActivity extends MylexzActivity {
     Toolbar toolbar;
     ImageGridViewAdapter adapterGrid;
     private boolean doubleBackToExitPressedOnce;
+    private SQLiteDatabase sqlDB;
+    List<String> dataPathGambar;
+    private static final String image_default_dirs = "data_hama/foto";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -33,15 +38,31 @@ public class GalleryActivity extends MylexzActivity {
         setContentView(R.layout.actgallery_main);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setMyActionBar();
+        loadFromDB();
+
+    }
+
+    private void loadFromDB() {
+        sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/databases/database_penyakitpadi.db", null);
+        dataPathGambar = new ArrayList<>();
+        Cursor cursor = sqlDB.rawQuery("select path_gambar from gambar_penyakit", null);
+        cursor.moveToFirst();
+        while(!cursor.isAfterLast()){
+            String res = cursor.getString(0);
+            String[] list = res.split(",");
+            for (String idx : list) {
+                dataPathGambar.add(image_default_dirs+'/'+idx+".jpg");
+            }
+            cursor.moveToNext();
+        }
+        cursor.close();
+        sqlDB.close();
+        System.gc();
         Point p = new Point();
         getWindowManager().getDefaultDisplay().getSize(p);
-        List<Integer> l = new ArrayList<Integer>();
-        l.add(R.drawable.viewpager_area_1);
-        l.add(R.drawable.viewpager_area_2);
-        l.add(R.drawable.viewpager_area_3);
-        l.add(R.drawable.viewpager_area_4);
-        adapterGrid = new ImageGridViewAdapter(this, l, p, R.id.actgallery_id_gridimage);
+        adapterGrid = new ImageGridViewAdapter(this, p, R.id.actgallery_id_gridimage);
         adapterGrid.setColumnCount(2);
+        adapterGrid.setListLocationAssetsImages(dataPathGambar, "gallery_act");
         adapterGrid.setOnItemClickListener(new ImageGridViewAdapter.OnItemClickListener() {
                                                @Override
                                                public void onItemClick(View v, int position) {
@@ -65,6 +86,7 @@ public class GalleryActivity extends MylexzActivity {
 
     @Override
     protected void onDestroy() {
+        adapterGrid.close();
         super.onDestroy();
     }
 

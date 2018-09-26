@@ -6,6 +6,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -43,13 +44,16 @@ public class DiagnoseActivityHelper{
     private int key_data_position = 0;
     private int savedItemDataPosition = 0;
     private List<Integer> saved_btn_yesno_modes = new ArrayList<Integer>();
-    private int view_mode_saved = 0;
+    private List<Integer> view_mode_saved = new ArrayList<Integer>();
     private int saved_counter = 0;
     // for temporary list
-    private List<Integer> temp_list_nums, saved_temp_list_nums;
+    private List<Integer> temp_list_nums;
+    private List<List<Integer>> saved_temp_list_nums = new ArrayList<List<Integer>>();
     private List<AdapterRecycler.DataPerItems> data;
 
     private OnPenyakitHaveSelected onPenyakitHaveSelected = null;
+    private LinearLayout btnBawah;
+
     public DiagnoseActivityHelper(MylexzActivity activity, HashMap<Integer, ListNamaPenyakit> listNamaPenyakitHashMap, HashMap<Integer, ListCiriCiriPenyakit> listCiriCiriPenyakitHashMap){
         this.activity = activity;
         this.listNamaPenyakitHashMap = listNamaPenyakitHashMap;
@@ -74,20 +78,25 @@ public class DiagnoseActivityHelper{
         if (!on) return false;
         if (counter == 0)
             return false;
-        if (view_mode_saved == 0)
+        if (view_mode_saved == null)
             return false;
-        else if (counter == 1 && view_mode_saved != ListCiriCiriPenyakit.MODE_SEQUENCE) {
+        int mCurrPosSaved = view_mode_saved.size() - 1;
+        if(mCurrPosSaved < -1)
+            return false;
+        if (view_mode_saved.get(mCurrPosSaved) == 0)
+            return false;
+        else if (counter == 1 && view_mode_saved.get(mCurrPosSaved) != ListCiriCiriPenyakit.MODE_SEQUENCE) {
             counter = count_when_accept = count_when_decline = 0;
             mAskLayout.setVisibility(View.GONE);
             mListFirstPage.setVisibility(View.VISIBLE);
             selectFirstTampil();
             return true;
         } else {
-            if (view_mode_saved == ListCiriCiriPenyakit.MODE_BIND) {
+            if (view_mode_saved.get(mCurrPosSaved) == ListCiriCiriPenyakit.MODE_BIND) {
                 // load previous lists
                 counter--;
                 count_when_accept--;
-                boolean same = checkIfSame(temp_list_nums, saved_temp_list_nums);
+                boolean same = checkIfSame(temp_list_nums, saved_temp_list_nums.get(mCurrPosSaved));
                 if (same) {
                     if (counter == 1) {
                         selectFirstTampil();
@@ -96,14 +105,14 @@ public class DiagnoseActivityHelper{
                     String buildPointo = buildIntoListUsedDB(temp_list_nums);
                     if (same) ;
                 }
-                temp_list_nums = saved_temp_list_nums;
+                temp_list_nums = saved_temp_list_nums.get(mCurrPosSaved);
                 // change the content of data
                 data = new ArrayList<AdapterRecycler.DataPerItems>();
                 for (int x = 0; x < temp_list_nums.size(); x++) {
                     data.add(new AdapterRecycler.DataPerItems(listCiriCiriPenyakitHashMap.get(temp_list_nums.get(x)).getCiri()));
                 }
                 // apply these changes into RecyclerView
-                dataAdapter = new AdapterRecycler(data);
+                dataAdapter = new AdapterRecycler(data, activity);
                 dataAdapter.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
                     @Override
                     public void onClick(View a, int b) {
@@ -119,8 +128,7 @@ public class DiagnoseActivityHelper{
                 if (onPenyakitHaveSelected != null)
                     onPenyakitHaveSelected.onPilihCiriSection();
                 System.gc();
-                return true;
-            } else if (view_mode_saved == ListCiriCiriPenyakit.MODE_SEQUENCE) {
+            } else if (view_mode_saved.get(mCurrPosSaved) == ListCiriCiriPenyakit.MODE_SEQUENCE) {
                 if (savedItemDataPosition > 0)
                     savedItemDataPosition = --count_position_data;
                 if (counter == 1) {
@@ -153,9 +161,10 @@ public class DiagnoseActivityHelper{
                 mAskLayout.setVisibility(View.VISIBLE);
 
                 System.gc();
-                return true;
             }
-            return false;
+            view_mode_saved.remove(mCurrPosSaved);
+            saved_temp_list_nums.remove(mCurrPosSaved);
+            return true;
         }
     }
 
@@ -195,7 +204,7 @@ public class DiagnoseActivityHelper{
             }
         }
 
-        dataAdapter = new AdapterRecycler(data);
+        dataAdapter = new AdapterRecycler(data, activity);
         dataAdapter.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
             @Override
             public void onClick(View a, int b) {
@@ -204,7 +213,10 @@ public class DiagnoseActivityHelper{
         });
         mListFirstPage.setAdapter(dataAdapter);
         mListFirstPage.scrollToPosition(0);
-        view_mode_saved = ListCiriCiriPenyakit.MODE_BIND;
+        view_mode_saved.clear();
+        saved_temp_list_nums.clear();
+        view_mode_saved.add(ListCiriCiriPenyakit.MODE_BIND);
+        saved_temp_list_nums.add(temp_list_nums);
         if (onPenyakitHaveSelected != null)
             onPenyakitHaveSelected.onPilihCiriSection();
         System.gc();
@@ -255,8 +267,6 @@ public class DiagnoseActivityHelper{
         // if these condition is never we change its content view
 
         // if view_modes is VIEW_BIND the content is will be displayed as list
-        view_mode_saved = ListCiriCiriPenyakit.MODE_BIND;
-        saved_temp_list_nums = temp_list_nums;
         if(view_modes == ListCiriCiriPenyakit.MODE_BIND){
             // load another lists
             temp_list_nums = listCiriCiriPenyakitHashMap.get(itemPosition).listused_flags;
@@ -266,7 +276,7 @@ public class DiagnoseActivityHelper{
                 data.add(new AdapterRecycler.DataPerItems(listCiriCiriPenyakitHashMap.get(temp_list_nums.get(x)).getCiri()));
             }
             // apply these changes into RecyclerView
-            dataAdapter = new AdapterRecycler(data);
+            dataAdapter = new AdapterRecycler(data, activity);
             dataAdapter.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
                 @Override
                 public void onClick(View a, int b) {
@@ -278,6 +288,8 @@ public class DiagnoseActivityHelper{
             mListFirstPage.setAdapter(dataAdapter);
             mListFirstPage.setVisibility(View.VISIBLE);
             mAskLayout.setVisibility(View.GONE);
+            view_mode_saved.add(ListCiriCiriPenyakit.MODE_BIND);
+            saved_temp_list_nums.add(temp_list_nums);
             mRootView.setGravity(Gravity.TOP | Gravity.CENTER);
             if (onPenyakitHaveSelected != null)
                 onPenyakitHaveSelected.onPilihCiriSection();
@@ -296,6 +308,8 @@ public class DiagnoseActivityHelper{
             // sets the textView
             String ciri = listCiriCiriPenyakitHashMap.get(temp_list_nums.get(count_position_data)).getCiri();
             mDescCiri.setText(ciri);
+            view_mode_saved.add(ListCiriCiriPenyakit.MODE_SEQUENCE);
+            saved_temp_list_nums.add(temp_list_nums);
             if (onPenyakitHaveSelected != null)
                 onPenyakitHaveSelected.onTanyaSection();
             System.gc();
@@ -337,9 +351,9 @@ public class DiagnoseActivityHelper{
             view_modes = listCiriCiriPenyakitHashMap.get(itemPosition).listused_mode_flags;
         }
         itemPosition = temp_list_nums.get(count_position_data);
-        view_mode_saved = ListCiriCiriPenyakit.MODE_SEQUENCE;
+        view_mode_saved.add(ListCiriCiriPenyakit.MODE_SEQUENCE);
         savedItemDataPosition = count_position_data;
-        saved_temp_list_nums = temp_list_nums;
+        saved_temp_list_nums.add(temp_list_nums);
         if(view_modes == ListCiriCiriPenyakit.MODE_SEQUENCE) {
             // handling into the next ciri - ciri if possible
             if (count_position_data >= temp_list_nums.size()) {
@@ -365,7 +379,7 @@ public class DiagnoseActivityHelper{
                 data.add(new AdapterRecycler.DataPerItems(listCiriCiriPenyakitHashMap.get(temp_list_nums.get(x)).getCiri()));
             }
             // apply these changes into RecyclerView
-            dataAdapter = new AdapterRecycler(data);
+            dataAdapter = new AdapterRecycler(data, activity);
             dataAdapter.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
                 @Override
                 public void onClick(View a, int b) {
@@ -384,9 +398,15 @@ public class DiagnoseActivityHelper{
     }
     private void createAskLayout() {
 
-        mAskLayout = (RelativeLayout) activity.getLayoutInflater().inflate(R.layout.actdiagnose_dialog_ask, null);
-        yes = (Button) mAskLayout.findViewById(R.id.actdiagnose_id_btnyes);
-        no = (Button) mAskLayout.findViewById(R.id.actdiagnose_id_btnno);
+        mAskLayout = (RelativeLayout) activity.getLayoutInflater().inflate(R.layout.actdiagnose_dialog_ask, mRootView, false);
+        btnBawah = (LinearLayout) activity.getLayoutInflater().inflate(R.layout.adapter_btnbawahdiag, mAskLayout, false);
+        RelativeLayout.LayoutParams paramsbtn = new RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.MATCH_PARENT,
+                RelativeLayout.LayoutParams.WRAP_CONTENT
+        );
+        paramsbtn.addRule(RelativeLayout.ABOVE, R.id.adapter_id_imgdiag_layout);
+        yes = (Button) btnBawah.findViewById(R.id.actimgdiagnose_buttonya);
+        no = (Button) btnBawah.findViewById(R.id.actimgdiagnose_buttontidak);
         mDescCiri = (TextView) mAskLayout.findViewById(R.id.actdiagnose_id_contentforask);
         yes.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -402,6 +422,7 @@ public class DiagnoseActivityHelper{
         });
         mDescCiri.setTextColor(Color.BLACK);
         mDescCiri.setTextSize(16.5f);
+        mAskLayout.addView(btnBawah);
     }
     public interface OnPenyakitHaveSelected{
         void onPenyakitSelected(RecyclerView list, RelativeLayout mAskLayout, HashMap<Integer, ListNamaPenyakit> listNamaPenyakitHashMap, int keyId, double percentage);

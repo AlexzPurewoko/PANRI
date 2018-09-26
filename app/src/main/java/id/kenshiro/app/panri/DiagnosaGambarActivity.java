@@ -1,6 +1,7 @@
 package id.kenshiro.app.panri;
 
 import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.database.sqlite.SQLiteDatabase;
@@ -11,6 +12,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.view.menu.MenuBuilder;
 import android.support.v7.view.menu.MenuPresenter;
 import android.support.v7.widget.Toolbar;
@@ -27,17 +29,18 @@ import android.widget.Toast;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
+import java.io.IOException;
+
 import id.kenshiro.app.panri.helper.ShowPenyakitDiagnoseHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 import id.kenshiro.app.panri.helper.TampilDiagnosaGambarHelper;
+import pl.droidsonroids.gif.GifImageView;
 
 public class DiagnosaGambarActivity extends MylexzActivity {
     Toolbar toolbar;
     SQLiteDatabase sqlDB;
     TampilDiagnosaGambarHelper tampilDiagnosaGambarHelper;
     ShowPenyakitDiagnoseHelper showPenyakitDiagnoseHelper;
-    private DiagnosaGambarActivity.ImgPetaniKedip imgPetaniKedip;
-    ImageView imgPetani;
     Button mTextPetaniDesc;
     private boolean doubleBackToExitPressedOnce;
 
@@ -52,20 +55,18 @@ public class DiagnosaGambarActivity extends MylexzActivity {
     }
 
     private void setContentV() {
-        imgPetani = (ImageView) findViewById(R.id.actmain_id_section_petani_img);
         mTextPetaniDesc = (Button) findViewById(R.id.actmain_id_section_petani_btn);
         mTextPetaniDesc.setTextColor(Color.BLACK);
         mTextPetaniDesc.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.NORMAL);
         mTextPetaniDesc.setText(getText(R.string.actdiagnose_string_speechfarmer_img_1));
-        imgPetani.setImageResource(R.drawable.petani);
-        imgPetani.setImageLevel(4);
         showPenyakitDiagnoseHelper = new ShowPenyakitDiagnoseHelper(this, sqlDB, (RelativeLayout) findViewById(R.id.actdim_id_layoutcontainer));
         tampilDiagnosaGambarHelper = new TampilDiagnosaGambarHelper(this, (RelativeLayout) findViewById(R.id.actdim_id_layoutcontainer), sqlDB);
         tampilDiagnosaGambarHelper.setOnItemListener(new TampilDiagnosaGambarHelper.OnItemListener() {
                                                          @Override
                                                          public void onBtnYaClicked(View v, View btn, int position) {
-                                                             v.setVisibility(View.GONE);
-                                                             btn.setVisibility(View.GONE);
+                                                             //v.setVisibility(View.GONE);
+                                                             //btn.setVisibility(View.GONE);
+                                                             tampilDiagnosaGambarHelper.hideContentView();
                                                              TOAST(Toast.LENGTH_LONG, "position at %d", position);
                                                              showPenyakitDiagnoseHelper.setmTextPetaniDesc(mTextPetaniDesc);
                                                              showPenyakitDiagnoseHelper.show(position);
@@ -80,9 +81,32 @@ public class DiagnosaGambarActivity extends MylexzActivity {
 
                                                          @Override
                                                          public void onIsAfterLastListPosition(View v, View btn, int position, int size_list) {
-                                                             v.setVisibility(View.GONE);
-                                                             btn.setVisibility(View.GONE);
-                                                             TOAST(Toast.LENGTH_LONG, "position at %d is last (%d)", position, size_list);
+                                                             // v.setVisibility(View.GONE);
+                                                             //btn.setVisibility(View.GONE);
+                                                             setAlertDialog();
+                                                         }
+
+                                                         private void setAlertDialog() {
+                                                             AlertDialog.Builder alertDialog = new AlertDialog.Builder(DiagnosaGambarActivity.this);
+                                                             alertDialog.setIcon(R.mipmap.ic_launcher);
+                                                             alertDialog.setTitle("Maaf!");
+                                                             alertDialog.setMessage("Mohon maaf, anda sudah sampai di daftar terakhir. Mungkin anda kurang teliti dalam mendiagnosa penyakit anda. Untuk itu, silahkan klik tombol 'Diagnosa Ulang' jika ingin diagnosa dari awal lagi, Atau klik 'Akhiri Diagnosa' apabila anda tidak ingin mendiagnosa lagi");
+                                                             alertDialog.setCancelable(false);
+                                                             alertDialog.setPositiveButton("Diagnosa ulang", new DialogInterface.OnClickListener() {
+                                                                 @Override
+                                                                 public void onClick(DialogInterface dialog, int which) {
+                                                                     dialog.cancel();
+                                                                     tampilDiagnosaGambarHelper.setPosition(1);
+                                                                 }
+                                                             });
+                                                             alertDialog.setNegativeButton("Akhiri Diagnosa", new DialogInterface.OnClickListener() {
+                                                                 @Override
+                                                                 public void onClick(DialogInterface dialog, int which) {
+                                                                     dialog.cancel();
+                                                                     SwitchIntoMainActivity.switchToMain(DiagnosaGambarActivity.this);
+                                                                 }
+                                                             });
+                                                             alertDialog.show();
                                                          }
                                                      }
         );
@@ -101,25 +125,12 @@ public class DiagnosaGambarActivity extends MylexzActivity {
         showPenyakitDiagnoseHelper.build();
         tampilDiagnosaGambarHelper.buildAndShow();
         tampilDiagnosaGambarHelper.showContentView();
+        //showPenyakitDiagnoseHelper.show(1);
     }
     @Override
     protected void onResume() {
         super.onResume();
-        setTask();
     }
-
-    private void setTask() {
-        imgPetaniKedip = new ImgPetaniKedip();
-        imgPetaniKedip.execute();
-    }
-
-    private void stopTask() {
-        if (imgPetaniKedip != null) {
-            imgPetaniKedip.cancel(true);
-            imgPetaniKedip = null;
-        }
-    }
-
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
 
@@ -131,13 +142,16 @@ public class DiagnosaGambarActivity extends MylexzActivity {
 
     @Override
     protected void onPause() {
-        stopTask();
         System.gc();
         super.onPause();
     }
     @Override
     protected void onDestroy() {
-        stopTask();
+        try {
+            tampilDiagnosaGambarHelper.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         super.onDestroy();
     }
 
@@ -209,33 +223,4 @@ public class DiagnosaGambarActivity extends MylexzActivity {
         return true;
     }
 
-    private class ImgPetaniKedip extends AsyncTask<Void, Integer, Void> {
-        private void sleep(int mil) {
-            try {
-                Thread.sleep(mil);
-            } catch (InterruptedException e) {
-                Log.e("Main_Exception", "Interrupted in method ImageAutoSwipe.doInBackground()", e);
-            }
-        }
-
-        @Override
-        protected Void doInBackground(Void[] p1) {
-            // TODO: Implement this method
-            while (true) {
-                sleep(400);
-                publishProgress(1);
-                sleep(2000);
-                publishProgress(4);
-            }
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer[] values) {
-            // TODO: Implement this method
-            super.onProgressUpdate(values);
-            int pos = values[0];
-            imgPetani.setImageLevel(pos);
-        }
-
-    }
 }

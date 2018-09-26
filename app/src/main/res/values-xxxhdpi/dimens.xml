@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="actmain_dimen_viewpager_height">230dp</dimen>
+    <dimen name="margin_img_penyakit">6dp</dimen>
+    <dimen name="size_text_incard">7sp</dimen>
 </resources>
