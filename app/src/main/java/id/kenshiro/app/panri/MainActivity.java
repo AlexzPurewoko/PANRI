@@ -588,7 +588,7 @@ public class MainActivity extends MylexzActivity
         private void postExecute(final Bitmap bitmapResult){
 
             // sets the image for nav header
-            ImageView img = (ImageView) mainActivity.get().findViewById(R.id.actmain_id_navheadermain_layoutimg);
+            final ImageView img = (ImageView) mainActivity.get().findViewById(R.id.actmain_id_navheadermain_layoutimg);
             synchronized (img) {
                 if(bitmapResult != null){
                     img.setImageBitmap(bitmapResult);

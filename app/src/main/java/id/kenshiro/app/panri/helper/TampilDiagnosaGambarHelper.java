@@ -9,6 +9,8 @@ import android.graphics.Point;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.CardView;
 import android.text.Html;
@@ -37,6 +39,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,7 +68,6 @@ public class TampilDiagnosaGambarHelper implements Closeable{
     private OnItemListener onItemListener;
     private int modes = 0;
     private int finished_mods = 0;
-    private BuilderTaskUpdaterContent builderTask = null;
 
     public TampilDiagnosaGambarHelper(MylexzActivity activity, RelativeLayout mRootView, SQLiteDatabase sqlDB) {
         this.mRootView = mRootView;
@@ -132,8 +134,13 @@ public class TampilDiagnosaGambarHelper implements Closeable{
     public void updateContentAfter() {
         if(finished_mods != 0) return;
         finished_mods = 1;
-        builderTask = new BuilderTaskUpdaterContent(this);
-        builderTask.execute();
+        Handler handler = new Handler(Looper.getMainLooper());
+        try {
+            PreparecontentTask preparecontentTask = new PreparecontentTask(this);
+            handler.postDelayed(preparecontentTask, 50);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void onClickBtn(int whichType, int x) {
@@ -378,66 +385,59 @@ public class TampilDiagnosaGambarHelper implements Closeable{
             this.nama_latin = nama_latin;
         }
     }
-    private static class BuilderTaskUpdaterContent extends AsyncTask<Void, Void, Integer>{
+
+    private static class PreparecontentTask implements Runnable{
         SimpleDiskLruCache diskLruObjectCache;
         private static final int QUALITY_FACTOR = 10;
         private static final long MAX_CACHE_BUFFERED_SIZE = 1048576;
-        TampilDiagnosaGambarHelper tampilDiagnosaGambarHelper;
-        BuilderTaskUpdaterContent(TampilDiagnosaGambarHelper tampilDiagnosaGambarHelper){
-            this.tampilDiagnosaGambarHelper = tampilDiagnosaGambarHelper;
-        }
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            File fileCache = new File(tampilDiagnosaGambarHelper.activity.getCacheDir(),"cache");
+        private WeakReference<TampilDiagnosaGambarHelper> tampilDiagnosaGambarHelper;
+        PreparecontentTask(TampilDiagnosaGambarHelper tampilDiagnosaGambarHelper) throws IOException {
+            this.tampilDiagnosaGambarHelper = new WeakReference<>(tampilDiagnosaGambarHelper);
+            final File fileCache = new File(this.tampilDiagnosaGambarHelper.get().activity.getCacheDir(), "cache");
             fileCache.mkdir();
-            try {
-                diskLruObjectCache = SimpleDiskLruCache.getsInstance(fileCache);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
+            diskLruObjectCache = SimpleDiskLruCache.getsInstance(fileCache);
         }
         @Override
-        protected Integer doInBackground(Void... voids) {
-            tampilDiagnosaGambarHelper.recycleBitmaps();
-            if(tampilDiagnosaGambarHelper.modes == 0){
-                tampilDiagnosaGambarHelper.getsTheSizeData();
-                tampilDiagnosaGambarHelper.getDataFromDB(tampilDiagnosaGambarHelper.mPositionList);
+        public void run() {
+            int rets = 0;
+            tampilDiagnosaGambarHelper.get().recycleBitmaps();
+            if(tampilDiagnosaGambarHelper.get().modes == 0){
+                tampilDiagnosaGambarHelper.get().getsTheSizeData();
+                tampilDiagnosaGambarHelper.get().getDataFromDB(tampilDiagnosaGambarHelper.get().mPositionList);
                 try {
                     checkAndLoadAllBitmaps();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                tampilDiagnosaGambarHelper.modes = 1;
-                return 2;
+                tampilDiagnosaGambarHelper.get().modes = 1;
+                rets = 2;
             }
-            else if (tampilDiagnosaGambarHelper.mPositionList <= tampilDiagnosaGambarHelper.mSizeList) {
-                tampilDiagnosaGambarHelper.dataCiriPenyakit = null;
-                tampilDiagnosaGambarHelper.getDataFromDB(tampilDiagnosaGambarHelper.mPositionList);
+            else if (tampilDiagnosaGambarHelper.get().mPositionList <= tampilDiagnosaGambarHelper.get().mSizeList) {
+                tampilDiagnosaGambarHelper.get().dataCiriPenyakit = null;
+                tampilDiagnosaGambarHelper.get().getDataFromDB(tampilDiagnosaGambarHelper.get().mPositionList);
                 try {
                     checkAndLoadAllBitmaps();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 System.gc();
-                return 1;
-            } else if (tampilDiagnosaGambarHelper.onItemListener != null)
-                tampilDiagnosaGambarHelper.onItemListener.onIsAfterLastListPosition(tampilDiagnosaGambarHelper.mContentView, tampilDiagnosaGambarHelper.btnBawah, tampilDiagnosaGambarHelper.mPositionList, tampilDiagnosaGambarHelper.mSizeList);
+                rets = 1;
+            } else if (tampilDiagnosaGambarHelper.get().onItemListener != null)
+                tampilDiagnosaGambarHelper.get().onItemListener.onIsAfterLastListPosition(tampilDiagnosaGambarHelper.get().mContentView, tampilDiagnosaGambarHelper.get().btnBawah, tampilDiagnosaGambarHelper.get().mPositionList, tampilDiagnosaGambarHelper.get().mSizeList);
 
-            return 0;
+            postExecute(rets);
         }
         private void checkAndLoadAllBitmaps() throws IOException {
             Point reqSize = new Point();
-            tampilDiagnosaGambarHelper.activity.getWindowManager().getDefaultDisplay().getSize(reqSize);
-            reqSize.y = Math.round(tampilDiagnosaGambarHelper.activity.getResources().getDimension(R.dimen.actmain_dimen_viewpager_height));
-            tampilDiagnosaGambarHelper.mImagecache = new LruCache<Integer, Bitmap>(reqSize.x * reqSize.y);
-            int sizeslist = tampilDiagnosaGambarHelper.dataCiriPenyakit.listGambarId.size();
+            tampilDiagnosaGambarHelper.get().activity.getWindowManager().getDefaultDisplay().getSize(reqSize);
+            reqSize.y = Math.round(tampilDiagnosaGambarHelper.get().activity.getResources().getDimension(R.dimen.actmain_dimen_viewpager_height));
+            tampilDiagnosaGambarHelper.get().mImagecache = new LruCache<Integer, Bitmap>(reqSize.x * reqSize.y);
+            int sizeslist = tampilDiagnosaGambarHelper.get().dataCiriPenyakit.listGambarId.size();
             for(int x = 0; x < sizeslist; x++){
-                int resID = tampilDiagnosaGambarHelper.dataCiriPenyakit.listGambarId.get(x);
-                String nameID = getLasts(tampilDiagnosaGambarHelper.activity.getResources().getResourceName(resID));
+                int resID = tampilDiagnosaGambarHelper.get().dataCiriPenyakit.listGambarId.get(x);
+                String nameID = getLasts(tampilDiagnosaGambarHelper.get().activity.getResources().getResourceName(resID));
                 if(!diskLruObjectCache.isKeyExists(nameID)){
-                    final Bitmap bitmap = DecodeBitmapHelper.decodeAndResizeBitmapsResources(tampilDiagnosaGambarHelper.activity.getResources(), resID, reqSize.y, reqSize.x);
+                    final Bitmap bitmap = DecodeBitmapHelper.decodeAndResizeBitmapsResources(tampilDiagnosaGambarHelper.get().activity.getResources(), resID, reqSize.y, reqSize.x);
                     Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, reqSize.x, reqSize.y, false);
                     //gets the byte of bitmap
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -455,7 +455,7 @@ public class TampilDiagnosaGambarHelper implements Closeable{
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    tampilDiagnosaGambarHelper.mImagecache.put(x, scaledBitmap);
+                    tampilDiagnosaGambarHelper.get().mImagecache.put(x, scaledBitmap);
                     bitmap.recycle();
                     System.gc();
                 }
@@ -470,7 +470,7 @@ public class TampilDiagnosaGambarHelper implements Closeable{
                         diskLruObjectCache.closeReading();
                         continue;
                     }
-                    tampilDiagnosaGambarHelper.mImagecache.put(x, BitmapFactory.decodeStream(is));
+                    tampilDiagnosaGambarHelper.get().mImagecache.put(x, BitmapFactory.decodeStream(is));
                     diskLruObjectCache.closeReading();
                 }
             }
@@ -487,58 +487,55 @@ public class TampilDiagnosaGambarHelper implements Closeable{
             return stringBuffer.append("res1").toString();
         }
 
-        @Override
-        protected void onPostExecute(Integer integer) {
-            super.onPostExecute(integer);
+        void postExecute(int integer) {
             try {
                 diskLruObjectCache.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
             if(integer == 1) {
-                tampilDiagnosaGambarHelper.mContentView.pageScroll(0);
-                TextView judul = tampilDiagnosaGambarHelper.content.findViewById(R.id.actimgdiagnose_judulpenyakit);
-                CustomViewPager customViewPager = tampilDiagnosaGambarHelper.content.findViewById(R.id.actimgdiagnose_id_viewpagerimg);
-                LinearLayout indicators = tampilDiagnosaGambarHelper.content.findViewById(R.id.actimgdiagnose_id_layoutIndicators);
-                WebView ciriP = tampilDiagnosaGambarHelper.content.findViewById(R.id.actimgdiagnose_ciriciri);
+                tampilDiagnosaGambarHelper.get().mContentView.pageScroll(0);
+                TextView judul = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_judulpenyakit);
+                CustomViewPager customViewPager = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_id_viewpagerimg);
+                LinearLayout indicators = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_id_layoutIndicators);
+                WebView ciriP = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_ciriciri);
                 // sets the judul
-                tampilDiagnosaGambarHelper.setJudulText(judul, tampilDiagnosaGambarHelper.dataCiriPenyakit.nama_penyakit);
+                tampilDiagnosaGambarHelper.get().setJudulText(judul, tampilDiagnosaGambarHelper.get().dataCiriPenyakit.nama_penyakit);
 
                 // sets the largeImage
-                tampilDiagnosaGambarHelper.setViewPagerImage(customViewPager, indicators);
+                tampilDiagnosaGambarHelper.get().setViewPagerImage(customViewPager, indicators);
 
                 // sets the TextView CiriP
-                tampilDiagnosaGambarHelper.setCiriPenyakitText(ciriP, tampilDiagnosaGambarHelper.dataCiriPenyakit.listCiriHtml);
+                tampilDiagnosaGambarHelper.get().setCiriPenyakitText(ciriP, tampilDiagnosaGambarHelper.get().dataCiriPenyakit.listCiriHtml);
                 System.gc();
             }
             else if(integer == 2){
-                //tampilDiagnosaGambarHelper.createAndApplyContentLayout();
+                //tampilDiagnosaGambarHelper.get().createAndApplyContentLayout();
                 //Load CardView
-                tampilDiagnosaGambarHelper.content = (CardView) tampilDiagnosaGambarHelper.activity.getLayoutInflater().inflate(R.layout.adapter_imgdiagnose, tampilDiagnosaGambarHelper.mRootView, false);
-                TextView judul = tampilDiagnosaGambarHelper.content.findViewById(R.id.actimgdiagnose_judulpenyakit);
-                CustomViewPager customViewPager = tampilDiagnosaGambarHelper.content.findViewById(R.id.actimgdiagnose_id_viewpagerimg);
-                LinearLayout indicators = tampilDiagnosaGambarHelper.content.findViewById(R.id.actimgdiagnose_id_layoutIndicators);
-                WebView ciriP = tampilDiagnosaGambarHelper.content.findViewById(R.id.actimgdiagnose_ciriciri);
-                Button btnYa = tampilDiagnosaGambarHelper.btnBawah.findViewById(R.id.actimgdiagnose_buttonya);
-                Button btnTidak = tampilDiagnosaGambarHelper.btnBawah.findViewById(R.id.actimgdiagnose_buttontidak);
+                tampilDiagnosaGambarHelper.get().content = (CardView) tampilDiagnosaGambarHelper.get().activity.getLayoutInflater().inflate(R.layout.adapter_imgdiagnose, tampilDiagnosaGambarHelper.get().mRootView, false);
+                TextView judul = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_judulpenyakit);
+                CustomViewPager customViewPager = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_id_viewpagerimg);
+                LinearLayout indicators = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_id_layoutIndicators);
+                WebView ciriP = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_ciriciri);
+                Button btnYa = tampilDiagnosaGambarHelper.get().btnBawah.findViewById(R.id.actimgdiagnose_buttonya);
+                Button btnTidak = tampilDiagnosaGambarHelper.get().btnBawah.findViewById(R.id.actimgdiagnose_buttontidak);
 
                 // sets the judul
-                tampilDiagnosaGambarHelper.setJudulText(judul, tampilDiagnosaGambarHelper.dataCiriPenyakit.nama_penyakit);
+                tampilDiagnosaGambarHelper.get().setJudulText(judul, tampilDiagnosaGambarHelper.get().dataCiriPenyakit.nama_penyakit);
 
                 // sets the largeImage
-                tampilDiagnosaGambarHelper.setViewPagerImage(customViewPager, indicators);
+                tampilDiagnosaGambarHelper.get().setViewPagerImage(customViewPager, indicators);
 
                 // sets the TextView CiriP
-                tampilDiagnosaGambarHelper.setCiriPenyakitText(ciriP, tampilDiagnosaGambarHelper.dataCiriPenyakit.listCiriHtml);
+                tampilDiagnosaGambarHelper.get().setCiriPenyakitText(ciriP, tampilDiagnosaGambarHelper.get().dataCiriPenyakit.listCiriHtml);
 
                 // sets the button
-                tampilDiagnosaGambarHelper.setBtn(btnYa, btnTidak);
+                tampilDiagnosaGambarHelper.get().setBtn(btnYa, btnTidak);
 
                 // add and apply into view
-                tampilDiagnosaGambarHelper.mChildView.addView(tampilDiagnosaGambarHelper.content);
+                tampilDiagnosaGambarHelper.get().mChildView.addView(tampilDiagnosaGambarHelper.get().content);
             }
-            tampilDiagnosaGambarHelper.finished_mods = 0;
-            tampilDiagnosaGambarHelper.builderTask = null;
+            tampilDiagnosaGambarHelper.get().finished_mods = 0;
             System.gc();
         }
     }

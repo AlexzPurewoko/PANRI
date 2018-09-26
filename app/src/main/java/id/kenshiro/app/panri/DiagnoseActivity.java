@@ -11,6 +11,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
@@ -30,6 +31,7 @@ import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.List;
 
@@ -53,6 +55,7 @@ public class DiagnoseActivity extends MylexzActivity
 	private DiagnoseActivityHelper diagnoseActivityHelper;
 	private ShowPenyakitDiagnoseHelper showPenyakitDiagnoseHelper;
 	private SimpleDiskLruCache diskCache;
+	private AlertDialog dialog;
 	Button mTextPetaniDesc;
 	private boolean doubleBackToExitPressedOnce;
 	private boolean isDiagnosting = true;
@@ -64,8 +67,15 @@ public class DiagnoseActivity extends MylexzActivity
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		setMyActionBar();
 		setDB();
-		TaskPrepare prepare = new TaskPrepare();
-		prepare.execute();
+		buildLoadingLayout();
+		try {
+			PrepareHandlerTask prepareHandlerTask = new PrepareHandlerTask(this);
+			Handler handler = new Handler(Looper.getMainLooper());
+			handler.postDelayed(prepareHandlerTask, 50);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	@Override
@@ -206,6 +216,11 @@ public class DiagnoseActivity extends MylexzActivity
 		System.gc();
 		sqlDB.close();
 		try {
+			diskCache.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		try {
 			showPenyakitDiagnoseHelper.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -233,99 +248,72 @@ public class DiagnoseActivity extends MylexzActivity
 		SwitchIntoMainActivity.switchToMain(this);
 		return true;
 	}
+	private void buildLoadingLayout() {
+		LinearLayout rootElement = buildAndConfigureRootelement();
+		AlertDialog.Builder builder = new AlertDialog.Builder(DiagnoseActivity.this);
+		builder.setView(rootElement);
+		builder.setCancelable(false);
+		dialog = builder.create();
+		dialog.show();
+	}
 
-	private class TaskPrepare extends AsyncTask<Void, Void, Integer> {
-		AlertDialog dialog;
-		private static final long MAX_CACHE_BUFFERED_SIZE = 1048576;
+	private LinearLayout buildAndConfigureRootelement() {
+		int sizeDialog =
+				Math.round(getResources().getDimension(R.dimen.actsplash_dimen_loading_wh));
+		LinearLayout resultElement = new LinearLayout(DiagnoseActivity.this);
+		LinearLayout.LayoutParams paramRoot = new LinearLayout.LayoutParams(
+				LinearLayout.LayoutParams.MATCH_PARENT,
+				LinearLayout.LayoutParams.WRAP_CONTENT
+		);
+		resultElement.setLayoutParams(paramRoot);
+		resultElement.setPadding(10, 10, 10, 10);
+		resultElement.setOrientation(LinearLayout.HORIZONTAL);
+
+		GifImageView gifImg = new GifImageView(DiagnoseActivity.this);
+		gifImg.setLayoutParams(new LinearLayout.LayoutParams(
+				sizeDialog,
+				sizeDialog
+		));
+		gifImg.setImageResource(R.drawable.loading);
+		resultElement.addView(gifImg);
+
+		TextView textView = new TextView(DiagnoseActivity.this);
+		textView.setText("Loading...");
+		LinearLayout.LayoutParams paramsText = new LinearLayout.LayoutParams(
+				LinearLayout.LayoutParams.WRAP_CONTENT,
+				LinearLayout.LayoutParams.WRAP_CONTENT
+		);
+		//paramsText.leftMargin = 40;
+		paramsText.gravity = Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL;
+		textView.setLayoutParams(paramsText);
+		textView.setGravity(Gravity.CENTER_VERTICAL);
+		resultElement.addView(textView);
+		return resultElement;
+	}
+
+	private static class PrepareHandlerTask implements Runnable {
+		private WeakReference<DiagnoseActivity> diagnoseActivity;
+		private WeakReference<SimpleDiskLruCache> diskLruCache;
+		PrepareHandlerTask(DiagnoseActivity diagnoseActivity) throws IOException {
+			this.diagnoseActivity = new WeakReference<>(diagnoseActivity);
+
+			final File cacheFile = new File(this.diagnoseActivity.get().getCacheDir(), "cache");
+			this.diagnoseActivity.get().diskCache = SimpleDiskLruCache.getsInstance(cacheFile);
+			diskLruCache = new WeakReference<>(this.diagnoseActivity.get().diskCache);
+		}
 		@Override
-		protected void onPreExecute() {
-			super.onPreExecute();
-			buildLoadingLayout();
+		public void run() {
+			diagnoseActivity.get().loadListPenyakit();
 			try {
-				prepareDiskLruCache();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-
-		private void prepareDiskLruCache() throws IOException {
-			File fileCache = new File(getCacheDir(),"cache");
-			fileCache.mkdir();
-			diskCache = SimpleDiskLruCache.getsInstance(fileCache);
-		}
-
-		private void buildLoadingLayout() {
-			LinearLayout rootElement = buildAndConfigureRootelement();
-			AlertDialog.Builder builder = new AlertDialog.Builder(DiagnoseActivity.this);
-			builder.setView(rootElement);
-			builder.setCancelable(false);
-			dialog = builder.create();
-			dialog.show();
-		}
-
-		private LinearLayout buildAndConfigureRootelement() {
-			int sizeDialog =
-					Math.round(getResources().getDimension(R.dimen.actsplash_dimen_loading_wh));
-			LinearLayout resultElement = new LinearLayout(DiagnoseActivity.this);
-			LinearLayout.LayoutParams paramRoot = new LinearLayout.LayoutParams(
-					LinearLayout.LayoutParams.MATCH_PARENT,
-					LinearLayout.LayoutParams.WRAP_CONTENT
-			);
-			resultElement.setLayoutParams(paramRoot);
-			resultElement.setPadding(10, 10, 10, 10);
-			resultElement.setOrientation(LinearLayout.HORIZONTAL);
-
-			GifImageView gifImg = new GifImageView(DiagnoseActivity.this);
-			gifImg.setLayoutParams(new LinearLayout.LayoutParams(
-					sizeDialog,
-					sizeDialog
-			));
-			gifImg.setImageResource(R.drawable.loading);
-			resultElement.addView(gifImg);
-
-			TextView textView = new TextView(DiagnoseActivity.this);
-			textView.setText("Loading...");
-			LinearLayout.LayoutParams paramsText = new LinearLayout.LayoutParams(
-					LinearLayout.LayoutParams.WRAP_CONTENT,
-					LinearLayout.LayoutParams.WRAP_CONTENT
-			);
-			//paramsText.leftMargin = 40;
-			paramsText.gravity = Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL;
-			textView.setLayoutParams(paramsText);
-			textView.setGravity(Gravity.CENTER_VERTICAL);
-			resultElement.addView(textView);
-			return resultElement;
-		}
-
-		@Override
-		protected Integer doInBackground(Void... voids) {
-			loadListPenyakit();
-			try {
-				loadAllDataCiri();
+				diagnoseActivity.get().loadAllDataCiri();
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			}
-			publishProgress();
-			return null;
-		}
-
-		@Override
-		protected void onProgressUpdate(Void... values) {
-			super.onProgressUpdate(values);
-			loadLayoutAndShow();
-		}
-
-		@Override
-		protected void onPostExecute(Integer integer) {
-			super.onPostExecute(integer);
-			dialog.cancel();
-			try {
-				diskCache.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			diagnoseActivity.get().loadLayoutAndShow();
+			diagnoseActivity.get().dialog.cancel();
 		}
 	}
+
 }
