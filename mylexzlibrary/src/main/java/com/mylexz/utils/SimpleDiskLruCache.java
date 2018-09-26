@@ -194,12 +194,8 @@ public class SimpleDiskLruCache implements Closeable{
     }
     public synchronized boolean isKeyExists(String key)
     {
-
         String encode_key = BaseEnDoc.encode(key);
-        Log.i(this.getClass().getSimpleName(), String.format("The Absolute path is %s", fileSource.getAbsolutePath()));
         File f = new File(fileSource, encode_key);
-        Log.i(this.getClass().getSimpleName(), String.format("The key is %s and encoded key is %s and is exists? : %s", f.getAbsolutePath(), key, String.valueOf(f.exists())));
-
         boolean results = f.exists();
         return results;
     }

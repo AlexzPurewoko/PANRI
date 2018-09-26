@@ -42,7 +42,7 @@ public class TampilListPenyakitHelper implements Closeable{
     List<DataPenyakit> dataPenyakitList;
     ScrollView mContentView;
     LinearLayout childView;
-    private LruCache<Integer, Bitmap> mImagecache = null;
+    private volatile LruCache<Integer, Bitmap> mImagecache = null;
     private int finished_mode = 0;
 
     public TampilListPenyakitHelper(MylexzActivity activity, SQLiteDatabase sqlDB, RelativeLayout rootView) {
