@@ -51,11 +51,13 @@ public class TampilListPenyakitHelper implements Closeable{
         this.rootView = rootView;
     }
 
-    public void buildAndShow(){
+    public synchronized void buildAndShow(){
         setContentViewer();
         if(finished_mode != 0) return;
         finished_mode = 1;
         try {
+            int size_images = Math.round(activity.getResources().getDimension(R.dimen.actmain_dimen_opimg_incard_wh));
+            mImagecache = new LruCache<Integer, Bitmap>(size_images * 2);
             PrepareTask prepareTask = new PrepareTask(this);
             Handler handler = new Handler(Looper.getMainLooper());
             handler.postDelayed(prepareTask, 50);
@@ -63,7 +65,7 @@ public class TampilListPenyakitHelper implements Closeable{
             e.printStackTrace();
         }
     }
-    private void recycleBitmaps(){
+    private synchronized void recycleBitmaps(){
         if(mImagecache != null) {
             for (int x = 0; x < mImagecache.size(); x++) {
                 mImagecache.get(x).recycle();
@@ -71,6 +73,7 @@ public class TampilListPenyakitHelper implements Closeable{
             mImagecache.evictAll();
         }
         mImagecache = null;
+        System.gc();
     }
 
     private void setContentViewer() {
@@ -207,7 +210,6 @@ public class TampilListPenyakitHelper implements Closeable{
 
         private void checkAndLoadAllBitmaps() throws IOException {
             int size_images = Math.round(tampilListPenyakitHelper.get().activity.getResources().getDimension(R.dimen.actmain_dimen_opimg_incard_wh));
-            tampilListPenyakitHelper.get().mImagecache = new LruCache<Integer, Bitmap>(size_images * 2);
             for(int x = 0; x < tampilListPenyakitHelper.get().dataPenyakitList.size(); x++){
                 String name = tampilListPenyakitHelper.get().dataPenyakitList.get(x).path_image;
                 String nameID = getLasts(name);
