@@ -1,6 +1,7 @@
 package id.kenshiro.app.panri;
 
 import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.database.sqlite.SQLiteDatabase;
@@ -11,6 +12,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.view.menu.MenuBuilder;
 import android.support.v7.view.menu.MenuPresenter;
 import android.support.v7.widget.Toolbar;
@@ -79,9 +81,32 @@ public class DiagnosaGambarActivity extends MylexzActivity {
 
                                                          @Override
                                                          public void onIsAfterLastListPosition(View v, View btn, int position, int size_list) {
-                                                             v.setVisibility(View.GONE);
-                                                             btn.setVisibility(View.GONE);
-                                                             TOAST(Toast.LENGTH_LONG, "position at %d is last (%d)", position, size_list);
+                                                             // v.setVisibility(View.GONE);
+                                                             //btn.setVisibility(View.GONE);
+                                                             setAlertDialog();
+                                                         }
+
+                                                         private void setAlertDialog() {
+                                                             AlertDialog.Builder alertDialog = new AlertDialog.Builder(DiagnosaGambarActivity.this);
+                                                             alertDialog.setIcon(R.mipmap.ic_launcher);
+                                                             alertDialog.setTitle("Maaf!");
+                                                             alertDialog.setMessage("Mohon maaf, anda sudah sampai di daftar terakhir. Mungkin anda kurang teliti dalam mendiagnosa penyakit anda. Untuk itu, silahkan klik tombol 'Diagnosa Ulang' jika ingin diagnosa dari awal lagi, Atau klik 'Akhiri Diagnosa' apabila anda tidak ingin mendiagnosa lagi");
+                                                             alertDialog.setCancelable(false);
+                                                             alertDialog.setPositiveButton("Diagnosa ulang", new DialogInterface.OnClickListener() {
+                                                                 @Override
+                                                                 public void onClick(DialogInterface dialog, int which) {
+                                                                     dialog.cancel();
+                                                                     tampilDiagnosaGambarHelper.setPosition(1);
+                                                                 }
+                                                             });
+                                                             alertDialog.setNegativeButton("Akhiri Diagnosa", new DialogInterface.OnClickListener() {
+                                                                 @Override
+                                                                 public void onClick(DialogInterface dialog, int which) {
+                                                                     dialog.cancel();
+                                                                     SwitchIntoMainActivity.switchToMain(DiagnosaGambarActivity.this);
+                                                                 }
+                                                             });
+                                                             alertDialog.show();
                                                          }
                                                      }
         );

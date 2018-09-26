@@ -105,7 +105,12 @@ public class TampilDiagnosaGambarHelper implements Closeable{
 
         mPositionList = 1;
     }
-
+    public void setPosition(int position){
+        if(position > mSizeList) throw new IndexOutOfBoundsException(String.format("your current position is greater than mSizeList (%d > %d)", position, mSizeList));
+        else if (position < 1) throw new IndexOutOfBoundsException("Your current position is less than 1, the index starts with 1 into mSizeList");
+        mPositionList = position;
+        updateContentAfter();
+    }
     public void setOnItemListener(OnItemListener onItemListener) {
         this.onItemListener = onItemListener;
     }

@@ -4,8 +4,9 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Point;
 import android.graphics.Typeface;
+import android.os.Looper;
 import android.support.annotation.NonNull;
-import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.view.Gravity;
 import android.view.View;
@@ -23,14 +24,12 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import android.os.Handler;
 
+import id.kenshiro.app.panri.DiagnoseActivity;
 import id.kenshiro.app.panri.R;
-import id.kenshiro.app.panri.adapter.CustomPageViewTransformer;
-import id.kenshiro.app.panri.adapter.CustomViewPager;
-import id.kenshiro.app.panri.adapter.FadePageViewTransformer;
-import id.kenshiro.app.panri.adapter.ImageAssetsFragmentAdapter;
-import id.kenshiro.app.panri.adapter.ImageFragmentAdapter;
 import id.kenshiro.app.panri.adapter.ImageGridViewAdapter;
+import pl.droidsonroids.gif.GifImageView;
 
 public class ShowPenyakitDiagnoseHelper implements Closeable{
     private MylexzActivity activity;
@@ -53,6 +52,8 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
     public ScrollView mScrollContent;
     private Button mTextPetaniDesc;
     boolean mTxtPeralihan = false;
+    // dialog Alert
+    private AlertDialog dialog = null;
     public ShowPenyakitDiagnoseHelper(@NonNull MylexzActivity activity, @NonNull SQLiteDatabase sqLiteDatabase, @NonNull RelativeLayout mRootView){
         this.activity = activity;
         this.sqLiteDatabase = sqLiteDatabase;
@@ -69,7 +70,7 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         mContentView.setVisibility(View.GONE);
         mRootView.addView(mContentView);
     }
-    public void show(int keyId){
+    private void showKeyId(final int keyId){
         setPenyakitText(keyId);
         selectContentOnDB(keyId);
         setImagePager(keyId);
@@ -95,6 +96,22 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         umum.loadUrl(path_to_asset+""+dataPath.getUmum_path());
         gejala.loadUrl(path_to_asset+""+dataPath.getGejala_path());
         caraatasi.loadUrl(path_to_asset+""+dataPath.getCara_atasi_path());
+    }
+    public void show(final int keyId){
+        buildLoadingLayout();
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                showKeyId(keyId);
+                /*try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }*/
+                dialog.cancel();
+            }
+        }, 2000);
     }
 
     public RelativeLayout getmContentView() {
@@ -251,7 +268,50 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         });
 
     }
+    private void buildLoadingLayout() {
+        if(dialog == null) {
+            LinearLayout rootElement = buildAndConfigureRootelement();
+            AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+            builder.setView(rootElement);
+            builder.setCancelable(false);
+            dialog = builder.create();
+        }
+        dialog.show();
+    }
 
+    private LinearLayout buildAndConfigureRootelement() {
+        int sizeDialog =
+                Math.round(activity.getResources().getDimension(R.dimen.actsplash_dimen_loading_wh));
+        LinearLayout resultElement = new LinearLayout(activity);
+        LinearLayout.LayoutParams paramRoot = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        resultElement.setLayoutParams(paramRoot);
+        resultElement.setPadding(10, 10, 10, 10);
+        resultElement.setOrientation(LinearLayout.HORIZONTAL);
+
+        GifImageView gifImg = new GifImageView(activity);
+        gifImg.setLayoutParams(new LinearLayout.LayoutParams(
+                sizeDialog,
+                sizeDialog
+        ));
+        gifImg.setImageResource(R.drawable.loading);
+        resultElement.addView(gifImg);
+
+        TextView textView = new TextView(activity);
+        textView.setText("Loading...");
+        LinearLayout.LayoutParams paramsText = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        //paramsText.leftMargin = 40;
+        paramsText.gravity = Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL;
+        textView.setLayoutParams(paramsText);
+        textView.setGravity(Gravity.CENTER_VERTICAL);
+        resultElement.addView(textView);
+        return resultElement;
+    }
     @Override
     public void close() throws IOException {
         if(imageViewPenyakit != null)
