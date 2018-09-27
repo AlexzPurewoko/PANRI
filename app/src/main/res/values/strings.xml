@@ -59,5 +59,6 @@
     <string name="acttutor_string_btnnext">lanjut</string>
     <string name="actabout_string_hope_made">Made By\nHOPE Project</string>
     <string name="about_name">Tentang Kami</string>
+    <string name="finish_diagnose_string_message">APAKAH ANDA YAKIN TIDAK ADA SALAH SATU GAMBAR PENYAKIT YANG COCOK DENGAN PADI ANDA..??\nMAU DIAGNOSIS ULANG..??</string>
     <!-- -->
 </resources>

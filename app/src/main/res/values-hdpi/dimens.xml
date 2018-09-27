@@ -11,4 +11,11 @@
     <dimen name="actmain_dimen_opimg_incard_wh">40dp</dimen>
     <dimen name="margin_img_penyakit">6dp</dimen>
     <dimen name="size_text_incard">10sp</dimen>
+    <dimen name="layout_onnotselected_padd_5">5dp</dimen>
+    <dimen name="layout_onnotselected_imgpetani_mikir_width">126dp</dimen>
+    <dimen name="layout_onnotselected_imgpetani_mikir_height">120dp</dimen>
+    <dimen name="layout_onnotselected_marginleft_90">90dp</dimen>
+    <dimen name="layout_onnotselected_marginleft_20">20dp</dimen>
+    <dimen name="layout_onnotselecte_textsize_10sp">10sp</dimen>
+    <dimen name="layout_onnotselected_contentpaddingcard">2dp</dimen>
 </resources>

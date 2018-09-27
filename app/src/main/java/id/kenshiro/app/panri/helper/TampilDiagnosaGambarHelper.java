@@ -536,7 +536,8 @@ public class TampilDiagnosaGambarHelper implements Closeable{
                 e.printStackTrace();
             }
             if(integer == 1) {
-                tampilDiagnosaGambarHelper.get().mContentView.pageScroll(0);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2)
+                    tampilDiagnosaGambarHelper.get().mContentView.pageScroll(0);
                 TextView judul = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_judulpenyakit);
                 CustomViewPager customViewPager = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_id_viewpagerimg);
                 LinearLayout indicators = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_id_layoutIndicators);
