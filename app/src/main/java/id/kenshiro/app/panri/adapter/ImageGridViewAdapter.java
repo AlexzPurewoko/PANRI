@@ -55,6 +55,7 @@ public class ImageGridViewAdapter implements Closeable{
     private int marginBottom = 20;
     private int marginLeft = 15;
     private int marginRight = 15;
+    private int marginCenter = 15;
     private int mode = 0;
     private int finished_mode = 0;
     private String idSuffix = null;
@@ -69,11 +70,12 @@ public class ImageGridViewAdapter implements Closeable{
     public void setColumnCount(int columnCount){
         this.columnCount = columnCount;
     }
-    public void setMargin(@Px int marginTop, @Px int marginBottom, @Px int marginLeft, @Px int marginRight){
+    public void setMargin(@Px int marginTop, @Px int marginBottom, @Px int marginLeft, @Px int marginRight, @Px int marginCenter){
         this.marginBottom = marginBottom;
         this.marginTop = marginTop;
         this.marginLeft = marginLeft;
         this.marginRight = marginRight;
+        this.marginCenter = marginCenter;
     }
     private void recycleBitmaps(){
         if(mImagecache != null) {
@@ -133,17 +135,34 @@ public class ImageGridViewAdapter implements Closeable{
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
             );
-            params.setMargins(0, marginTop, 0, marginBottom);
+            if(x+1 == rowCount)
+                params.setMargins(0, marginTop, 0, marginBottom);
+            else
+                params.setMargins(0, marginTop, 0, 0);
             element.setLayoutParams(params);
             element.setGravity(Gravity.CENTER);
+            // build in column
             for(int y = 0; y < columnCount; y++){
                 ImageView img = new ImageView(ctx);
                 LinearLayout.LayoutParams params1 = new LinearLayout.LayoutParams(
                         imageItemSize.x,
                         imageItemSize.y
                 );
-                params1.rightMargin = marginRight;
-                params1.leftMargin = marginLeft;
+                if(columnCount > 1 && y+1 == columnCount) {
+                    params1.rightMargin = marginRight;
+                    params1.leftMargin = 0;
+                }
+                else if (columnCount > 1 && y < columnCount){
+                    if(y == 0)
+                        params1.leftMargin = marginLeft;
+                    else
+                        params1.leftMargin = 0;
+                    params1.rightMargin = marginCenter;
+                }
+                else {
+                    params1.rightMargin = marginRight;
+                    params1.leftMargin = marginLeft;
+                }
                 img.setLayoutParams(params1);
                 img.setImageBitmap(mImagecache.get(items));
                 img.setMaxHeight(imageItemSize.y);
@@ -228,7 +247,8 @@ public class ImageGridViewAdapter implements Closeable{
             int screenHeight = ctxCls.get().screenSize.y;
             int screenWidth  = ctxCls.get().screenSize.x;
             ///// section width
-            int imageWidth = screenWidth / ctxCls.get().columnCount - (ctxCls.get().columnCount * ctxCls.get().marginLeft + ctxCls.get().columnCount * ctxCls.get().marginRight);
+            //int imageWidth = screenWidth / ctxCls.get().columnCount - (ctxCls.get().columnCount * ctxCls.get().marginLeft + ctxCls.get().columnCount * ctxCls.get().marginRight);
+            int imageWidth = screenWidth / ctxCls.get().columnCount - (ctxCls.get().marginLeft + ctxCls.get().marginRight / ctxCls.get().columnCount);
             ctxCls.get().imageItemSize.x = imageWidth;
             ///// section height
             if(ctxCls.get().imageItemSize.y == 0){

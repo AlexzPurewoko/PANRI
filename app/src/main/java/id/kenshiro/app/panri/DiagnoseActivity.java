@@ -37,6 +37,7 @@ import java.util.List;
 
 import id.kenshiro.app.panri.adapter.AdapterRecycler;
 import id.kenshiro.app.panri.helper.DiagnoseActivityHelper;
+import id.kenshiro.app.panri.helper.DialogShowHelper;
 import id.kenshiro.app.panri.helper.ListCiriCiriPenyakit;
 import id.kenshiro.app.panri.helper.ListNamaPenyakit;
 import id.kenshiro.app.panri.helper.ShowPenyakitDiagnoseHelper;
@@ -55,7 +56,7 @@ public class DiagnoseActivity extends MylexzActivity
 	private DiagnoseActivityHelper diagnoseActivityHelper;
 	private ShowPenyakitDiagnoseHelper showPenyakitDiagnoseHelper;
 	private SimpleDiskLruCache diskCache;
-	private AlertDialog dialog;
+	private DialogShowHelper dialogShowHelper;
 	Button mTextPetaniDesc;
 	private boolean doubleBackToExitPressedOnce;
 	private boolean isDiagnosting = true;
@@ -67,7 +68,9 @@ public class DiagnoseActivity extends MylexzActivity
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		setMyActionBar();
 		setDB();
-		buildLoadingLayout();
+		dialogShowHelper = new DialogShowHelper(this);
+		dialogShowHelper.buildLoadingLayout();
+		dialogShowHelper.showDialog();
 		try {
 			PrepareHandlerTask prepareHandlerTask = new PrepareHandlerTask(this);
 			Handler handler = new Handler(Looper.getMainLooper());
@@ -248,48 +251,6 @@ public class DiagnoseActivity extends MylexzActivity
 		SwitchIntoMainActivity.switchToMain(this);
 		return true;
 	}
-	private void buildLoadingLayout() {
-		LinearLayout rootElement = buildAndConfigureRootelement();
-		AlertDialog.Builder builder = new AlertDialog.Builder(DiagnoseActivity.this);
-		builder.setView(rootElement);
-		builder.setCancelable(false);
-		dialog = builder.create();
-		dialog.show();
-	}
-
-	private LinearLayout buildAndConfigureRootelement() {
-		int sizeDialog =
-				Math.round(getResources().getDimension(R.dimen.actsplash_dimen_loading_wh));
-		LinearLayout resultElement = new LinearLayout(DiagnoseActivity.this);
-		LinearLayout.LayoutParams paramRoot = new LinearLayout.LayoutParams(
-				LinearLayout.LayoutParams.MATCH_PARENT,
-				LinearLayout.LayoutParams.WRAP_CONTENT
-		);
-		resultElement.setLayoutParams(paramRoot);
-		resultElement.setPadding(10, 10, 10, 10);
-		resultElement.setOrientation(LinearLayout.HORIZONTAL);
-
-		GifImageView gifImg = new GifImageView(DiagnoseActivity.this);
-		gifImg.setLayoutParams(new LinearLayout.LayoutParams(
-				sizeDialog,
-				sizeDialog
-		));
-		gifImg.setImageResource(R.drawable.loading);
-		resultElement.addView(gifImg);
-
-		TextView textView = new TextView(DiagnoseActivity.this);
-		textView.setText("Loading...");
-		LinearLayout.LayoutParams paramsText = new LinearLayout.LayoutParams(
-				LinearLayout.LayoutParams.WRAP_CONTENT,
-				LinearLayout.LayoutParams.WRAP_CONTENT
-		);
-		//paramsText.leftMargin = 40;
-		paramsText.gravity = Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL;
-		textView.setLayoutParams(paramsText);
-		textView.setGravity(Gravity.CENTER_VERTICAL);
-		resultElement.addView(textView);
-		return resultElement;
-	}
 
 	private static class PrepareHandlerTask implements Runnable {
 		private WeakReference<DiagnoseActivity> diagnoseActivity;
@@ -312,7 +273,7 @@ public class DiagnoseActivity extends MylexzActivity
 				e.printStackTrace();
 			}
 			diagnoseActivity.get().loadLayoutAndShow();
-			diagnoseActivity.get().dialog.cancel();
+			diagnoseActivity.get().dialogShowHelper.stopDialog();
 		}
 	}
 

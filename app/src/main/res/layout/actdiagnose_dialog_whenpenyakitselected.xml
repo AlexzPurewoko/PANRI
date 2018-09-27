@@ -83,6 +83,7 @@
                     android:padding="10dp"
                     app:cardCornerRadius="2dp"
                     app:cardElevation="2dp"
+                    app:contentPadding="@dimen/margin_img_penyakit"
                     app:cardUseCompatPadding="true">
 
                     <LinearLayout

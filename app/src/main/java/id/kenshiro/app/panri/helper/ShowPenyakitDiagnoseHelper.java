@@ -52,12 +52,14 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
     public ScrollView mScrollContent;
     private Button mTextPetaniDesc;
     boolean mTxtPeralihan = false;
+    private final DialogShowHelper dialogShowHelper;
     // dialog Alert
-    private AlertDialog dialog = null;
     public ShowPenyakitDiagnoseHelper(@NonNull MylexzActivity activity, @NonNull SQLiteDatabase sqLiteDatabase, @NonNull RelativeLayout mRootView){
         this.activity = activity;
         this.sqLiteDatabase = sqLiteDatabase;
         this.mRootView = mRootView;
+        dialogShowHelper = new DialogShowHelper(activity);
+        dialogShowHelper.buildLoadingLayout();
     }
 
     public void setmTextPetaniDesc(Button mTextPetaniDesc) {
@@ -93,12 +95,16 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
                 }
             });
         mScrollContent.pageScroll(1);
+        umum.clearCache(false);
+        gejala.clearCache(false);
+        caraatasi.clearCache(false);
+
         umum.loadUrl(path_to_asset+""+dataPath.getUmum_path());
         gejala.loadUrl(path_to_asset+""+dataPath.getGejala_path());
         caraatasi.loadUrl(path_to_asset+""+dataPath.getCara_atasi_path());
     }
     public void show(final int keyId){
-        buildLoadingLayout();
+        dialogShowHelper.showDialog();
         Handler handler = new Handler(Looper.getMainLooper());
         handler.postDelayed(new Runnable() {
             @Override
@@ -109,7 +115,7 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }*/
-                dialog.cancel();
+                dialogShowHelper.stopDialog();
             }
         }, 2000);
     }
@@ -150,7 +156,7 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         imageViewPenyakit.setColumnCount(2);
         imageViewPenyakit.setListLocationAssetsImages(mListResImage, "show_diagnose");
         int dimen = Math.round(activity.getResources().getDimension(R.dimen.margin_img_penyakit));
-        imageViewPenyakit.setMargin(dimen, dimen, dimen, dimen);
+        imageViewPenyakit.setMargin(0, dimen, dimen, dimen, dimen);
         imageViewPenyakit.buildAndShow();
     }
 
@@ -267,50 +273,6 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
             }
         });
 
-    }
-    private void buildLoadingLayout() {
-        if(dialog == null) {
-            LinearLayout rootElement = buildAndConfigureRootelement();
-            AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-            builder.setView(rootElement);
-            builder.setCancelable(false);
-            dialog = builder.create();
-        }
-        dialog.show();
-    }
-
-    private LinearLayout buildAndConfigureRootelement() {
-        int sizeDialog =
-                Math.round(activity.getResources().getDimension(R.dimen.actsplash_dimen_loading_wh));
-        LinearLayout resultElement = new LinearLayout(activity);
-        LinearLayout.LayoutParams paramRoot = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        resultElement.setLayoutParams(paramRoot);
-        resultElement.setPadding(10, 10, 10, 10);
-        resultElement.setOrientation(LinearLayout.HORIZONTAL);
-
-        GifImageView gifImg = new GifImageView(activity);
-        gifImg.setLayoutParams(new LinearLayout.LayoutParams(
-                sizeDialog,
-                sizeDialog
-        ));
-        gifImg.setImageResource(R.drawable.loading);
-        resultElement.addView(gifImg);
-
-        TextView textView = new TextView(activity);
-        textView.setText("Loading...");
-        LinearLayout.LayoutParams paramsText = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        //paramsText.leftMargin = 40;
-        paramsText.gravity = Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL;
-        textView.setLayoutParams(paramsText);
-        textView.setGravity(Gravity.CENTER_VERTICAL);
-        resultElement.addView(textView);
-        return resultElement;
     }
     @Override
     public void close() throws IOException {

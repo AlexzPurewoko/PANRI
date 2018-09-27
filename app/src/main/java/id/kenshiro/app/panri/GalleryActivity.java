@@ -8,6 +8,7 @@ import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
@@ -43,6 +44,7 @@ public class GalleryActivity extends MylexzActivity {
     }
 
     private void loadFromDB() {
+        Handler handler = new Handler(Looper.getMainLooper());
         sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/databases/database_penyakitpadi.db", null);
         dataPathGambar = new ArrayList<>();
         Cursor cursor = sqlDB.rawQuery("select path_gambar from gambar_penyakit", null);
@@ -60,9 +62,11 @@ public class GalleryActivity extends MylexzActivity {
         System.gc();
         Point p = new Point();
         getWindowManager().getDefaultDisplay().getSize(p);
+        int dimen = Math.round(getResources().getDimension(R.dimen.margin_img_penyakit));
         adapterGrid = new ImageGridViewAdapter(this, p, R.id.actgallery_id_gridimage);
         adapterGrid.setColumnCount(2);
         adapterGrid.setListLocationAssetsImages(dataPathGambar, "gallery_act");
+        adapterGrid.setMargin(dimen, dimen, dimen, dimen, dimen);
         adapterGrid.setOnItemClickListener(new ImageGridViewAdapter.OnItemClickListener() {
                                                @Override
                                                public void onItemClick(View v, int position) {
