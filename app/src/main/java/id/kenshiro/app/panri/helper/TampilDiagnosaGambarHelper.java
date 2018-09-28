@@ -339,14 +339,17 @@ public class TampilDiagnosaGambarHelper implements Closeable{
                 LinearLayout.LayoutParams.MATCH_PARENT
         );
         mChildView = new LinearLayout(activity);
+        mChildView.setGravity(Gravity.TOP);
         mChildView.setLayoutParams(params);
         mChildView.setOrientation(LinearLayout.VERTICAL);
         mChildView.setVisibility(View.VISIBLE);
         mContentView = new ScrollView(activity);
-        mContentView.setLayoutParams(new ScrollView.LayoutParams(
+        ScrollView.LayoutParams scrollViewParams = new ScrollView.LayoutParams(
                 ScrollView.LayoutParams.MATCH_PARENT,
                 ScrollView.LayoutParams.WRAP_CONTENT
-        ));
+        );
+        scrollViewParams.gravity = Gravity.TOP;
+        mContentView.setLayoutParams(scrollViewParams);
         mContentView.addView(mChildView);
         btnBawah = (LinearLayout) activity.getLayoutInflater().inflate(R.layout.adapter_btnbawahdiag, mRootView, false);
         mRootView.addView(mContentView);
@@ -357,6 +360,7 @@ public class TampilDiagnosaGambarHelper implements Closeable{
                 RelativeLayout.LayoutParams.WRAP_CONTENT
         );
         paramsbtn.addRule(RelativeLayout.ABOVE, R.id.adapter_id_imgdiag_layout);
+        paramsbtn.addRule(RelativeLayout.ALIGN_PARENT_TOP, 1);
         mContentView.setLayoutParams(paramsbtn);
     }
 

@@ -63,6 +63,7 @@ import android.view.KeyEvent;
 
 public class MainActivity extends MylexzActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+    private static final long TIME_BETWEEN_IMAGE = 6000;
     Toolbar toolbar;
     // for view image pager
     LinearLayout indicators;
@@ -87,11 +88,12 @@ public class MainActivity extends MylexzActivity
     // for section operation
     private LinearLayout mListOp;
     private List<CardView> mListCard;
-    // Important Task
-    private ImageAutoSwipe imgSw;
+    private volatile Runnable mImageSwitcher = null;
+    private volatile Handler mImageHandlerSw = null;
+    private volatile int curr_pos_image = 0;
+
     private boolean doubleBackToExitPressedOnce;
     LruCache<Integer, Bitmap> mImageMemCache;
-    //TaskBitmapViewPager task;
     private WeakReference<PrepareBitmapViewPager> prepareBitmapViewPagerWeakReference;
     private int has_finished = 0;
 
@@ -115,6 +117,31 @@ public class MainActivity extends MylexzActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         checkVersion();
+    }
+
+    private void setHandlers(final CustomViewPager customViewPager, final int size) {
+        mImageSwitcher = new Runnable() {
+            @Override
+            public void run() {
+                if (curr_pos_image >= size)
+                    curr_pos_image = 0;
+                customViewPager.setCurrentItem(curr_pos_image, true);
+                ++curr_pos_image;
+                clearHandlers(this);
+                mImageHandlerSw = new Handler(Looper.getMainLooper());
+                mImageHandlerSw.postDelayed(mImageSwitcher, TIME_BETWEEN_IMAGE);
+            }
+        };
+        mImageHandlerSw = new Handler(Looper.getMainLooper());
+        mImageHandlerSw.postDelayed(mImageSwitcher, TIME_BETWEEN_IMAGE);
+    }
+
+    private void clearHandlers(Runnable runnable) {
+        if (mImageHandlerSw != null) {
+            mImageHandlerSw.removeCallbacks(runnable);
+            mImageHandlerSw = null;
+            System.gc();
+        }
     }
 
     private void checkVersion() {
@@ -199,12 +226,12 @@ public class MainActivity extends MylexzActivity
     protected void onResume() {
         super.onResume();
         if (has_finished == 1)
-            startTask();
+            setHandlers(mImageSelector, mImageMemCache.size());
     }
 
     @Override
     protected void onPause() {
-        stopTask();
+        clearHandlers(mImageSwitcher);
         super.onPause();
     }
 
@@ -273,19 +300,6 @@ public class MainActivity extends MylexzActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
-    }
-
-    void startTask() {
-        imgSw = new ImageAutoSwipe(mImageMemCache, mImageSelector);
-        imgSw.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-    }
-
-    private void stopTask() {
-        if (imgSw != null)
-            imgSw.cancel(true);
-        imgSw = null;
-        System.gc();
-
     }
 
     private void setCardTouchEvent(final Class<?>[] cls) {
@@ -427,7 +441,7 @@ public class MainActivity extends MylexzActivity
 
     @Override
     protected void onDestroy() {
-        stopTask();
+        clearHandlers(mImageSwitcher);
         if (mImageMemCache != null) {
             for (int x = 0; x < mImageMemCache.size(); x++) {
                 mImageMemCache.get(x).recycle();
@@ -631,6 +645,7 @@ public class MainActivity extends MylexzActivity
                     for (int x = 0; x < mDotCount; x++) {
                         mDots[x].setBackgroundResource(R.drawable.indicator_unselected_item_oval);
                     }
+                    mainActivity.get().curr_pos_image = i;
                     mDots[i].setBackgroundResource(R.drawable.indicator_selected_item_oval);
                 }
 
@@ -659,7 +674,7 @@ public class MainActivity extends MylexzActivity
             mDots[0].setBackgroundResource(R.drawable.indicator_selected_item_oval);
             System.gc();
             mainActivity.get().has_finished = 1;
-            mainActivity.get().startTask();
+            mainActivity.get().setHandlers(mainActivity.get().mImageSelector, memCache.size());
         }
     }
 }
