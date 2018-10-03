@@ -85,7 +85,7 @@ public class DiagnoseActivityHelper{
             return false;
         if (view_mode_saved.get(mCurrPosSaved) == 0)
             return false;
-        else if (counter == 1 && view_mode_saved.get(mCurrPosSaved) != ListCiriCiriPenyakit.MODE_SEQUENCE) {
+        else if (view_mode_saved.size() == 1 && view_mode_saved.get(mCurrPosSaved) != ListCiriCiriPenyakit.MODE_SEQUENCE) {
             counter = count_when_accept = count_when_decline = 0;
             mAskLayout.setVisibility(View.GONE);
             mListFirstPage.setVisibility(View.VISIBLE);
@@ -98,12 +98,12 @@ public class DiagnoseActivityHelper{
                 count_when_accept--;
                 boolean same = checkIfSame(temp_list_nums, saved_temp_list_nums.get(mCurrPosSaved));
                 if (same) {
-                    if (counter == 1) {
+                    if (view_mode_saved.size() == 1) {
                         selectFirstTampil();
                         return true;
                     }
-                    String buildPointo = buildIntoListUsedDB(temp_list_nums);
-                    if (same) ;
+                    //String buildPointo = buildIntoListUsedDB(temp_list_nums);
+                    //if (same) ;
                 }
                 temp_list_nums = saved_temp_list_nums.get(mCurrPosSaved);
                 // change the content of data
@@ -131,7 +131,7 @@ public class DiagnoseActivityHelper{
             } else if (view_mode_saved.get(mCurrPosSaved) == ListCiriCiriPenyakit.MODE_SEQUENCE) {
                 if (savedItemDataPosition > 0)
                     savedItemDataPosition = --count_position_data;
-                if (counter == 1) {
+                if (view_mode_saved.size() == 1) {
                     counter = count_when_accept = count_when_decline = 0;
                     mAskLayout.setVisibility(View.GONE);
                     mListFirstPage.setVisibility(View.VISIBLE);
