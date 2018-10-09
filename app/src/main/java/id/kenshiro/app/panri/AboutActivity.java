@@ -32,6 +32,7 @@ public class AboutActivity extends MylexzActivity {
             "<a href=\"https://stackoverflow.com\">StackOverflow</a>",
             "Library pihak ketiga : <a href=\"https://github.com/koral--/android-gif-drawable\">GifImageView (pl.droidsonroids.gif:android-gif-drawable)</a>",
             "Library pihak ketiga : <a href=\"https://github.com/AlexzPurewoko/MyLEXZ-Library\">MyLEXZ Library</a>",
+            "Library pihak ketiga : <a href=\"https://commons.apache.org/codec\">Apache Commons Codec</a>"
     };
 
 

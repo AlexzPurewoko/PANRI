@@ -98,15 +98,6 @@ public class DiagnoseActivityHelper{
                 // load previous lists
                 //counter--;
                 count_when_accept--;
-                /*boolean same = checkIfSame(temp_list_nums, saved_temp_list_nums.get(mCurrPosSaved));
-                if (same) {
-                    if (view_mode_saved.size() == 1) {
-                        selectFirstTampil();
-                        return true;
-                    }
-                    //String buildPointo = buildIntoListUsedDB(temp_list_nums);
-                    //if (same) ;
-                }*/
                 temp_list_nums = saved_temp_list_nums.get(mCurrPosSaved);
                 // change the content of data
                 data = new ArrayList<AdapterRecycler.DataPerItems>();
@@ -207,6 +198,7 @@ public class DiagnoseActivityHelper{
         mListFirstPage.scrollToPosition(0);
         view_mode_saved.clear();
         saved_temp_list_nums.clear();
+        view_modes = ListCiriCiriPenyakit.MODE_BIND;
         //view_mode_saved.add(ListCiriCiriPenyakit.MODE_BIND);
         //saved_temp_list_nums.add(temp_list_nums);
         if (onPenyakitHaveSelected != null)
@@ -241,9 +233,10 @@ public class DiagnoseActivityHelper{
     private void onItemCardTouch(int cardPosition){
         //counter++;
         count_when_accept++;
-        int itemPosition = temp_list_nums.get(cardPosition);
         view_mode_saved.add(view_modes);
         saved_temp_list_nums.add(temp_list_nums);
+        int itemPosition = temp_list_nums.get(cardPosition);
+
         view_modes = listCiriCiriPenyakitHashMap.get(itemPosition).listused_mode_flags;
         // if reached the end
 
