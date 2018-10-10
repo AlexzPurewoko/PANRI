@@ -42,6 +42,7 @@ public class TampilListPenyakitHelper implements Closeable{
     List<DataPenyakit> dataPenyakitList;
     ScrollView mContentView;
     LinearLayout childView;
+    private final DialogShowHelper dialogShowHelper;
     private volatile LruCache<Integer, Bitmap> mImagecache = null;
     private int finished_mode = 0;
 
@@ -49,9 +50,12 @@ public class TampilListPenyakitHelper implements Closeable{
         this.activity = activity;
         this.sqlDB = sqlDB;
         this.rootView = rootView;
+        dialogShowHelper = new DialogShowHelper(activity);
+        dialogShowHelper.buildLoadingLayout();
     }
 
     public synchronized void buildAndShow(){
+        dialogShowHelper.showDialog();
         setContentViewer();
         if(finished_mode != 0) return;
         finished_mode = 1;
@@ -206,6 +210,7 @@ public class TampilListPenyakitHelper implements Closeable{
                 e.printStackTrace();
             }
             tampilListPenyakitHelper.get().finished_mode = 0;
+            tampilListPenyakitHelper.get().dialogShowHelper.stopDialog();
         }
 
         private void checkAndLoadAllBitmaps() throws IOException {

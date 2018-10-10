@@ -8,6 +8,7 @@ import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import id.kenshiro.app.panri.adapter.ImageGridViewAdapter;
+import id.kenshiro.app.panri.helper.DialogShowHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 
 public class GalleryActivity extends MylexzActivity {
@@ -30,6 +32,7 @@ public class GalleryActivity extends MylexzActivity {
     private boolean doubleBackToExitPressedOnce;
     private SQLiteDatabase sqlDB;
     List<String> dataPathGambar;
+    private DialogShowHelper dialogShowHelper;
     private static final String image_default_dirs = "data_hama/foto";
 
     @Override
@@ -43,35 +46,50 @@ public class GalleryActivity extends MylexzActivity {
     }
 
     private void loadFromDB() {
-        sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/databases/database_penyakitpadi.db", null);
-        dataPathGambar = new ArrayList<>();
-        Cursor cursor = sqlDB.rawQuery("select path_gambar from gambar_penyakit", null);
-        cursor.moveToFirst();
-        while(!cursor.isAfterLast()){
-            String res = cursor.getString(0);
-            String[] list = res.split(",");
-            for (String idx : list) {
-                dataPathGambar.add(image_default_dirs+'/'+idx+".jpg");
-            }
-            cursor.moveToNext();
-        }
-        cursor.close();
-        sqlDB.close();
-        System.gc();
-        Point p = new Point();
-        getWindowManager().getDefaultDisplay().getSize(p);
-        adapterGrid = new ImageGridViewAdapter(this, p, R.id.actgallery_id_gridimage);
-        adapterGrid.setColumnCount(2);
-        adapterGrid.setListLocationAssetsImages(dataPathGambar, "gallery_act");
-        adapterGrid.setOnItemClickListener(new ImageGridViewAdapter.OnItemClickListener() {
-                                               @Override
-                                               public void onItemClick(View v, int position) {
+        dialogShowHelper = new DialogShowHelper(this);
+        dialogShowHelper.buildLoadingLayout();
+        dialogShowHelper.showDialog();
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (this) {
+                    sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/databases/database_penyakitpadi.db", null);
+                    dataPathGambar = new ArrayList<>();
+                    Cursor cursor = sqlDB.rawQuery("select path_gambar from gambar_penyakit", null);
+                    cursor.moveToFirst();
+                    while (!cursor.isAfterLast()) {
+                        String res = cursor.getString(0);
+                        String[] list = res.split(",");
+                        for (String idx : list) {
+                            dataPathGambar.add(image_default_dirs + '/' + idx + ".jpg");
+                        }
+                        cursor.moveToNext();
+                    }
+                    cursor.close();
+                    sqlDB.close();
+                    System.gc();
+                    Point p = new Point();
+                    getWindowManager().getDefaultDisplay().getSize(p);
+                    int dimen = Math.round(getResources().getDimension(R.dimen.margin_img_penyakit));
+                    adapterGrid = new ImageGridViewAdapter(GalleryActivity.this, p, R.id.actgallery_id_gridimage);
+                    adapterGrid.setColumnCount(2);
+                    adapterGrid.setListLocationAssetsImages(dataPathGambar, "gallery_act");
+                    adapterGrid.setMargin(dimen, dimen, dimen, dimen, dimen);
+                    adapterGrid.setOnItemClickListener(new ImageGridViewAdapter.OnItemClickListener() {
+                                                           @Override
+                                                           public void onItemClick(View v, int position) {
 
-                                                   Toast.makeText(GalleryActivity.this, "selected at position = " + position, Toast.LENGTH_SHORT).show();
-                                               }
-                                           }
-        );
-        adapterGrid.buildAndShow();
+                                                               Toast.makeText(GalleryActivity.this, "selected at position = " + position, Toast.LENGTH_SHORT).show();
+                                                           }
+                                                       }
+                    );
+                    adapterGrid.buildAndShow();
+                    dialogShowHelper.stopDialog();
+                }
+            }
+        }, 200);
+
     }
 
     @Override

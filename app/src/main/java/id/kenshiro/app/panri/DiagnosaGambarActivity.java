@@ -15,6 +15,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.view.menu.MenuBuilder;
 import android.support.v7.view.menu.MenuPresenter;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
 import android.util.Log;
@@ -42,6 +43,7 @@ public class DiagnosaGambarActivity extends MylexzActivity {
     TampilDiagnosaGambarHelper tampilDiagnosaGambarHelper;
     ShowPenyakitDiagnoseHelper showPenyakitDiagnoseHelper;
     Button mTextPetaniDesc;
+    private RelativeLayout relativeLayout;
     private boolean doubleBackToExitPressedOnce;
 
     @Override
@@ -67,7 +69,6 @@ public class DiagnosaGambarActivity extends MylexzActivity {
                                                              //v.setVisibility(View.GONE);
                                                              //btn.setVisibility(View.GONE);
                                                              tampilDiagnosaGambarHelper.hideContentView();
-                                                             TOAST(Toast.LENGTH_LONG, "position at %d", position);
                                                              showPenyakitDiagnoseHelper.setmTextPetaniDesc(mTextPetaniDesc);
                                                              showPenyakitDiagnoseHelper.show(position);
                                                              mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_img_2));
@@ -83,30 +84,34 @@ public class DiagnosaGambarActivity extends MylexzActivity {
                                                          public void onIsAfterLastListPosition(View v, View btn, int position, int size_list) {
                                                              // v.setVisibility(View.GONE);
                                                              //btn.setVisibility(View.GONE);
-                                                             setAlertDialog();
+                                                             setAlertDialog(v, btn);
                                                          }
 
-                                                         private void setAlertDialog() {
-                                                             AlertDialog.Builder alertDialog = new AlertDialog.Builder(DiagnosaGambarActivity.this);
-                                                             alertDialog.setIcon(R.mipmap.ic_launcher);
-                                                             alertDialog.setTitle("Maaf!");
-                                                             alertDialog.setMessage("Mohon maaf, anda sudah sampai di daftar terakhir. Mungkin anda kurang teliti dalam mendiagnosa penyakit anda. Untuk itu, silahkan klik tombol 'Diagnosa Ulang' jika ingin diagnosa dari awal lagi, Atau klik 'Akhiri Diagnosa' apabila anda tidak ingin mendiagnosa lagi");
-                                                             alertDialog.setCancelable(false);
-                                                             alertDialog.setPositiveButton("Diagnosa ulang", new DialogInterface.OnClickListener() {
-                                                                 @Override
-                                                                 public void onClick(DialogInterface dialog, int which) {
-                                                                     dialog.cancel();
-                                                                     tampilDiagnosaGambarHelper.setPosition(1);
-                                                                 }
-                                                             });
-                                                             alertDialog.setNegativeButton("Akhiri Diagnosa", new DialogInterface.OnClickListener() {
-                                                                 @Override
-                                                                 public void onClick(DialogInterface dialog, int which) {
-                                                                     dialog.cancel();
-                                                                     SwitchIntoMainActivity.switchToMain(DiagnosaGambarActivity.this);
-                                                                 }
-                                                             });
-                                                             alertDialog.show();
+            private void setAlertDialog(View v, final View btn) {
+                if (relativeLayout == null) {
+                    final RelativeLayout root = findViewById(R.id.actdim_id_layoutcontainer);
+                    relativeLayout = (RelativeLayout) getLayoutInflater().inflate(R.layout.layout_onnotselected, root, false);
+                    CardView cardView = relativeLayout.findViewById(R.id.layoutonselected_id_card_ya);
+                    CardView cardView1 = relativeLayout.findViewById(R.id.layoutonselected_id_card_tidak);
+                    cardView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            relativeLayout.setVisibility(View.GONE);
+                            v.setVisibility(View.VISIBLE);
+                            btn.setVisibility(View.VISIBLE);
+                            tampilDiagnosaGambarHelper.setPosition(1);
+                        }
+                    });
+                    cardView1.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            SwitchIntoMainActivity.switchToMain(DiagnosaGambarActivity.this);
+                        }
+                    });
+                    root.addView(relativeLayout);
+                } else {
+                    relativeLayout.setVisibility(View.VISIBLE);
+                }
                                                          }
                                                      }
         );

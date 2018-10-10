@@ -2,6 +2,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
+    android:layout_gravity="top"
+    android:gravity="top"
     android:layout_height="match_parent">
 
     <ScrollView
@@ -83,6 +85,7 @@
                     android:padding="10dp"
                     app:cardCornerRadius="2dp"
                     app:cardElevation="2dp"
+                    app:contentPadding="@dimen/margin_img_penyakit"
                     app:cardUseCompatPadding="true">
 
                     <LinearLayout

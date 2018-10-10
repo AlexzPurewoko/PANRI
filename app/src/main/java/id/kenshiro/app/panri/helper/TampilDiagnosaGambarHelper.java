@@ -72,12 +72,15 @@ public class TampilDiagnosaGambarHelper implements Closeable{
     private OnItemListener onItemListener;
     private int modes = 0;
     private int finished_mods = 0;
+    private final DialogShowHelper dialogShowHelper;
     private volatile int curr_pos_image = 0;
     private volatile Runnable mSwitcherImages = null;
     public TampilDiagnosaGambarHelper(MylexzActivity activity, RelativeLayout mRootView, SQLiteDatabase sqlDB) {
         this.mRootView = mRootView;
         this.sqlDB = sqlDB;
         this.activity = activity;
+        this.dialogShowHelper = new DialogShowHelper(activity);
+        dialogShowHelper.buildLoadingLayout();
     }
 
     public void buildAndShow() {
@@ -142,6 +145,7 @@ public class TampilDiagnosaGambarHelper implements Closeable{
     }
 
     public void updateContentAfter() {
+        dialogShowHelper.showDialog();
         if(finished_mods != 0) return;
         finished_mods = 1;
         Handler handler = new Handler(Looper.getMainLooper());
@@ -335,14 +339,17 @@ public class TampilDiagnosaGambarHelper implements Closeable{
                 LinearLayout.LayoutParams.MATCH_PARENT
         );
         mChildView = new LinearLayout(activity);
+        mChildView.setGravity(Gravity.TOP);
         mChildView.setLayoutParams(params);
         mChildView.setOrientation(LinearLayout.VERTICAL);
         mChildView.setVisibility(View.VISIBLE);
         mContentView = new ScrollView(activity);
-        mContentView.setLayoutParams(new ScrollView.LayoutParams(
+        ScrollView.LayoutParams scrollViewParams = new ScrollView.LayoutParams(
                 ScrollView.LayoutParams.MATCH_PARENT,
                 ScrollView.LayoutParams.WRAP_CONTENT
-        ));
+        );
+        scrollViewParams.gravity = Gravity.TOP;
+        mContentView.setLayoutParams(scrollViewParams);
         mContentView.addView(mChildView);
         btnBawah = (LinearLayout) activity.getLayoutInflater().inflate(R.layout.adapter_btnbawahdiag, mRootView, false);
         mRootView.addView(mContentView);
@@ -353,6 +360,7 @@ public class TampilDiagnosaGambarHelper implements Closeable{
                 RelativeLayout.LayoutParams.WRAP_CONTENT
         );
         paramsbtn.addRule(RelativeLayout.ABOVE, R.id.adapter_id_imgdiag_layout);
+        paramsbtn.addRule(RelativeLayout.ALIGN_PARENT_TOP, 1);
         mContentView.setLayoutParams(paramsbtn);
     }
 
@@ -532,7 +540,8 @@ public class TampilDiagnosaGambarHelper implements Closeable{
                 e.printStackTrace();
             }
             if(integer == 1) {
-                tampilDiagnosaGambarHelper.get().mContentView.pageScroll(0);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2)
+                    tampilDiagnosaGambarHelper.get().mContentView.pageScroll(0);
                 TextView judul = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_judulpenyakit);
                 CustomViewPager customViewPager = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_id_viewpagerimg);
                 LinearLayout indicators = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_id_layoutIndicators);
@@ -575,6 +584,8 @@ public class TampilDiagnosaGambarHelper implements Closeable{
             }
             tampilDiagnosaGambarHelper.get().finished_mods = 0;
             System.gc();
+            tampilDiagnosaGambarHelper.get().dialogShowHelper.stopDialog();
         }
+
     }
 }
