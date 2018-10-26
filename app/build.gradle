@@ -1,6 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+        config {
+            keyAlias 'PANRI'
+            keyPassword 'panri_dev'
+            storeFile file('/home/mylexz/key_panri.jks')
+            storePassword 'panri_dev'
+        }
+    }
     compileSdkVersion 28
     defaultConfig {
         applicationId "id.kenshiro.app.panri"
@@ -14,6 +22,8 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.config
+            zipAlignEnabled true
         }
     }
     compileOptions {
