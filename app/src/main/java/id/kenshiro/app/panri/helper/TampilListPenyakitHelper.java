@@ -4,8 +4,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.widget.CardView;
@@ -17,12 +15,8 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-
-import com.mylexz.utils.DiskLruObjectCache;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.SimpleDiskLruCache;
-
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -30,7 +24,6 @@ import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import id.kenshiro.app.panri.R;
 import id.kenshiro.app.panri.adapter.AdapterRecycler;
@@ -88,41 +81,6 @@ public class TampilListPenyakitHelper implements Closeable{
         childView = (LinearLayout) mContentView.getChildAt(0);
     }
 
-    private synchronized void inflateListAndAddTouchable() throws IOException {
-        int size = dataPenyakitList.size();
-        //Log.i("tampilInflate", String.format("Size of lruCache = %d, size of bitmap value 1 = %d, isRecycled? : %s", mImagecache.size(), mImagecache.get(1).getByteCount(), String.valueOf(mImagecache.get(1).isRecycled())));
-        for (int x = 0; x < size; x++) {
-            CardView mContent = (CardView) activity.getLayoutInflater().inflate(R.layout.adapter_namapenyakit, null);
-            ImageView mImg = mContent.findViewById(R.id.adapter_id_imgnamapenyakit);
-            TextView mText = mContent.findViewById(R.id.adapter_id_namapenyakit);
-            DataPenyakit data = dataPenyakitList.get(x);
-            synchronized (mImagecache.get(x)) {
-                final Bitmap bitmap = Bitmap.createBitmap(mImagecache.get(x));
-                synchronized (bitmap) {
-                    Log.i("tampilInflater", String.format("Size of lruCache = %d, size of bitmap value %d = %d, isRecycled? : %s", mImagecache.size(), x, bitmap.getByteCount(), String.valueOf(bitmap.isRecycled())));
-                    mImg.setImageBitmap(bitmap);
-                    // apply the name of penyakit
-                    mText.setText(data.getNama_penyakit());
-
-                    // sets the item touchable
-                    final int y = x;
-                    mContent.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            if (onItemClickListener != null)
-                                onItemClickListener.onClick(mContentView, y);
-                        }
-                    });
-
-                    // applying into content section
-                    childView.addView(mContent);
-                }
-            }
-        }
-        //Log.i("tampilInflateSelesai", String.format("Size of lruCache = %d, size of bitmap value 1 = %d, isRecycled? : %s", mImagecache.size(), mImagecache.get(1).getByteCount(), String.valueOf(mImagecache.get(1).isRecycled())));
-
-        //System.gc();
-    }
 
     public boolean onBackButtonPressed() {
         if (mContentView == null) return false;
