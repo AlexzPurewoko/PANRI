@@ -70,6 +70,7 @@ public class DiagnoseActivityHelper{
         // set it visible into mListFirstPage
         mListFirstPage.setVisibility(View.VISIBLE);
         mAskLayout.setVisibility(View.GONE);
+
         selectFirstTampil();
     }
 
@@ -198,6 +199,7 @@ public class DiagnoseActivityHelper{
         mListFirstPage.scrollToPosition(0);
         view_mode_saved.clear();
         saved_temp_list_nums.clear();
+        count_when_accept = count_when_decline = 0;
         view_modes = ListCiriCiriPenyakit.MODE_BIND;
         //view_mode_saved.add(ListCiriCiriPenyakit.MODE_BIND);
         //saved_temp_list_nums.add(temp_list_nums);
