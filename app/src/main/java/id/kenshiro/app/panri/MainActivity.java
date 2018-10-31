@@ -382,6 +382,13 @@ public class MainActivity extends MylexzActivity
         });
         mTextPetaniDesc.setText(TextPetaniDesc[mPosTxtPetani]);
         imgPetaniKedipView.setVisibility(View.VISIBLE);
+        imgPetaniKedipView.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                onButtonPetaniClicked();
+            }
+        });
     }
 
     private void setInitialTextInds() {
