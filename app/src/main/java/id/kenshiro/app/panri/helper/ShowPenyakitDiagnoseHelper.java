@@ -79,6 +79,9 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         mContentView.setVisibility(View.VISIBLE);
         mContent1.setVisibility(View.VISIBLE);
         mContent2.setVisibility(View.GONE);
+        umum.setVisibility(View.GONE);
+        gejala.setVisibility(View.GONE);
+        caraatasi.setVisibility(View.GONE);
         if (mTextPetaniDesc != null)
             mTextPetaniDesc.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -110,14 +113,17 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
             @Override
             public void run() {
                 showKeyId(keyId);
-                /*try {
+                try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
-                }*/
+                }
+                umum.setVisibility(View.VISIBLE);
+                gejala.setVisibility(View.VISIBLE);
+                caraatasi.setVisibility(View.VISIBLE);
                 dialogShowHelper.stopDialog();
             }
-        }, 2000);
+        }, 1000);
     }
 
     public RelativeLayout getmContentView() {
