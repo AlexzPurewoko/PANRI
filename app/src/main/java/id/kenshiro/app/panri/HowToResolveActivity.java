@@ -125,6 +125,11 @@ public class HowToResolveActivity extends MylexzActivity {
         System.gc();
     }
 
+    @Override
+    public void onTrimMemory(int level) {
+
+    }
+
     private void setCaraAtasiContent() {
         penyakitnama.setText(this.name_penyakit);
         latinnya.setText(this.name_latin == null ? "" : this.name_latin);

@@ -21,6 +21,7 @@ import android.support.transition.Scene;
 import android.support.transition.Transition;
 import android.support.transition.TransitionManager;
 import android.support.transition.TransitionValues;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AlphaAnimation;
@@ -48,13 +49,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import id.kenshiro.app.panri.helper.CheckAndMoveDB;
 import id.kenshiro.app.panri.helper.DecodeBitmapHelper;
 import id.kenshiro.app.panri.helper.ListCiriCiriPenyakit;
 import id.kenshiro.app.panri.helper.ListNamaPenyakit;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
+import id.kenshiro.app.panri.helper.TampilListPenyakitHelper;
 import pl.droidsonroids.gif.GifImageView;
 
 public class SplashScreenActivity extends MylexzActivity {
@@ -210,7 +214,8 @@ public class SplashScreenActivity extends MylexzActivity {
         }
 
         private boolean validateCacheDirs() {
-            if (fileCache.list() == null)
+            String[] fileList = fileCache.list();
+            if (fileList.length == 0)
                 return true;
             return false;
         }
@@ -224,6 +229,60 @@ public class SplashScreenActivity extends MylexzActivity {
             } catch (IOException e) {
                 ctx.LOGE("Task.background()", "IOException occured when create listCiriCiriPenyakit Cache", e);
             }
+            try {
+                cachingListImageCard1();
+            } catch (IOException e) {
+                ctx.LOGE("Task.background()", "IOException occured when create image card listCiriCiriPenyakit Cache", e);
+            }
+            sqlDB.close();
+        }
+
+        private void cachingListImageCard1() throws IOException {
+            int counter = 0;
+            Cursor cursor = sqlDB.rawQuery("select path_gambar from gambar_penyakit", null);
+            cursor.moveToFirst();
+            int size_images = Math.round(ctx.getResources().getDimension(R.dimen.actmain_dimen_opimg_incard_wh));
+            while (!cursor.isAfterLast()) {
+                String[] buf = cursor.getString(0).split(",");
+                String name = buf[0];
+                String nameID = getLasts(name) + "jpg";
+                final Bitmap bitmap = DecodeBitmapHelper.decodeAndResizeBitmapsAssets(ctx.getAssets(), "data_hama/foto/" + name + ".jpg", size_images, size_images);
+                final Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, size_images, size_images, false);
+                //gets the byte of bitmap
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                float scaling = bitmap.getHeight() / size_images;
+                scaling = ((scaling < 1.0f) ? 1.0f : scaling);
+                // compressing
+                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, Math.round(QUALITY_FACTOR / scaling), bos);
+                // put into cache
+                try {
+                    diskCache.put(nameID, bos.toByteArray());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    bos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                bitmap.recycle();
+                System.gc();
+                cursor.moveToNext();
+            }
+            cursor.close();
+            System.gc();
+        }
+
+        private String getLasts(String name) {
+            StringBuffer results = new StringBuffer();
+            for (int x = name.length() - 1; x >= 0; x--) {
+                char s = name.charAt(x);
+                if (s == '.') continue;
+                else if (s == '/') break;
+                else results.append(s);
+            }
+            results.reverse();
+            return results.toString().toLowerCase();
         }
 
         private void cachingListPenyakit() throws IOException {
@@ -338,11 +397,6 @@ public class SplashScreenActivity extends MylexzActivity {
         private void cleanCache() {
             fileCache.delete();
             fileCache.mkdir();
-            /*try {
-                diskCache.clean();
-            } catch (IOException e) {
-                ctx.LOGE("Task.background()", "IOException occured when cleaning a cache", e);
-            }*/
         }
 
         private void updateDBIfItsNewVersion() throws IOException {
