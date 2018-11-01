@@ -4,24 +4,19 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.widget.CardView;
 import android.support.v4.util.LruCache;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-
-import com.mylexz.utils.DiskLruObjectCache;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.SimpleDiskLruCache;
-
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +24,6 @@ import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import id.kenshiro.app.panri.R;
 import id.kenshiro.app.panri.adapter.AdapterRecycler;
@@ -61,7 +55,7 @@ public class TampilListPenyakitHelper implements Closeable{
         finished_mode = 1;
         try {
             int size_images = Math.round(activity.getResources().getDimension(R.dimen.actmain_dimen_opimg_incard_wh));
-            mImagecache = new LruCache<Integer, Bitmap>(size_images * 2);
+            mImagecache = new LruCache<Integer, Bitmap>(size_images * 12);
             PrepareTask prepareTask = new PrepareTask(this);
             Handler handler = new Handler(Looper.getMainLooper());
             handler.postDelayed(prepareTask, 50);
@@ -87,33 +81,6 @@ public class TampilListPenyakitHelper implements Closeable{
         childView = (LinearLayout) mContentView.getChildAt(0);
     }
 
-    private void inflateListAndAddTouchable() throws IOException {
-        int size = dataPenyakitList.size();
-        for (int x = 0; x < size; x++) {
-            CardView mContent = (CardView) activity.getLayoutInflater().inflate(R.layout.adapter_namapenyakit, null);
-            ImageView mImg = mContent.findViewById(R.id.adapter_id_imgnamapenyakit);
-            TextView mText = mContent.findViewById(R.id.adapter_id_namapenyakit);
-            DataPenyakit data = dataPenyakitList.get(x);
-
-            mImg.setImageBitmap(mImagecache.get(x));
-            // apply the name of penyakit
-            mText.setText(data.getNama_penyakit());
-
-            // sets the item touchable
-            final int y = x;
-            mContent.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (onItemClickListener != null)
-                        onItemClickListener.onClick(mContentView, y);
-                }
-            });
-
-            // applying into content section
-            childView.addView(mContent);
-        }
-        System.gc();
-    }
 
     public boolean onBackButtonPressed() {
         if (mContentView == null) return false;
@@ -203,9 +170,9 @@ public class TampilListPenyakitHelper implements Closeable{
             postExecute();
         }
 
-        private void postExecute() {
+        private synchronized void postExecute() {
             try {
-                tampilListPenyakitHelper.get().inflateListAndAddTouchable();
+                inflateListAndAddTouchable();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -213,35 +180,49 @@ public class TampilListPenyakitHelper implements Closeable{
             tampilListPenyakitHelper.get().dialogShowHelper.stopDialog();
         }
 
-        private void checkAndLoadAllBitmaps() throws IOException {
-            int size_images = Math.round(tampilListPenyakitHelper.get().activity.getResources().getDimension(R.dimen.actmain_dimen_opimg_incard_wh));
+        private synchronized void inflateListAndAddTouchable() throws IOException {
+            int size = tampilListPenyakitHelper.get().dataPenyakitList.size();
+            for (int x = 0; x < size; x++) {
+                inflateToList(x);
+            }
+            //Log.i("tampilInflateSelesai", String.format("Size of lruCache = %d, size of bitmap value 1 = %d, isRecycled? : %s", mImagecache.size(), mImagecache.get(1).getByteCount(), String.valueOf(mImagecache.get(1).isRecycled())));
+        }
+
+        private void inflateToList(final int x) {
+            CardView mContent = (CardView) tampilListPenyakitHelper.get().activity.getLayoutInflater().inflate(R.layout.adapter_namapenyakit, null);
+            ImageView mImg = mContent.findViewById(R.id.adapter_id_imgnamapenyakit);
+            TextView mText = mContent.findViewById(R.id.adapter_id_namapenyakit);
+            DataPenyakit data = tampilListPenyakitHelper.get().dataPenyakitList.get(x);
+            synchronized (tampilListPenyakitHelper.get().mImagecache.get(x)) {
+                final Bitmap bitmap = tampilListPenyakitHelper.get().mImagecache.get(x);
+                synchronized (bitmap) {
+                    Log.i("tampilInflater", String.format("Size of lruCache = %d, size of bitmap value %d = %d, isRecycled? : %s", tampilListPenyakitHelper.get().mImagecache.size(), x, bitmap.getByteCount(), String.valueOf(bitmap.isRecycled())));
+                    mImg.setImageBitmap(bitmap);
+                    // apply the name of penyakit
+                    mText.setText(data.getNama_penyakit());
+
+                    // sets the item touchable
+                    final int y = x;
+                    mContent.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if (tampilListPenyakitHelper.get().onItemClickListener != null)
+                                tampilListPenyakitHelper.get().onItemClickListener.onClick(tampilListPenyakitHelper.get().mContentView, y);
+                        }
+                    });
+
+                    // applying into content section
+                    tampilListPenyakitHelper.get().childView.addView(mContent);
+                }
+            }
+        }
+
+        private synchronized void checkAndLoadAllBitmaps() throws IOException {
             for(int x = 0; x < tampilListPenyakitHelper.get().dataPenyakitList.size(); x++){
                 String name = tampilListPenyakitHelper.get().dataPenyakitList.get(x).path_image;
                 String nameID = getLasts(name);
-                if(!diskLruObjectCache.isKeyExists(nameID)){
-                    final Bitmap bitmap = DecodeBitmapHelper.decodeAndResizeBitmapsAssets(tampilListPenyakitHelper.get().activity.getAssets(), name, size_images, size_images);
-                    Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, size_images, size_images, false);
-                    //gets the byte of bitmap
-                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                    float scaling = bitmap.getHeight() / size_images;
-                    scaling = ((scaling < 1.0f) ? 1.0f : scaling);
-                    scaledBitmap.compress(Bitmap.CompressFormat.JPEG, Math.round(QUALITY_FACTOR / scaling), bos);
-                    // put into cache
-                    try {
-                        diskLruObjectCache.put(nameID, bos.toByteArray());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    try {
-                        bos.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    tampilListPenyakitHelper.get().mImagecache.put(x, scaledBitmap);
-                    bitmap.recycle();
-                    System.gc();
-                }
-                else{
+                Log.i("CobaLoad", "nameID is " + diskLruObjectCache.isKeyExists(nameID));
+                if (diskLruObjectCache.isKeyExists(nameID)) {
                     InputStream is = null;
                     try {
                         is = diskLruObjectCache.get(nameID);
@@ -252,10 +233,14 @@ public class TampilListPenyakitHelper implements Closeable{
                         diskLruObjectCache.closeReading();
                         continue;
                     }
-                    tampilListPenyakitHelper.get().mImagecache.put(x, BitmapFactory.decodeStream(is));
+                    final Bitmap resultBitmap = BitmapFactory.decodeStream(is);
+                    // applying into content section
+                    Log.i("tampilThread", "Bitmap " + x + " isRecycled? : " + resultBitmap.isRecycled());
+                    tampilListPenyakitHelper.get().mImagecache.put(x, resultBitmap);
                     diskLruObjectCache.closeReading();
                 }
             }
+            Log.i("tampilThread", String.format("Size of lruCache = %d, size of bitmap value 1 = %d, isRecycled? : %s", tampilListPenyakitHelper.get().mImagecache.size(), tampilListPenyakitHelper.get().mImagecache.get(1).getByteCount(), String.valueOf(tampilListPenyakitHelper.get().mImagecache.get(1).isRecycled())));
         }
         private String getLasts(String name) {
             StringBuffer results = new StringBuffer();
@@ -280,12 +265,13 @@ public class TampilListPenyakitHelper implements Closeable{
         }
 
         public void setPath_image(String[] img, int countImg) {
-            if (countImg > 0) {
+            /*if (countImg > 0) {
                 Random random = new Random();
                 int selectedImg = random.nextInt(countImg);
                 this.path_image = path + "/" + img[selectedImg] + ".jpg";
             } else
-                this.path_image = null;
+                this.path_image = null;*/
+            this.path_image = path + "/" + img[0] + ".jpg";
         }
 
         public void setNama_penyakit(String nama_penyakit) {

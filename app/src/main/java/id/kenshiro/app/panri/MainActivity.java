@@ -68,9 +68,6 @@ public class MainActivity extends MylexzActivity
     // for view image pager
     LinearLayout indicators;
     private CustomViewPager mImageSelector;
-    int mDotCount;
-    LinearLayout[] mDots;
-    ImageFragmentAdapter mImageControllerFragment;
     private TextView mTextDetails;
     private Handler handlerPetani;
     // for section petani
@@ -385,6 +382,13 @@ public class MainActivity extends MylexzActivity
         });
         mTextPetaniDesc.setText(TextPetaniDesc[mPosTxtPetani]);
         imgPetaniKedipView.setVisibility(View.VISIBLE);
+        imgPetaniKedipView.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                onButtonPetaniClicked();
+            }
+        });
     }
 
     private void setInitialTextInds() {
@@ -490,49 +494,6 @@ public class MainActivity extends MylexzActivity
         mAlert.show();
     }
 
-    static class ImageAutoSwipe extends AsyncTask<Void, Integer, Void> {
-        private final long pause_swipe_in_millis = 6000;
-        private int maxImages;
-        private LruCache<Integer, Bitmap> mListResImage1;
-        private CustomViewPager mImageSelector1;
-
-        ImageAutoSwipe(LruCache<Integer, Bitmap> mListResImage1, CustomViewPager mImageSelector1) {
-            this.mListResImage1 = mListResImage1;
-            this.mImageSelector1 = mImageSelector1;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            maxImages = mListResImage1.size();
-        }//5s
-
-        @Override
-        protected Void doInBackground(Void[] p1) {
-            while (true) {
-                try {
-                    Thread.sleep(pause_swipe_in_millis);
-                } catch (InterruptedException e) {
-                    Log.e("Main_Exception", "Interrupted in method ImageAutoSwipe.doInBackground()", e);
-                }
-                if (!mImageSelector1.isFakeDragging())
-                    publishProgress(mImageSelector1.getCurrentItem());
-            }
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer[] values) {
-            super.onProgressUpdate(values);
-            int pos_result = values[0];
-            if (++pos_result == maxImages)
-                mImageSelector1.setCurrentItem(0, true);
-            else
-                mImageSelector1.setCurrentItem(pos_result, true);
-        }
-
-
-    }
-
     private static class PrepareBitmapViewPager implements Runnable {
         LruCache<Integer, Bitmap> memCache;
         private final File sourceCache;
@@ -541,8 +502,8 @@ public class MainActivity extends MylexzActivity
         private WeakReference<Point> reqSize;
         private static volatile SimpleDiskLruCache diskLruCache;
         private WeakReference<MainActivity> mainActivity;
-        private int mDotCount;
-        private LinearLayout[] mDots;
+        //private int mDotCount;
+        //private LinearLayout[] mDots;
         private WeakReference<LinearLayout> indicators;
 
         PrepareBitmapViewPager(MainActivity mainActivity, Point reqSize, File cacheDirs) {
@@ -634,6 +595,21 @@ public class MainActivity extends MylexzActivity
                     System.gc();
                 }
             });
+            final int mDotCount = mImageControllerFragment.getCount();
+            final LinearLayout[] mDots = new LinearLayout[mDotCount];
+            for (int x = 0; x < mDotCount; x++) {
+                mDots[x] = new LinearLayout(mainActivity.get());
+                mDots[x].setBackgroundResource(R.drawable.indicator_unselected_item_oval);
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                );
+                params.setMargins(0, 0, 4, 4);
+                mDots[x].setGravity(Gravity.RIGHT | Gravity.BOTTOM | Gravity.END);
+                indicators.get().addView(mDots[x], params);
+
+            }
+            mDots[0].setBackgroundResource(R.drawable.indicator_selected_item_oval);
             mImageSelector.get().addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
                 @Override
                 public void onPageScrolled(int i, float v, int i1) {
@@ -657,21 +633,6 @@ public class MainActivity extends MylexzActivity
                         mImageSelector.get().setCurrentItem(0, true);
                 }
             });
-            mDotCount = mImageControllerFragment.getCount();
-            mDots = new LinearLayout[mDotCount];
-            for (int x = 0; x < mDotCount; x++) {
-                mDots[x] = new LinearLayout(mainActivity.get());
-                mDots[x].setBackgroundResource(R.drawable.indicator_unselected_item_oval);
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-                params.setMargins(0, 0, 4, 4);
-                mDots[x].setGravity(Gravity.RIGHT | Gravity.BOTTOM | Gravity.END);
-                indicators.get().addView(mDots[x], params);
-
-            }
-            mDots[0].setBackgroundResource(R.drawable.indicator_selected_item_oval);
             System.gc();
             mainActivity.get().has_finished = 1;
             mainActivity.get().setHandlers(mainActivity.get().mImageSelector, memCache.size());
