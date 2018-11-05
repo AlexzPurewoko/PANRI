@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "140337659975",
+    "firebase_url": "https://panri-hope-project.firebaseio.com",
+    "project_id": "panri-hope-project",
+    "storage_bucket": "panri-hope-project.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:140337659975:android:47fe0fb64a62310c",
+        "android_client_info": {
+          "package_name": "id.kenshiro.app.panri"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "140337659975-du32g8ggmg6f8eikna0ln8rpde7np0mg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUmG1nzj8W381nLc0UD6P8CDrnNR5qbwg"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
