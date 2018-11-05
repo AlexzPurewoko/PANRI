@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
-
+apply plugin: 'io.fabric'
+apply plugin: 'com.google.gms.google-services'
 android {
     signingConfigs {
         config {
@@ -31,7 +32,9 @@ android {
         sourceCompatibility 1.7
     }
 }
-
+repositories {
+    mavenCentral()
+}
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:28.0.0-rc02'
@@ -43,4 +46,9 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation project(':mylexzlibrary')
     implementation 'pl.droidsonroids.gif:android-gif-drawable:+'
+
+    // for firebase library and crashlytics
+    implementation 'com.google.firebase:firebase-core:16.0.4'
+    implementation 'com.google.firebase:firebase-storage:16.0.4'
+    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.5'
 }

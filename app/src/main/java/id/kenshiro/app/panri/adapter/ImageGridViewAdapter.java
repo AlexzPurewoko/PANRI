@@ -39,8 +39,6 @@ import id.kenshiro.app.panri.helper.DecodeBitmapHelper;
 public class ImageGridViewAdapter implements Closeable{
     private List<Integer> listLocationResImages;
     private List<String> listLocationAssetsImages;
-    private List<LinearLayout> listRow;
-    private List<ImageView> imageViewList;
     private Point screenSize;
     private Point imageItemSize;
     private int resRootLayout;

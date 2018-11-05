@@ -48,8 +48,6 @@ public class DiagnoseActivity extends MylexzActivity
 {
 
 	private Toolbar toolbar;
-	private List<AdapterRecycler.DataPerItems> data;
-	private RecyclerView mListView;
 	private SQLiteDatabase sqlDB;
 	private HashMap<Integer, ListNamaPenyakit> listNamaPenyakitHashMap;
 	private HashMap<Integer, ListCiriCiriPenyakit> listCiriCiriPenyakitHashMap;

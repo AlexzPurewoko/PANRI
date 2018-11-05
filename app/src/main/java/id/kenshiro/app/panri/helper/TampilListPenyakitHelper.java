@@ -141,9 +141,7 @@ public class TampilListPenyakitHelper implements Closeable{
 
     private static class PrepareTask implements Runnable {
         volatile SimpleDiskLruCache diskLruObjectCache;
-        private static final int QUALITY_FACTOR = 10;
         final File fileCache;
-        private static final long MAX_CACHE_BUFFERED_SIZE = 1048576;
         private WeakReference<TampilListPenyakitHelper> tampilListPenyakitHelper;
         PrepareTask(TampilListPenyakitHelper tampilListPenyakitHelper) throws IOException {
             this.tampilListPenyakitHelper = new WeakReference<>(tampilListPenyakitHelper);
