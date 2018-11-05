@@ -21,9 +21,7 @@ import id.kenshiro.app.panri.R;
 
 public class AdapterRecycler extends RecyclerView.Adapter {
     private List<DataPerItems> data;
-    private List<CardView> dataList;
     private OnItemClickListener listener = null;
-    private int lengthItem = 0;
     private MylexzActivity mylexzActivity;
 
     public AdapterRecycler(List<DataPerItems> data, MylexzActivity mylexzActivity) {
@@ -111,7 +109,6 @@ public class AdapterRecycler extends RecyclerView.Adapter {
     }
     public static class DataPerItems {
         public String items;
-        public int resImages;
         public DataPerItems(String items){
             this.items = items;
         }

@@ -41,12 +41,10 @@ public class DiagnoseActivityHelper{
     private int count_when_accept = 0;
     private int count_when_decline = 0;
     private int count_position_data = 0;
-    private int key_data_position = 0;
     private int savedItemDataPosition = 0;
     private int view_modes = ListCiriCiriPenyakit.MODE_BIND;
     private List<Integer> saved_btn_yesno_modes = new ArrayList<Integer>();
     private List<Integer> view_mode_saved = new ArrayList<Integer>();
-    private int saved_counter = 0;
     // for temporary list
     private List<Integer> temp_list_nums;
     private List<List<Integer>> saved_temp_list_nums = new ArrayList<List<Integer>>();
@@ -161,16 +159,6 @@ public class DiagnoseActivityHelper{
             saved_temp_list_nums.remove(mCurrPosSaved);
             return true;
         }
-    }
-
-    private boolean checkIfSame(List<Integer> temps, List<Integer> saved) {
-        if (temps == null || saved == null) return false;
-        if (temps.size() != saved.size()) return false;
-
-        for (int x = 0; x < temps.size(); x++) {
-            if (temps.get(x) != saved.get(x)) return false;
-        }
-        return true;
     }
 
     public void setOnPenyakitHaveSelected(OnPenyakitHaveSelected onPenyakitHaveSelected) {

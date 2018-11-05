@@ -397,7 +397,7 @@ public class TampilDiagnosaGambarHelper implements Closeable{
 
         public void setListCiriHtml(String listCiri) {
             if (listCiri == null) return;
-            String[] list = listCiri.split(",");
+            String[] list = listCiri.split("=");
             StringBuffer bufHtml = new StringBuffer();
             bufHtml.append("<font color=\"black\" size=\"5pt\">");
             bufHtml.append("<b>Ciri - ciri : </b>");
