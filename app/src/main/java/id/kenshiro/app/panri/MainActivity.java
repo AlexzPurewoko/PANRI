@@ -29,6 +29,7 @@ import com.mylexz.utils.SimpleDiskLruCache;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
 import android.graphics.Typeface;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import java.io.File;
@@ -44,6 +45,7 @@ import id.kenshiro.app.panri.adapter.ImageFragmentAdapter;
 
 import android.view.Gravity;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import id.kenshiro.app.panri.adapter.CustomPageViewTransformer;
@@ -345,11 +347,17 @@ public class MainActivity extends MylexzActivity
             mListCard.get(x).setContentPadding(10, 10, 10, 10);
             mListCard.get(x).addView(content);
         }
+        addPasangIklanCard();
         setCardTouchEvent(listClass);
         // fill into LinearLayout
         for (int x = 0; x < mListCard.size(); x++) {
             mListOp.addView(mListCard.get(x));
         }
+    }
+
+    private void addPasangIklanCard() {
+        CardView cardView = (CardView) CardView.inflate(this, R.layout.actmain_instadds, null);
+        mListCard.add(cardView);
     }
 
     private void onButtonPetaniClicked() {
