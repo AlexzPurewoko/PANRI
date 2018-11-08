@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?><!-- START xml_defaults -->
+<defaultsMap>
+    <entry>
+        <key>data_iklan_version</key>
+        <value>undefined</value>
+    </entry>
+    <entry>
+        <key>data_library_version</key>
+        <value>20181005</value>
+    </entry>
+</defaultsMap><!-- END xml_defaults -->
