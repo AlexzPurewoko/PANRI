@@ -33,13 +33,14 @@ public class GalleryActivity extends MylexzActivity {
     private SQLiteDatabase sqlDB;
     List<String> dataPathGambar;
     private DialogShowHelper dialogShowHelper;
-    private static final String image_default_dirs = "data_hama/foto";
+    private String image_default_dirs;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.actgallery_main);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        this.image_default_dirs = getFilesDir().getAbsolutePath() + "/data/images/list";
         setMyActionBar();
         loadFromDB();
 
@@ -54,7 +55,7 @@ public class GalleryActivity extends MylexzActivity {
             @Override
             public void run() {
                 synchronized (this) {
-                    sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/databases/database_penyakitpadi.db", null);
+                    sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/files/database_penyakitpadi.db", null);
                     dataPathGambar = new ArrayList<>();
                     Cursor cursor = sqlDB.rawQuery("select path_gambar from gambar_penyakit", null);
                     cursor.moveToFirst();
@@ -74,7 +75,7 @@ public class GalleryActivity extends MylexzActivity {
                     int dimen = Math.round(getResources().getDimension(R.dimen.margin_img_penyakit));
                     adapterGrid = new ImageGridViewAdapter(GalleryActivity.this, p, R.id.actgallery_id_gridimage);
                     adapterGrid.setColumnCount(2);
-                    adapterGrid.setListLocationAssetsImages(dataPathGambar, "gallery_act");
+                    adapterGrid.setListLocationFileImages(dataPathGambar, "gallery_act");
                     adapterGrid.setMargin(dimen, dimen, dimen, dimen, dimen);
                     adapterGrid.setOnItemClickListener(new ImageGridViewAdapter.OnItemClickListener() {
                                                            @Override

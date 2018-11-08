@@ -142,7 +142,7 @@ public class DiagnosaGambarActivity extends MylexzActivity {
     }
 
     private void setDB() {
-        sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/databases/database_penyakitpadi.db", null);
+        sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/files/database_penyakitpadi.db", null);
     }
 
     @Override

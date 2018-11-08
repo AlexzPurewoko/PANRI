@@ -29,6 +29,7 @@ import id.kenshiro.app.panri.MainActivity;
 import id.kenshiro.app.panri.R;
 import id.kenshiro.app.panri.SplashScreenActivity;
 import id.kenshiro.app.panri.helper.CheckAndMoveDB;
+import id.kenshiro.app.panri.important.KeyListClasses;
 import id.kenshiro.app.panri.opt.CheckConnection;
 import io.fabric.sdk.android.Fabric;
 
@@ -71,24 +72,24 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
         publishProgress(0);
         synchronized (this) {
             switch (ctx.app_condition) {
-                case SplashScreenActivity.APP_IS_OLDER_VERSION:
-                case SplashScreenActivity.APP_IS_NEWER_VERSION: {
+                case KeyListClasses.APP_IS_OLDER_VERSION:
+                case KeyListClasses.APP_IS_NEWER_VERSION: {
                     cleanCache();
                     createCacheOperation();
                 }
                 break;
-                case SplashScreenActivity.APP_IS_FIRST_USAGE: {
+                case KeyListClasses.APP_IS_FIRST_USAGE: {
                     ctx.getFilesDir().mkdir();
                     try {
                         ExtractAndConfigureData.extractData(ctx, ctx.getFilesDir(), "data_panri.zip");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-
+                    ExtractAndConfigureData.configureData(ctx);
                     createCacheOperation();
                 }
                 break;
-                case SplashScreenActivity.APP_IS_SAME_VERSION: {
+                case KeyListClasses.APP_IS_SAME_VERSION: {
                     boolean isConnected = CheckConnection.isConnected(ctx);
                     if (!isConnected) {
                         boolean status_cache_dirs = validateCacheDirs();
@@ -98,8 +99,30 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
                     } else {
                         FirebaseApp.initializeApp(ctx);
                         // start separate threads to perform an action
+                        boolean ischeckDB = isAllowedToCheckDBOnline();
                         numOfThreads = 2;
-                        CheckDBCloudThread checkDBCloudThread = new CheckDBCloudThread(ctx, new ThreadPerformCallbacks() {
+                        CheckDBCloudThread checkDBCloudThread = null;
+                        CheckCacheAndConfThread checkCacheAndConfThread = new CheckCacheAndConfThread(ctx, diskCache);
+                        checkCacheAndConfThread.setThreadPerformCallbacks(new ThreadPerformCallbacks() {
+                            @Override
+                            public void onStarting(@NotNull Runnable runnedThread) {
+
+                            }
+
+                            @Override
+                            public void onCompleted(@NotNull Runnable runnedThread, @NotNull Object returnedCallbacks) {
+                                synchronized (finishedThreads) {
+                                    finishedThreads++;
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(@NotNull Runnable runnedThread, @NotNull Throwable caused, @NotNull Object returnedCallbacks) {
+
+                            }
+                        });
+                        if (ischeckDB)
+                            checkDBCloudThread = new CheckDBCloudThread(ctx, new ThreadPerformCallbacks() {
                             @Override
                             public void onStarting(@NotNull Runnable runnedThread) {
 
@@ -120,30 +143,11 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
                                 dbversion = (String[]) returnedCallbacks;
                             }
                         });
-                        CheckCacheAndConfThread checkCacheAndConfThread = new CheckCacheAndConfThread(ctx, diskCache);
-                        checkCacheAndConfThread.setThreadPerformCallbacks(new ThreadPerformCallbacks() {
-                            @Override
-                            public void onStarting(@NotNull Runnable runnedThread) {
-
-                            }
-
-                            @Override
-                            public void onCompleted(@NotNull Runnable runnedThread, @NotNull Object returnedCallbacks) {
-                                synchronized (finishedThreads) {
-                                    finishedThreads++;
-                                }
-                            }
-
-                            @Override
-                            public void onCancelled(@NotNull Runnable runnedThread, @NotNull Throwable caused, @NotNull Object returnedCallbacks) {
-
-                            }
-                        });
-
                         // starts it!
-                        Thread t1 = new Thread(checkCacheAndConfThread), t2 = new Thread(checkDBCloudThread);
+                        Thread t1 = new Thread(checkCacheAndConfThread), t2 = (checkDBCloudThread == null) ? null : new Thread(checkDBCloudThread);
                         t1.start();
-                        t2.start();
+                        if (t2 != null)
+                            t2.start();
                     }
                 }
             }
@@ -159,15 +163,13 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
         } catch (IOException e) {
             ctx.LOGE("Task.background()", "IOException occured when closing diskCache", e);
         }
-        SharedPreferences shareds = ctx.getSharedPreferences(SplashScreenActivity.SHARED_PREF_NAME, Context.MODE_PRIVATE);
-        if (!shareds.contains(ctx.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER))
-            shareds.edit().putInt(ctx.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, 0).commit();
-        int curr = shareds.getInt(ctx.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, 0);
+        SharedPreferences shareds = ctx.getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE);
+        int curr = shareds.getInt(KeyListClasses.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, 0);
         if (curr == 4)
             curr = 0;
         else
             curr++;
-        shareds.edit().putInt(ctx.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, curr).commit();
+        shareds.edit().putInt(KeyListClasses.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, curr).commit();
         // wait for the threads
         while (finishedThreads != numOfThreads) {
             try {
@@ -177,6 +179,11 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
             }
         }
         return ctx.app_condition;
+    }
+
+    private boolean isAllowedToCheckDBOnline() {
+        SharedPreferences sharedPreferences = ctx.getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getBoolean(KeyListClasses.KEY_AUTOCHECKUPDATE_APPDATA, true);
     }
 
     private synchronized void createCacheOperation() {
@@ -211,7 +218,7 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
             }
             fis.close();
             fos.close();
-            ctx.db_condition = SplashScreenActivity.DB_IS_FIRST_USAGE;
+            ctx.db_condition = KeyListClasses.DB_IS_FIRST_USAGE;
             // update into databases
             new CheckAndMoveDB(ctx, "database_penyakitpadi.db").upgradeDB();
         }
@@ -232,11 +239,11 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
                 fos.close();
                 // update into databases
                 new CheckAndMoveDB(ctx, "database_penyakitpadi.db").upgradeDB();
-                ctx.db_condition = SplashScreenActivity.DB_IS_NEWER_VERSION;
+                ctx.db_condition = KeyListClasses.DB_IS_NEWER_VERSION;
             } else if (current_db_version > available_db_version)
-                ctx.db_condition = SplashScreenActivity.DB_IS_OLDER_IN_APP_VERSION;
+                ctx.db_condition = KeyListClasses.DB_IS_OLDER_IN_APP_VERSION;
             else
-                ctx.db_condition = SplashScreenActivity.DB_IS_SAME_VERSION;
+                ctx.db_condition = KeyListClasses.DB_IS_SAME_VERSION;
         }
 
     }
@@ -269,7 +276,7 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
         path.mkdir();
         File content = new File(path, this.folder_app_version);
         if (!content.exists()) {
-            ctx.app_condition = SplashScreenActivity.APP_IS_FIRST_USAGE;
+            ctx.app_condition = KeyListClasses.APP_IS_FIRST_USAGE;
             String data = String.valueOf(version);
             FileOutputStream fos = new FileOutputStream(content);
             fos.write(data.getBytes());
@@ -282,15 +289,15 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
             int current_version = Integer.parseInt(new String(buf));
             fis.close();
             if (current_version < version) {
-                ctx.app_condition = SplashScreenActivity.APP_IS_NEWER_VERSION;
+                ctx.app_condition = KeyListClasses.APP_IS_NEWER_VERSION;
                 String data = String.valueOf(version);
                 FileOutputStream fos = new FileOutputStream(content);
                 fos.write(data.getBytes());
                 fos.close();
             } else if (current_version > version) {
-                ctx.app_condition = SplashScreenActivity.APP_IS_OLDER_VERSION;
+                ctx.app_condition = KeyListClasses.APP_IS_OLDER_VERSION;
             } else
-                ctx.app_condition = SplashScreenActivity.APP_IS_SAME_VERSION;
+                ctx.app_condition = KeyListClasses.APP_IS_SAME_VERSION;
         }
     }
 
@@ -301,9 +308,9 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
             int origVer = Integer.parseInt(dbversion[0]);
             int newVer = Integer.parseInt(dbversion[1]);
             if (newVer > origVer) {
-                ctx.db_condition = SplashScreenActivity.DB_REQUEST_UPDATE;
+                ctx.db_condition = KeyListClasses.DB_REQUEST_UPDATE;
             } else if (newVer == origVer) {
-                ctx.db_condition = SplashScreenActivity.DB_IS_SAME_VERSION;
+                ctx.db_condition = KeyListClasses.DB_IS_SAME_VERSION;
             }
         }
         //gifImageView.setVisibility(View.GONE);
@@ -327,12 +334,12 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
         in.setDuration(1200);
         TransitionManager.beginDelayedTransition((RelativeLayout) ctx.findViewById(R.id.actsplash_id_bawah_layout), in);
         ctx.linearIndicator.setVisibility(View.GONE);
-        if (ctx.app_condition == SplashScreenActivity.APP_IS_FIRST_USAGE)
+        if (ctx.app_condition == KeyListClasses.APP_IS_FIRST_USAGE)
             ctx.btnNext.setVisibility(View.VISIBLE);
         else {
             Bundle args = new Bundle();
-            args.putInt(SplashScreenActivity.APP_CONDITION_KEY, ctx.app_condition);
-            args.putInt(SplashScreenActivity.DB_CONDITION_KEY, ctx.db_condition);
+            args.putInt(KeyListClasses.APP_CONDITION_KEY, ctx.app_condition);
+            args.putInt(KeyListClasses.DB_CONDITION_KEY, ctx.db_condition);
             MylexzActivity activity = ctx;
             activity.finish();
             System.gc();

@@ -50,6 +50,7 @@ import id.kenshiro.app.panri.adapter.CustomPageViewTransformer;
 import id.kenshiro.app.panri.helper.CheckAndMoveDB;
 import id.kenshiro.app.panri.helper.DecodeBitmapHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
+import id.kenshiro.app.panri.important.KeyListClasses;
 import pl.droidsonroids.gif.GifImageView;
 
 import android.os.AsyncTask;
@@ -143,28 +144,28 @@ public class MainActivity extends MylexzActivity
 
     private void checkVersion() {
         Bundle bundle = getIntent().getExtras();
-        int app_cond = bundle.getInt(SplashScreenActivity.APP_CONDITION_KEY);
-        int db_cond = bundle.getInt(SplashScreenActivity.DB_CONDITION_KEY);
+        int app_cond = bundle.getInt(KeyListClasses.APP_CONDITION_KEY);
+        int db_cond = bundle.getInt(KeyListClasses.DB_CONDITION_KEY);
         String messageIfNeeded = null;
         String dbErrorMesageIfNeeded = null;
         switch (app_cond) {
-            case SplashScreenActivity.APP_IS_FIRST_USAGE:
-            case SplashScreenActivity.APP_IS_NEWER_VERSION:
+            case KeyListClasses.APP_IS_FIRST_USAGE:
+            case KeyListClasses.APP_IS_NEWER_VERSION:
                 break;
-            case SplashScreenActivity.APP_IS_OLDER_VERSION:
+            case KeyListClasses.APP_IS_OLDER_VERSION:
                 messageIfNeeded = "Aplikasi ini sudah usang dan tidak kompatibel dengan versi sebelumnya yang lebih baru, coba copot dan pasang lagi aplikasi ini";
-            case SplashScreenActivity.APP_IS_SAME_VERSION:
+            case KeyListClasses.APP_IS_SAME_VERSION:
                 break;
         }
         switch (db_cond) {
-            case SplashScreenActivity.DB_IS_FIRST_USAGE:
+            case KeyListClasses.DB_IS_FIRST_USAGE:
                 break;
-            case SplashScreenActivity.DB_IS_NEWER_VERSION:
+            case KeyListClasses.DB_IS_NEWER_VERSION:
                 TOAST(Toast.LENGTH_SHORT, "The data now is new version !");
                 break;
-            case SplashScreenActivity.DB_IS_OLDER_IN_APP_VERSION:
+            case KeyListClasses.DB_IS_OLDER_IN_APP_VERSION:
                 dbErrorMesageIfNeeded = "Current Database dengan database di aplikasi sudah usang, mohon copot dan pasang aplikasi untuk membenahi";
-            case SplashScreenActivity.DB_IS_SAME_VERSION:
+            case KeyListClasses.DB_IS_SAME_VERSION:
                 break;
         }
         showDialog(messageIfNeeded, dbErrorMesageIfNeeded);
@@ -267,6 +268,7 @@ public class MainActivity extends MylexzActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            SwitchIntoMainActivity.switchTo(this, PanriSettingActivity.class, null);
             return true;
         }
 
@@ -534,7 +536,7 @@ public class MainActivity extends MylexzActivity
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            final int current = mainActivity.get().getSharedPreferences(SplashScreenActivity.SHARED_PREF_NAME, Context.MODE_PRIVATE).getInt(SplashScreenActivity.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, 0);
+            final int current = mainActivity.get().getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE).getInt(KeyListClasses.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, 0);
             final int current1 = (current == memCache.size()) ? 0 : current;
             postExecute(memCache.get(current1));
         }

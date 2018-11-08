@@ -42,6 +42,7 @@ import id.kenshiro.app.panri.helper.ListCiriCiriPenyakit;
 import id.kenshiro.app.panri.helper.ListNamaPenyakit;
 import id.kenshiro.app.panri.helper.ShowPenyakitDiagnoseHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
+import id.kenshiro.app.panri.important.KeyListClasses;
 import pl.droidsonroids.gif.GifImageView;
 
 public class DiagnoseActivity extends MylexzActivity
@@ -133,7 +134,7 @@ public class DiagnoseActivity extends MylexzActivity
 		mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
 	}
 	private void loadAllDataCiri() throws IOException, ClassNotFoundException {
-		listCiriCiriPenyakitHashMap = (HashMap<Integer, ListCiriCiriPenyakit>) diskCache.getObjectWithDecode(SplashScreenActivity.LIST_PENYAKIT_CIRI_KEY_CACHE);
+		listCiriCiriPenyakitHashMap = (HashMap<Integer, ListCiriCiriPenyakit>) diskCache.getObjectWithDecode(KeyListClasses.LIST_PENYAKIT_CIRI_KEY_CACHE);
 		diskCache.closeReading();
 	}
 
@@ -164,7 +165,7 @@ public class DiagnoseActivity extends MylexzActivity
 		System.gc();
 	}
 	private void setDB() {
-		sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/databases/database_penyakitpadi.db", null);
+		sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/files/database_penyakitpadi.db", null);
 	}
 
 	@Override

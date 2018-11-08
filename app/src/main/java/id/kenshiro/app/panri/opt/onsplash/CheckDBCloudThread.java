@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import id.kenshiro.app.panri.SplashScreenActivity;
+import id.kenshiro.app.panri.important.KeyListClasses;
 
 public class CheckDBCloudThread implements Runnable {
     private ThreadPerformCallbacks threadPerformCallbacks = null;
@@ -87,7 +88,7 @@ public class CheckDBCloudThread implements Runnable {
             return null;
         }
         synchronized (ctx) {
-            SharedPreferences sharedPreferences = ctx.getSharedPreferences(SplashScreenActivity.SHARED_PREF_NAME, Context.MODE_PRIVATE);
+            SharedPreferences sharedPreferences = ctx.getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE);
             if (!sharedPreferences.contains(KEY_SHARED_DATA_DB_VERSION)) {
                 if (getDBVersFromAssets != null)
                     sharedPreferences.edit().putString(KEY_SHARED_DATA_DB_VERSION, getDBVersFromAssets).commit();

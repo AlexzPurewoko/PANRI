@@ -9,13 +9,17 @@ import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.SimpleDiskLruCache;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 
 import id.kenshiro.app.panri.R;
 import id.kenshiro.app.panri.SplashScreenActivity;
 import id.kenshiro.app.panri.helper.DecodeBitmapHelper;
 import id.kenshiro.app.panri.helper.ListCiriCiriPenyakit;
+import id.kenshiro.app.panri.important.KeyListClasses;
 
 public class ConfigureCache {
     private static final long MAX_CACHE_BUFFERED_SIZE = 1048576;
@@ -24,6 +28,7 @@ public class ConfigureCache {
     private MylexzActivity ctx;
     private SimpleDiskLruCache diskCache;
     private HashMap<Integer, ListCiriCiriPenyakit> listCiriCiriPenyakitHashMap;
+    private String pathImageListPenyakit = "data/images/list";
 
     public ConfigureCache(MylexzActivity ctx, SimpleDiskLruCache diskCache) {
         this.ctx = ctx;
@@ -31,25 +36,27 @@ public class ConfigureCache {
     }
 
     public void configureCache() {
-        // caching images
-        cachingBitmapsViewPager();
-        // caching Objects
-        try {
-            cachingListPenyakit();
-        } catch (IOException e) {
-            ctx.LOGE("Task.background()", "IOException occured when create listCiriCiriPenyakit Cache", e);
+        if (validateCacheDirs()) {
+            // caching images
+            cachingBitmapsViewPager();
+            // caching Objects
+            try {
+                cachingListPenyakit();
+            } catch (IOException e) {
+                ctx.LOGE("Task.background()", "IOException occured when create listCiriCiriPenyakit Cache", e);
+            }
+            try {
+                cachingListImageCard1();
+            } catch (IOException e) {
+                ctx.LOGE("Task.background()", "IOException occured when create image card listCiriCiriPenyakit Cache", e);
+            }
+            sqlDB.close();
         }
-        try {
-            cachingListImageCard1();
-        } catch (IOException e) {
-            ctx.LOGE("Task.background()", "IOException occured when create image card listCiriCiriPenyakit Cache", e);
-        }
-        sqlDB.close();
     }
 
     private void cachingListImageCard1() throws IOException {
         int counter = 0;
-        //String pathImage =;
+        File imgListPath = new File(ctx.getFilesDir(), pathImageListPenyakit);
         Cursor cursor = sqlDB.rawQuery("select path_gambar from gambar_penyakit", null);
         cursor.moveToFirst();
         int size_images = Math.round(ctx.getResources().getDimension(R.dimen.actmain_dimen_opimg_incard_wh));
@@ -57,9 +64,11 @@ public class ConfigureCache {
             String[] buf = cursor.getString(0).split(",");
             String name = buf[0];
             String nameID = getLasts(name) + "jpg";
-            final Bitmap bitmap = DecodeBitmapHelper.decodeAndResizeBitmapsAssets(ctx.getAssets(), "data_hama/foto/" + name + ".jpg", size_images, size_images);
+            final InputStream inputStream = new FileInputStream(imgListPath.getAbsolutePath() + "/" + name + ".jpg");
+            final Bitmap bitmap = DecodeBitmapHelper.decodeBitmapStream(inputStream);
             final Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, size_images, size_images, false);
             //gets the byte of bitmap
+            inputStream.close();
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             float scaling = bitmap.getHeight() / size_images;
             scaling = ((scaling < 1.0f) ? 1.0f : scaling);
@@ -84,12 +93,22 @@ public class ConfigureCache {
         System.gc();
     }
 
+    private boolean validateCacheDirs() {
+        File fileCache = new File(ctx.getCacheDir(), "cache");
+        fileCache.mkdir();
+        String[] fileList = fileCache.list();
+        if (fileList.length == 0)
+            return true;
+        return false;
+    }
+
+
     private void cachingListPenyakit() throws IOException {
         sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/files/database_penyakitpadi.db", null);
         loadAllDataCiri();
         if (listCiriCiriPenyakitHashMap != null) {
             synchronized (diskCache) {
-                diskCache.putObjectWithEncode(SplashScreenActivity.LIST_PENYAKIT_CIRI_KEY_CACHE, listCiriCiriPenyakitHashMap);
+                diskCache.putObjectWithEncode(KeyListClasses.LIST_PENYAKIT_CIRI_KEY_CACHE, listCiriCiriPenyakitHashMap);
             }
         }
     }

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="Auto Update Settings">
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="autoupdate"
+            android:title="Otomatis Check Update"
+            android:summary="Aktifkan Otomatis cek update saat memulai aplikasi" />
+    </PreferenceCategory>
+</PreferenceScreen>

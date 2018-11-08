@@ -26,6 +26,7 @@ import com.mylexz.utils.SimpleDiskLruCache;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
@@ -88,6 +89,12 @@ public class ImageGridViewAdapter implements Closeable{
     @Override
     public void close() {
         recycleBitmaps();
+    }
+
+    public void setListLocationFileImages(List<String> listLocationFileImages, String idSuffix) {
+        this.listLocationAssetsImages = listLocationFileImages;
+        this.idSuffix = idSuffix;
+        mode = 2;
     }
 
     public void setListLocationAssetsImages(List<String> listLocationAssetsImages, String idSuffix) {
@@ -237,9 +244,63 @@ public class ImageGridViewAdapter implements Closeable{
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                    break;
+                case 2:
+                    try {
+                        checkAndLoadAllBitmapsFromFiles();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
             }
 
         }
+
+        private void checkAndLoadAllBitmapsFromFiles() throws IOException {
+            for (int x = 0; x < ctxCls.get().listLocationAssetsImages.size(); x++) {
+                String name = ctxCls.get().listLocationAssetsImages.get(x);
+                String nameID = getLasts(name) + ctxCls.get().idSuffix;
+                if (!diskLruObjectCache.isKeyExists(nameID)) {
+                    InputStream inputStream = new FileInputStream(name);
+                    final Bitmap bitmap = DecodeBitmapHelper.decodeBitmapStream(inputStream);
+                    Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, ctxCls.get().imageItemSize.x, ctxCls.get().imageItemSize.y, false);
+                    inputStream.close();
+                    //gets the byte of bitmap
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    float scaling = bitmap.getHeight() / ctxCls.get().imageItemSize.y;
+                    scaling = ((scaling < 1.0f) ? 1.0f : scaling);
+                    scaledBitmap.compress(Bitmap.CompressFormat.JPEG, Math.round(QUALITY_FACTOR / scaling), bos);
+                    // put into cache
+                    try {
+                        diskLruObjectCache.put(nameID, bos.toByteArray());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        bos.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    ctxCls.get().mImagecache.put(x, scaledBitmap);
+                    bitmap.recycle();
+                    System.gc();
+                } else {
+                    InputStream is = null;
+                    try {
+                        is = diskLruObjectCache.get(nameID);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    if (is == null) {
+                        diskLruObjectCache.closeReading();
+                        continue;
+                    }
+                    ctxCls.get().mImagecache.put(x, BitmapFactory.decodeStream(is));
+                    diskLruObjectCache.closeReading();
+                }
+            }
+        }
+
         private void settingSize(){
             // set size per images
             int screenHeight = ctxCls.get().screenSize.y;

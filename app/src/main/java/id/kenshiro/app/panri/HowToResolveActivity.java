@@ -30,6 +30,7 @@ import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.text.TextSpanFormat;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
+import java.io.File;
 import java.io.IOException;
 
 import id.kenshiro.app.panri.adapter.AdapterRecycler;
@@ -106,7 +107,8 @@ public class HowToResolveActivity extends MylexzActivity {
         // load url path from assets
         Cursor cursor = sqlDB.rawQuery("select cara_atasi_path from penyakit where no=" + position, null);
         cursor.moveToFirst();
-        this.data_url = "file:///android_asset/" + cursor.getString(0);
+        File tmp = new File(getFilesDir(), "data_hama_html");
+        this.data_url = "file://" + tmp.getAbsolutePath() + "/" + cursor.getString(0);
         cursor.close();
         System.gc();
 
@@ -137,7 +139,7 @@ public class HowToResolveActivity extends MylexzActivity {
     }
 
     private void setDB() {
-        sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/databases/database_penyakitpadi.db", null);
+        sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/files/database_penyakitpadi.db", null);
     }
     @Override
     protected void onResume() {
