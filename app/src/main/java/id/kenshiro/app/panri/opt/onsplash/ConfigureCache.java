@@ -16,13 +16,12 @@ import java.io.InputStream;
 import java.util.HashMap;
 
 import id.kenshiro.app.panri.R;
-import id.kenshiro.app.panri.SplashScreenActivity;
 import id.kenshiro.app.panri.helper.DecodeBitmapHelper;
 import id.kenshiro.app.panri.helper.ListCiriCiriPenyakit;
 import id.kenshiro.app.panri.important.KeyListClasses;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
 
 public class ConfigureCache {
-    private static final long MAX_CACHE_BUFFERED_SIZE = 1048576;
     private static final int QUALITY_FACTOR = 40;
     private SQLiteDatabase sqlDB;
     private MylexzActivity ctx;
@@ -43,11 +42,13 @@ public class ConfigureCache {
             try {
                 cachingListPenyakit();
             } catch (IOException e) {
+                LogIntoCrashlytics.logException("IOExCreateCache1", String.format("IOException occured when create listCiriCiriPenyakit Cache e -> %s", e.toString()), e);
                 ctx.LOGE("Task.background()", "IOException occured when create listCiriCiriPenyakit Cache", e);
             }
             try {
                 cachingListImageCard1();
             } catch (IOException e) {
+                LogIntoCrashlytics.logException("IOExCreateCache2", String.format("IOException occured when create image card listCiriCiriPenyakit Cache e -> %s", e.toString()), e);
                 ctx.LOGE("Task.background()", "IOException occured when create image card listCiriCiriPenyakit Cache", e);
             }
             sqlDB.close();

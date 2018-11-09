@@ -80,6 +80,7 @@
                 android:src="@drawable/loading" />
 
             <TextView
+                android:layout_marginTop="@dimen/layout_onnotselected_marginleft_20"
                 android:id="@+id/actsplash_id_txtsplash_indicator"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

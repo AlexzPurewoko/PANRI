@@ -1,71 +1,22 @@
 package id.kenshiro.app.panri;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
-import android.content.res.AssetManager;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Typeface;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.transition.Fade;
-import android.support.transition.Scene;
-import android.support.transition.Transition;
-import android.support.transition.TransitionManager;
-import android.support.transition.TransitionValues;
-import android.util.Log;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
-import com.mylexz.utils.DiskLruObjectCache;
 import com.mylexz.utils.MylexzActivity;
-import com.mylexz.utils.SimpleDiskLruCache;
 
 import io.fabric.sdk.android.Fabric;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import id.kenshiro.app.panri.helper.CheckAndMoveDB;
-import id.kenshiro.app.panri.helper.DecodeBitmapHelper;
-import id.kenshiro.app.panri.helper.ListCiriCiriPenyakit;
-import id.kenshiro.app.panri.helper.ListNamaPenyakit;
-import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
-import id.kenshiro.app.panri.helper.TampilListPenyakitHelper;
 import id.kenshiro.app.panri.important.KeyListClasses;
-import id.kenshiro.app.panri.opt.CheckConnection;
-import id.kenshiro.app.panri.opt.onsplash.CheckCacheAndConfThread;
-import id.kenshiro.app.panri.opt.onsplash.ConfigureCache;
-import id.kenshiro.app.panri.opt.onsplash.ExtractAndConfigureData;
 import id.kenshiro.app.panri.opt.onsplash.LoaderTask;
 import pl.droidsonroids.gif.GifImageView;
 
@@ -84,7 +35,11 @@ public class SplashScreenActivity extends MylexzActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Fabric.with(this, new Crashlytics());
+        final Fabric fabric = new Fabric.Builder(this)
+                .kits(new Crashlytics())
+                .debuggable(true)  // Enables Crashlytics debugger
+                .build();
+        Fabric.with(fabric);
         setContentView(R.layout.actsplash_main);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setAllViews();

@@ -3,13 +3,11 @@ package id.kenshiro.app.panri.opt;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.support.annotation.NonNull;
 
 import com.mylexz.utils.MylexzActivity;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.net.InetAddress;
 
 public class CheckConnection {
     public static boolean isConnected(@NotNull MylexzActivity activity) {

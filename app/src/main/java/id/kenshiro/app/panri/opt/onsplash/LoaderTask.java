@@ -3,7 +3,6 @@ package id.kenshiro.app.panri.opt.onsplash;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.AssetManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.transition.Fade;
@@ -19,23 +18,17 @@ import com.mylexz.utils.SimpleDiskLruCache;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import id.kenshiro.app.panri.BuildConfig;
 import id.kenshiro.app.panri.MainActivity;
 import id.kenshiro.app.panri.R;
 import id.kenshiro.app.panri.SplashScreenActivity;
-import id.kenshiro.app.panri.helper.CheckAndMoveDB;
 import id.kenshiro.app.panri.important.KeyListClasses;
 import id.kenshiro.app.panri.opt.CheckConnection;
-import io.fabric.sdk.android.Fabric;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
 
-public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
-    String folder_app_version = "app_version";
-    String file_db_version = "db_version";
+public class LoaderTask extends AsyncTask<Void, String, Integer> {
     File fileCache;
     SimpleDiskLruCache diskCache;
     SplashScreenActivity ctx;
@@ -56,22 +49,24 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
 
     @Override
     protected Integer doInBackground(Void... voids) {
+        publishProgress("First checking...");
         try {
             // if is firstUsage then execute command below
             checkAndSaveAppVersion();
+            Crashlytics.setString("IOExceptionCheckAppVers", "Success");
             //updateDBIfItsNewVersion();
         } catch (IOException e) {
-            Crashlytics.log(String.format("IOException occured when executing checkAndSaveAppVersion() e -> %s", e.toString()));
+            LogIntoCrashlytics.logException("IOExceptionCheckAppVers", String.format("IOException occured when executing checkAndSaveAppVersion() e -> %s", e.toString()), e);
             ctx.LOGE("Task.background()", "IOException occured when executing checkAndSaveAppVersion() & updateDBIfItsNewVersion();", e);
         }
         // creates cache directory if not exists
         try {
             diskCache = SimpleDiskLruCache.getsInstance(fileCache);
         } catch (IOException e) {
-            Crashlytics.log(String.format("IOException occured when initialize DiskLruObjectCache instance e -> %s", e.toString()));
+            LogIntoCrashlytics.logException("IOExceptionDiskCache", String.format("IOException occured when initialize DiskLruObjectCache instance e -> %s", e.toString()), e);
             ctx.LOGE("Task.background()", "IOException occured when initialize DiskLruObjectCache instance", e);
         }
-        publishProgress(0);
+        publishProgress("Mempersiapkan data...");
         synchronized (this) {
             switch (ctx.app_condition) {
                 case KeyListClasses.APP_IS_OLDER_VERSION:
@@ -85,7 +80,7 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
                     try {
                         ExtractAndConfigureData.extractData(ctx, ctx.getFilesDir(), "data_panri.zip");
                     } catch (IOException e) {
-                        Crashlytics.log(String.format("IOException occured when Extract and configure data e -> %s", e.toString()));
+                        LogIntoCrashlytics.logException("IOExceptionExtractData", String.format("IOException occured when Extract and configure data e -> %s", e.toString()), e);
                         e.printStackTrace();
                     }
                     ExtractAndConfigureData.configureData(ctx);
@@ -171,17 +166,17 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
                 }
             }
         }
-        publishProgress(1);
+        publishProgress("Hampir siap...");
         try {
-            Thread.sleep(800);
+            Thread.sleep(600);
         } catch (InterruptedException e) {
-            Crashlytics.log(String.format("InterruptedException! occured when sleep a main thread e -> %s", e.toString()));
+            LogIntoCrashlytics.logException("InterruptExSleep", String.format("InterruptedException! occured when sleep a main thread e -> %s", e.toString()), e);
             ctx.LOGE("Task.background()", "Interrupted signal exception!", e);
         }
         try {
             diskCache.close();
         } catch (IOException e) {
-            Crashlytics.log(String.format("IOException occured when closing diskCache e -> %s", e.toString()));
+            LogIntoCrashlytics.logException("IOExCloseCache", String.format("IOException occured when closing diskCache e -> %s", e.toString()), e);
             ctx.LOGE("Task.background()", "IOException occured when closing diskCache", e);
         }
         SharedPreferences shareds = ctx.getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE);
@@ -196,10 +191,10 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
-                Crashlytics.log(String.format("InterruptedException occured when waiting the threads, finishedThreads(%d) e -> %s", finishedThreads, e.toString()));
-
+                LogIntoCrashlytics.logException("InterruptExSleep2", String.format("InterruptedException! occured when waiting the threads, finishedThreads(%d) e -> %s", finishedThreads, e.toString()), e);
             }
         }
+        publishProgress("Selesai!");
         Crashlytics.log("Thread ended!");
         return ctx.app_condition;
     }
@@ -263,13 +258,9 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
     }
 
     @Override
-    protected void onProgressUpdate(Integer... values) {
+    protected void onProgressUpdate(String... values) {
         super.onProgressUpdate(values);
-        if (values[0] == 0) {
-            ctx.indicators.setText("Membuat cache...");
-        } else if (values[0] == 1) {
-            ctx.indicators.setText("Membuka aplikasi");
-        }
+        ctx.indicators.setText(values[0]);
     }
 
     private void animateAndForward() {

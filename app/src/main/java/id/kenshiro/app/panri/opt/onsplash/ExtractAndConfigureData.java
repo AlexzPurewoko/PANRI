@@ -12,7 +12,6 @@ import org.jetbrains.annotations.NotNull;
 import org.xmlpull.v1.XmlPullParser;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -20,8 +19,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import id.kenshiro.app.panri.BuildConfig;
-import id.kenshiro.app.panri.R;
-import id.kenshiro.app.panri.SplashScreenActivity;
 import id.kenshiro.app.panri.important.KeyListClasses;
 import id.kenshiro.app.panri.opt.UnzipFile;
 
