@@ -2,12 +2,16 @@ package id.kenshiro.app.panri;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -357,9 +361,21 @@ public class MainActivity extends MylexzActivity
             case R.id.update_db:
                 new CheckDBUpdateThread(this).execute();
                 break;
-            case R.id.nav_rate:
+            case R.id.nav_rate: {
+                // https://play.google.com/store/apps/details?id=ohi.andre.consolelauncher
+                String packageApp = getPackageName().toString();
+                Intent i = new Intent(Intent.ACTION_VIEW);
+                i.setData(Uri.parse("https://play.google.com/store/apps/details?id=" + packageApp));
+                i.setPackage("com.android.vending");
+                startActivity(Intent.createChooser(i, "Beri Nilai dengan..."));
+            }
                 break;
-            case R.id.nav_share:
+            case R.id.nav_share: {
+                Intent i = new Intent(Intent.ACTION_SEND);
+                i.putExtra(Intent.EXTRA_TEXT, String.format("Download Aplikasi PANRI ke smartphone Android kamu dengan klik https://play.google.com/store/apps/details?id=%s", getPackageName().toString()));
+                i.setType("text/plain");
+                startActivity(Intent.createChooser(i, "Bagikan Aplikasi dengan..."));
+            }
                 break;
         }
 
