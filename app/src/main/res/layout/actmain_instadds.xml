@@ -37,14 +37,14 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/actmain_dimen_opimg_incard_wh"
         android:layout_gravity="center|center_vertical|center_horizontal"
-        android:background="#ff0000">
+        android:background="#0000ff">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_centerInParent="true"
             android:layout_margin="5dp"
-            android:background="@android:color/darker_gray">
+            android:background="@android:color/white">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -53,7 +53,7 @@
                 android:layout_gravity="center|center_vertical|center_horizontal"
                 android:layout_marginLeft="8dp"
                 android:text="PASANG IKLAN"
-                android:textColor="#FFFFFF"
+                android:textColor="#0000ff"
                 android:textSize="16sp"
                 android:textStyle="bold" />
         </RelativeLayout>

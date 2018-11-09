@@ -53,6 +53,10 @@ import id.kenshiro.app.panri.helper.CheckAndMoveDB;
 import id.kenshiro.app.panri.helper.DecodeBitmapHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 import id.kenshiro.app.panri.important.KeyListClasses;
+import id.kenshiro.app.panri.opt.onmain.CheckDBUpdateThread;
+import id.kenshiro.app.panri.opt.onmain.DialogOnMain;
+import id.kenshiro.app.panri.opt.onmain.PrepareBitmapViewPager;
+import id.kenshiro.app.panri.opt.onmain.TaskDownloadDBUpdates;
 import pl.droidsonroids.gif.GifImageView;
 
 import android.os.AsyncTask;
@@ -67,12 +71,14 @@ import android.view.KeyEvent;
 public class MainActivity extends MylexzActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     private static final long TIME_BETWEEN_IMAGE = 6000;
+    private static final long TIME_AUTO_UPDATE_TEXT_MILLIS = 5000; // 5s
     Toolbar toolbar;
     // for view image pager
-    LinearLayout indicators;
-    private CustomViewPager mImageSelector;
+    public LinearLayout indicators;
+    public CustomViewPager mImageSelector;
     private TextView mTextDetails;
     private Handler handlerPetani;
+    private Handler autoClick = null;
     // for section petani
     private Button mTextPetaniDesc;
     private GifImageView imgPetaniKedipView;
@@ -89,13 +95,14 @@ public class MainActivity extends MylexzActivity
     private LinearLayout mListOp;
     private List<CardView> mListCard;
     private volatile Runnable mImageSwitcher = null;
+    private volatile Runnable mAutoClickHandler = null;
     private volatile Handler mImageHandlerSw = null;
-    private volatile int curr_pos_image = 0;
+    public volatile int curr_pos_image = 0;
 
     private boolean doubleBackToExitPressedOnce;
-    LruCache<Integer, Bitmap> mImageMemCache;
+    public LruCache<Integer, Bitmap> mImageMemCache;
     private WeakReference<PrepareBitmapViewPager> prepareBitmapViewPagerWeakReference;
-    private int has_finished = 0;
+    public int has_finished = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,7 +126,39 @@ public class MainActivity extends MylexzActivity
         checkVersion();
     }
 
-    private void setHandlers(final CustomViewPager customViewPager, final int size) {
+    public void setAutoClickUpdate() {
+        if (mAutoClickHandler == null && autoClick == null) {
+            mAutoClickHandler = new Runnable() {
+                @Override
+                public void run() {
+                    onButtonPetaniClicked(false);
+
+                    Handler inner = new Handler(Looper.getMainLooper());
+                    inner.postDelayed(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            clearAutoClickUpdate(mAutoClickHandler);
+                            setAutoClickUpdate();
+                        }
+                    }, TIME_AUTO_UPDATE_TEXT_MILLIS);
+                }
+            };
+            autoClick = new Handler(Looper.getMainLooper());
+            autoClick.postDelayed(mAutoClickHandler, TIME_AUTO_UPDATE_TEXT_MILLIS);
+        }
+    }
+
+    public void clearAutoClickUpdate(Runnable runnable) {
+        if (autoClick != null) {
+            autoClick.removeCallbacks(runnable);
+            autoClick = null;
+            mAutoClickHandler = null;
+            System.gc();
+        }
+    }
+
+    public void setHandlers(final CustomViewPager customViewPager, final int size) {
         mImageSwitcher = new Runnable() {
             @Override
             public void run() {
@@ -160,6 +199,23 @@ public class MainActivity extends MylexzActivity
                 break;
         }
         switch (db_cond) {
+            case KeyListClasses.DB_REQUEST_UPDATE: {
+                final String[] dbVersion = bundle.getStringArray(KeyListClasses.KEY_LIST_VERSION_DB);
+                DialogOnMain.showUpdateDBDialog(this, KeyListClasses.UPDATE_DB_IS_AVAILABLE, new Object[]{
+                        dbVersion[0],
+                        dbVersion[1],
+                        "Update",
+                        new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                new TaskDownloadDBUpdates(MainActivity.this, dbVersion[1]).execute();
+                            }
+                        }
+                });
+            }
+            break;
             case KeyListClasses.DB_IS_FIRST_USAGE:
                 break;
             case KeyListClasses.DB_IS_NEWER_VERSION:
@@ -225,13 +281,16 @@ public class MainActivity extends MylexzActivity
     @Override
     protected void onResume() {
         super.onResume();
-        if (has_finished == 1)
+        if (has_finished == 1) {
             setHandlers(mImageSelector, mImageMemCache.size());
+            setAutoClickUpdate();
+        }
     }
 
     @Override
     protected void onPause() {
         clearHandlers(mImageSwitcher);
+        clearAutoClickUpdate(mAutoClickHandler);
         super.onPause();
     }
 
@@ -286,11 +345,17 @@ public class MainActivity extends MylexzActivity
             case R.id.nav_gallery:
                 SwitchIntoMainActivity.switchTo(this, GalleryActivity.class, null);
                 break;
+            case R.id.send_report:
+                DialogOnMain.showReportDialog(this);
+                break;
             case R.id.nav_about:
                 SwitchIntoMainActivity.switchTo(this, AboutActivity.class, null);
                 break;
             case R.id.nav_out:
                 this.finish();
+                break;
+            case R.id.update_db:
+                new CheckDBUpdateThread(this).execute();
                 break;
             case R.id.nav_rate:
                 break;
@@ -347,36 +412,60 @@ public class MainActivity extends MylexzActivity
             mListCard.get(x).setContentPadding(10, 10, 10, 10);
             mListCard.get(x).addView(content);
         }
-        addPasangIklanCard();
         setCardTouchEvent(listClass);
         // fill into LinearLayout
         for (int x = 0; x < mListCard.size(); x++) {
             mListOp.addView(mListCard.get(x));
         }
+        addPasangIklanCard();
     }
 
     private void addPasangIklanCard() {
         CardView cardView = (CardView) CardView.inflate(this, R.layout.actmain_instadds, null);
-        mListCard.add(cardView);
+        cardView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DialogOnMain.showDialogPasangIklan(MainActivity.this);
+            }
+        });
+        mListOp.addView(cardView);
     }
 
-    private void onButtonPetaniClicked() {
-        if (++mPosTxtPetani == TextPetaniDesc.length)
+    private void onButtonPetaniClicked(boolean isOnStart) {
+        if (!isOnStart) {
+            if (++mPosTxtPetani == TextPetaniDesc.length)
+                mPosTxtPetani = 0;
+            mTextPetaniDesc.setText(TextPetaniDesc[mPosTxtPetani]);
+            imgPetaniKedipView.setImageResource(R.drawable.petani_bicara);
+            if (handlerPetani == null) {
+                handlerPetani = new Handler();
+                handlerPetani.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        handlerPetani = null;
+                        System.gc();
+                        imgPetaniKedipView.setImageResource(R.drawable.petani_kedip);
+                    }
+                }, 4000);
+            }
+            System.gc();
+        } else {
             mPosTxtPetani = 0;
-        mTextPetaniDesc.setText(TextPetaniDesc[mPosTxtPetani]);
-        imgPetaniKedipView.setImageResource(R.drawable.petani_bicara);
-        if (handlerPetani == null) {
-            handlerPetani = new Handler();
-            handlerPetani.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    handlerPetani = null;
-                    System.gc();
-                    imgPetaniKedipView.setImageResource(R.drawable.petani_kedip);
-                }
-            }, 2000);
+            mTextPetaniDesc.setText(TextPetaniDesc[mPosTxtPetani]);
+            imgPetaniKedipView.setImageResource(R.drawable.petani_bicara);
+            if (handlerPetani == null) {
+                handlerPetani = new Handler();
+                handlerPetani.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        handlerPetani = null;
+                        System.gc();
+                        imgPetaniKedipView.setImageResource(R.drawable.petani_kedip);
+                    }
+                }, 4000);
+            }
+            System.gc();
         }
-        System.gc();
     }
 
     private void setInitialSectPetani() {
@@ -387,18 +476,19 @@ public class MainActivity extends MylexzActivity
         mTextPetaniDesc.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View p1) {
-                onButtonPetaniClicked();
+                onButtonPetaniClicked(false);
             }
         });
-        mTextPetaniDesc.setText(TextPetaniDesc[mPosTxtPetani]);
+        //mTextPetaniDesc.setText(TextPetaniDesc[mPosTxtPetani]);
         imgPetaniKedipView.setVisibility(View.VISIBLE);
         imgPetaniKedipView.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                onButtonPetaniClicked();
+                onButtonPetaniClicked(false);
             }
         });
+        onButtonPetaniClicked(true);
     }
 
     private void setInitialTextInds() {
@@ -435,7 +525,7 @@ public class MainActivity extends MylexzActivity
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             if (doubleBackToExitPressedOnce) {
-                showExitDialog();
+                DialogOnMain.showExitDialog(this);
                 return true;
             }
 
@@ -456,6 +546,7 @@ public class MainActivity extends MylexzActivity
     @Override
     protected void onDestroy() {
         clearHandlers(mImageSwitcher);
+        clearAutoClickUpdate(mAutoClickHandler);
         if (mImageMemCache != null) {
             for (int x = 0; x < mImageMemCache.size(); x++) {
                 mImageMemCache.get(x).recycle();
@@ -463,189 +554,5 @@ public class MainActivity extends MylexzActivity
             mImageMemCache.evictAll();
         }
         super.onDestroy();
-    }
-
-    private void showExitDialog() {
-        AlertDialog.Builder build = new AlertDialog.Builder(this);
-        LinearLayout layoutDialog = (LinearLayout) LinearLayout.inflate(this, R.layout.actmain_dialog_on_exit, null);
-        TextView text = (TextView) layoutDialog.findViewById(R.id.actmain_id_dialogexit_content);
-        Button btnyes = (Button) layoutDialog.findViewById(R.id.actmain_id_dialogexit_btnyes);
-        Button btnno = (Button) layoutDialog.findViewById(R.id.actmain_id_dialogexit_btnno);
-        text.setTextColor(Color.BLACK);
-        text.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.BOLD);
-        text.setText(R.string.actmain_string_dialogexit_desc);
-        btnyes.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.BOLD);
-        btnyes.setTextColor(Color.WHITE);
-        btnyes.setText(R.string.actmain_string_dialogexit_btnyes);
-        btnno.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.BOLD);
-        btnno.setTextColor(Color.WHITE);
-        btnno.setText(R.string.actmain_string_dialogexit_btnno);
-        build.setView(layoutDialog);
-        final AlertDialog mAlert = build.create();
-        btnyes.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View p1) {
-                mAlert.cancel();
-                MainActivity.this.finish();
-            }
-
-
-        });
-        btnno.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View p1) {
-                mAlert.cancel();
-            }
-
-
-        });
-        mAlert.show();
-    }
-
-    private static class PrepareBitmapViewPager implements Runnable {
-        LruCache<Integer, Bitmap> memCache;
-        private final File sourceCache;
-        private ImageFragmentAdapter mImageControllerFragment;
-        private WeakReference<CustomViewPager> mImageSelector;
-        private WeakReference<Point> reqSize;
-        private static volatile SimpleDiskLruCache diskLruCache;
-        private WeakReference<MainActivity> mainActivity;
-        //private int mDotCount;
-        //private LinearLayout[] mDots;
-        private WeakReference<LinearLayout> indicators;
-
-        PrepareBitmapViewPager(MainActivity mainActivity, Point reqSize, File cacheDirs) {
-            this.mainActivity = new WeakReference<MainActivity>(mainActivity);
-            this.memCache = mainActivity.mImageMemCache;
-            this.sourceCache = cacheDirs;
-            this.mImageSelector = new WeakReference<CustomViewPager>(mainActivity.mImageSelector);
-            this.reqSize = new WeakReference<Point>(reqSize);
-            this.indicators = new WeakReference<LinearLayout>(mainActivity.indicators);
-
-
-            sourceCache.mkdir();
-        }
-
-        @Override
-        public void run() {
-            //add your items here
-            String[] key = {
-                    "viewpager_area_1",
-                    "viewpager_area_2",
-                    "viewpager_area_3",
-                    "viewpager_area_4"
-            };
-            //////////
-            // loads from a cache
-            try {
-                loadBitmapIntoCache(key);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            final int current = mainActivity.get().getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE).getInt(KeyListClasses.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, 0);
-            final int current1 = (current == memCache.size()) ? 0 : current;
-            postExecute(memCache.get(current1));
-        }
-
-        private void loadBitmapIntoCache(String[] key) throws IOException {
-            try {
-                synchronized (this) {
-                    //File source = sourceCache;
-                    Log.i("checkeraaa", "the curr cache dirs is " + sourceCache.getAbsolutePath());
-                    diskLruCache = SimpleDiskLruCache.getsInstance(sourceCache);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                return;
-            }
-            int x = 0;
-
-            synchronized (diskLruCache) {
-                for (String result : key) {
-                    InputStream bis = diskLruCache.get(result);
-                    memCache.put(x++, BitmapFactory.decodeStream(bis));
-                    diskLruCache.closeReading();
-                    bis.close();
-
-                }
-            }
-            System.gc();
-
-            synchronized (diskLruCache) {
-                diskLruCache.close();
-            }
-        }
-
-        private void postExecute(final Bitmap bitmapResult) {
-
-            // sets the image for nav header
-            final ImageView img = (ImageView) mainActivity.get().findViewById(R.id.actmain_id_navheadermain_layoutimg);
-            if (img != null)
-                synchronized (img) {
-                    if (bitmapResult != null) {
-                        img.setImageBitmap(bitmapResult);
-                    }
-                }
-            mImageControllerFragment = new ImageFragmentAdapter(mainActivity.get(), mainActivity.get().getSupportFragmentManager(), memCache, reqSize.get());
-            mImageSelector.get().setAdapter(mImageControllerFragment);
-            mImageSelector.get().setCurrentItem(0);
-            mImageSelector.get().setPageTransformer(true, new CustomPageViewTransformer());
-            mImageSelector.get().setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    int curr_img = mImageSelector.get().getCurrentItem();
-                    if (++curr_img == memCache.size())
-                        curr_img = 0;
-                    mImageSelector.get().setCurrentItem(curr_img);
-
-                    System.gc();
-                    mImageSelector.get().setPageTransformer(true, new CustomPageViewTransformer());
-                    System.gc();
-                }
-            });
-            final int mDotCount = mImageControllerFragment.getCount();
-            final LinearLayout[] mDots = new LinearLayout[mDotCount];
-            for (int x = 0; x < mDotCount; x++) {
-                mDots[x] = new LinearLayout(mainActivity.get());
-                mDots[x].setBackgroundResource(R.drawable.indicator_unselected_item_oval);
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-                params.setMargins(0, 0, 4, 4);
-                mDots[x].setGravity(Gravity.RIGHT | Gravity.BOTTOM | Gravity.END);
-                indicators.get().addView(mDots[x], params);
-
-            }
-            mDots[0].setBackgroundResource(R.drawable.indicator_selected_item_oval);
-            mImageSelector.get().addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-                @Override
-                public void onPageScrolled(int i, float v, int i1) {
-
-                }
-
-                @Override
-                public void onPageSelected(int i) {
-                    for (int x = 0; x < mDotCount; x++) {
-                        mDots[x].setBackgroundResource(R.drawable.indicator_unselected_item_oval);
-                    }
-                    mainActivity.get().curr_pos_image = i;
-                    mDots[i].setBackgroundResource(R.drawable.indicator_selected_item_oval);
-                }
-
-                @Override
-                public void onPageScrollStateChanged(int i) {
-                    int pos = mImageSelector.get().getCurrentItem();
-                    // if reaching last and state is DRAGGING, back into first
-                    if (pos == memCache.size() - 1 && i == ViewPager.SCROLL_STATE_DRAGGING)
-                        mImageSelector.get().setCurrentItem(0, true);
-                }
-            });
-            System.gc();
-            mainActivity.get().has_finished = 1;
-            mainActivity.get().setHandlers(mainActivity.get().mImageSelector, memCache.size());
-        }
     }
 }

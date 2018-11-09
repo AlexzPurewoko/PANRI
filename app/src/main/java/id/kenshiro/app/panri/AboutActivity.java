@@ -25,14 +25,18 @@ public class AboutActivity extends MylexzActivity {
     private Toolbar toolbar;
     private static final String[] listsThanksTo = {
             "SMKN 1 Giritontro",
-            "Bu Purwari selaku pembimbing",
             "Bu Lian selaku pembimbing",
             "Pak Sitam selaku narasumber",
+            "Pak Wahyudi selaku narasumber dari validasi data penyakit",
+            "BPP (Balai Penyuluhan Pertanian) 'Harjaning Tani' Giriwoyo",
             "Android Studio",
             "<a href=\"https://stackoverflow.com\">StackOverflow</a>",
             "Library pihak ketiga : <a href=\"https://github.com/koral--/android-gif-drawable\">GifImageView (pl.droidsonroids.gif:android-gif-drawable)</a>",
             "Library pihak ketiga : <a href=\"https://github.com/AlexzPurewoko/MyLEXZ-Library\">MyLEXZ Library</a>",
-            "Library pihak ketiga : <a href=\"https://commons.apache.org/codec\">Apache Commons Codec</a>"
+            "Library pihak ketiga : <a href=\"https://commons.apache.org/codec\">Apache Commons Codec</a>",
+            "Library pihak ketiga : <a href=\"https://firebase.google.com\">Google Firebase</a>",
+            "Library pihak ketiga : <a href=\"https://fabric.io\">Fabric Crashlytics</a>",
+            "Library pihak ketiga : <a href=\"https://commons.apache.org/proper/commons-io\">Apache Commons IO</a>"
     };
 
 
@@ -61,6 +65,7 @@ public class AboutActivity extends MylexzActivity {
 
     private void prepareAboutPeople() {
         int[] imageResLocation = {
+                R.drawable.baseline_bug_report_black,
                 R.drawable.roman_av,
                 R.drawable.bagus_cahyono,
                 R.drawable.alexpw,
@@ -68,6 +73,7 @@ public class AboutActivity extends MylexzActivity {
                 R.drawable.wahyu_catur,
         };
         String[] names = {
+                "Purwari Puji Rahayu, S.Pd",
                 "Roman Aqviriyoso",
                 "Bagus Cahyono",
                 "Alexzander Purwoko W",
@@ -75,9 +81,10 @@ public class AboutActivity extends MylexzActivity {
                 "Wahyu Catur"
         };
         String[] jobs = {
+                "Penanggung jawab",
                 "Produser\nDesainer\nArtist 2D",
                 "Programmer\nContent Writer",
-                "Developer Apps\nProgrammer",
+                "Software Engineer\nDeveloper Apps\nProgrammer",
                 "Content Writer",
                 "Content Writer\nArtist 2D"
         };

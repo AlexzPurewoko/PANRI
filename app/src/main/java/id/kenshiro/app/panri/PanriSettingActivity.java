@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.CheckBoxPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
@@ -18,13 +19,16 @@ import android.text.SpannableString;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
+import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 import id.kenshiro.app.panri.important.KeyListClasses;
 
-public class PanriSettingActivity extends AppCompatActivity {
+public class PanriSettingActivity extends MylexzActivity {
     Toolbar toolbar;
     SharedPreferences pref;
+    private boolean doubleBackToExitPressedOnce;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -48,6 +52,30 @@ public class PanriSettingActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
             getWindow().setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark));
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (doubleBackToExitPressedOnce) {
+            SwitchIntoMainActivity.switchToMain(this);
+            return;
+        }
+
+        this.doubleBackToExitPressedOnce = true;
+        TOAST(Toast.LENGTH_SHORT, "Klik lagi untuk kembali");
+        new Handler().postDelayed(new Runnable() {
+
+            @Override
+            public void run() {
+                doubleBackToExitPressedOnce = false;
+            }
+        }, 2000);
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        SwitchIntoMainActivity.switchToMain(this);
+        return true;
     }
 
     public static class PanriFragment extends PreferenceFragment {

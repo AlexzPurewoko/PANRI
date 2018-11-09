@@ -4,7 +4,7 @@
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="autoupdate"
-            android:title="Otomatis Check Update"
-            android:summary="Aktifkan Otomatis cek update saat memulai aplikasi" />
+            android:title="Otomatis Check Pembaruan"
+            android:summary="Aktifkan otomatis cek pembaruan data app saat memulai aplikasi" />
     </PreferenceCategory>
 </PreferenceScreen>

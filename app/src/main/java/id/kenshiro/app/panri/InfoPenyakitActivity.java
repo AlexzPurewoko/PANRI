@@ -40,8 +40,10 @@ public class InfoPenyakitActivity extends MylexzActivity {
     private TampilListPenyakitHelper tampil;
     private SQLiteDatabase sqlDB;
     private ShowPenyakitDiagnoseHelper showPenyakitDiagnoseHelper;
+    private Handler handlerPetani;
     Button mTextPetaniDesc;
     private boolean doubleBackToExitPressedOnce;
+    private GifImageView imgPetaniKedipView;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -64,19 +66,20 @@ public class InfoPenyakitActivity extends MylexzActivity {
     private void setContent() throws IOException {
         loadLayoutAndShow();
         mTextPetaniDesc = (Button) findViewById(R.id.actmain_id_section_petani_btn);
+        imgPetaniKedipView = findViewById(R.id.actsplash_id_gifpetanikedip);
         mTextPetaniDesc.setTextColor(Color.BLACK);
         mTextPetaniDesc.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.NORMAL);
-        mTextPetaniDesc.setText(getText(R.string.actinfo_string_speechfarmer_1));
         tampil = new TampilListPenyakitHelper(this, sqlDB, (RelativeLayout) findViewById(R.id.actinfo_id_layoutcontainer));
         tampil.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
             @Override
             public void onClick(View view, int position) {
                 view.setVisibility(View.GONE);
                 showPenyakitDiagnoseHelper.show(position + 1);
-                mTextPetaniDesc.setText(getText(R.string.actinfo_string_speechfarmer_2));
+                onButtonPetaniClicked(getText(R.string.actinfo_string_speechfarmer_2));
             }
         });
         tampil.buildAndShow();
+        onButtonPetaniClicked(getText(R.string.actinfo_string_speechfarmer_1));
     }
 
     private void loadLayoutAndShow() {
@@ -87,7 +90,7 @@ public class InfoPenyakitActivity extends MylexzActivity {
             public void onClick(View mContentView) {
                 mContentView.setVisibility(View.GONE);
                 // back into begin diagnostics
-                mTextPetaniDesc.setText(getText(R.string.actinfo_string_speechfarmer_1));
+                onButtonPetaniClicked(getText(R.string.actinfo_string_speechfarmer_1));
                 tampil.getmContentView().setVisibility(View.VISIBLE);
             }
         });
@@ -96,6 +99,25 @@ public class InfoPenyakitActivity extends MylexzActivity {
     private void setDB() {
         sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/files/database_penyakitpadi.db", null);
     }
+
+    private void onButtonPetaniClicked(CharSequence text) {
+
+        mTextPetaniDesc.setText(text);
+        imgPetaniKedipView.setImageResource(R.drawable.petani_bicara);
+        if (handlerPetani == null) {
+            handlerPetani = new Handler();
+            handlerPetani.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    handlerPetani = null;
+                    System.gc();
+                    imgPetaniKedipView.setImageResource(R.drawable.petani_kedip);
+                }
+            }, 4000);
+        }
+        System.gc();
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -166,7 +188,7 @@ public class InfoPenyakitActivity extends MylexzActivity {
                 } else if (showPenyakitDiagnoseHelper.getmContent1().getVisibility() == View.VISIBLE) {
                     showPenyakitDiagnoseHelper.getmContent1().setVisibility(View.GONE);
                     showPenyakitDiagnoseHelper.getmContentView().setVisibility(View.GONE);
-                    mTextPetaniDesc.setText(getText(R.string.actinfo_string_speechfarmer_1));
+                    onButtonPetaniClicked(getText(R.string.actinfo_string_speechfarmer_1));
                     tampil.getmContentView().setVisibility(View.VISIBLE);
                     --showPenyakitDiagnoseHelper.countBtn;
                     return false;

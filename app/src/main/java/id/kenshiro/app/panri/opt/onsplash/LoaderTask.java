@@ -61,12 +61,14 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
             checkAndSaveAppVersion();
             //updateDBIfItsNewVersion();
         } catch (IOException e) {
+            Crashlytics.log(String.format("IOException occured when executing checkAndSaveAppVersion() e -> %s", e.toString()));
             ctx.LOGE("Task.background()", "IOException occured when executing checkAndSaveAppVersion() & updateDBIfItsNewVersion();", e);
         }
         // creates cache directory if not exists
         try {
             diskCache = SimpleDiskLruCache.getsInstance(fileCache);
         } catch (IOException e) {
+            Crashlytics.log(String.format("IOException occured when initialize DiskLruObjectCache instance e -> %s", e.toString()));
             ctx.LOGE("Task.background()", "IOException occured when initialize DiskLruObjectCache instance", e);
         }
         publishProgress(0);
@@ -83,6 +85,7 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
                     try {
                         ExtractAndConfigureData.extractData(ctx, ctx.getFilesDir(), "data_panri.zip");
                     } catch (IOException e) {
+                        Crashlytics.log(String.format("IOException occured when Extract and configure data e -> %s", e.toString()));
                         e.printStackTrace();
                     }
                     ExtractAndConfigureData.configureData(ctx);
@@ -100,20 +103,27 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
                         FirebaseApp.initializeApp(ctx);
                         // start separate threads to perform an action
                         boolean ischeckDB = isAllowedToCheckDBOnline();
-                        numOfThreads = 2;
+                        numOfThreads = 1;
+                        Crashlytics.log("Check DB and Check Cache in separate thread");
                         CheckDBCloudThread checkDBCloudThread = null;
                         CheckCacheAndConfThread checkCacheAndConfThread = new CheckCacheAndConfThread(ctx, diskCache);
                         checkCacheAndConfThread.setThreadPerformCallbacks(new ThreadPerformCallbacks() {
                             @Override
                             public void onStarting(@NotNull Runnable runnedThread) {
-
+                                Crashlytics.log("Check Cache in separate thread started!");
                             }
 
                             @Override
                             public void onCompleted(@NotNull Runnable runnedThread, @NotNull Object returnedCallbacks) {
                                 synchronized (finishedThreads) {
+                                    Crashlytics.log("Check Cache in separate thread completed!");
                                     finishedThreads++;
                                 }
+                            }
+
+                            @Override
+                            public void onRunning(@NotNull Runnable runnedThread, @NotNull Object returnedCallbacks) {
+
                             }
 
                             @Override
@@ -121,28 +131,37 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
 
                             }
                         });
-                        if (ischeckDB)
+                        if (ischeckDB) {
+                            numOfThreads = 2;
                             checkDBCloudThread = new CheckDBCloudThread(ctx, new ThreadPerformCallbacks() {
-                            @Override
-                            public void onStarting(@NotNull Runnable runnedThread) {
+                                @Override
+                                public void onStarting(@NotNull Runnable runnedThread) {
+                                    Crashlytics.log("Check DB in separate thread started!");
+                                }
 
-                            }
+                                @Override
+                                public void onCompleted(@NotNull Runnable runnedThread, @NotNull Object returnedCallbacks) {
+                                    synchronized (finishedThreads) {
+                                        Crashlytics.log("Check DB in separate thread completed!");
+                                        finishedThreads++;
+                                        dbversion = (String[]) returnedCallbacks;
+                                    }
+                                }
 
-                            @Override
-                            public void onCompleted(@NotNull Runnable runnedThread, @NotNull Object returnedCallbacks) {
-                                synchronized (finishedThreads) {
+                                @Override
+                                public void onRunning(@NotNull Runnable runnedThread, @NotNull Object returnedCallbacks) {
+
+                                }
+
+                                @Override
+                                public void onCancelled(@NotNull Runnable runnedThread, @NotNull Throwable caused, @NotNull Object returnedCallbacks) {
+                                    //Crashlytics.logException(caused);
+                                    Crashlytics.log(String.format("Check Cache in separate thread cancelled! because -> e: %s", caused.toString()));
                                     finishedThreads++;
                                     dbversion = (String[]) returnedCallbacks;
                                 }
-                            }
-
-                            @Override
-                            public void onCancelled(@NotNull Runnable runnedThread, @NotNull Throwable caused, @NotNull Object returnedCallbacks) {
-                                Crashlytics.logException(caused);
-                                finishedThreads++;
-                                dbversion = (String[]) returnedCallbacks;
-                            }
-                        });
+                            });
+                        }
                         // starts it!
                         Thread t1 = new Thread(checkCacheAndConfThread), t2 = (checkDBCloudThread == null) ? null : new Thread(checkDBCloudThread);
                         t1.start();
@@ -154,13 +173,15 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
         }
         publishProgress(1);
         try {
-            Thread.sleep(1000);
+            Thread.sleep(800);
         } catch (InterruptedException e) {
+            Crashlytics.log(String.format("InterruptedException! occured when sleep a main thread e -> %s", e.toString()));
             ctx.LOGE("Task.background()", "Interrupted signal exception!", e);
         }
         try {
             diskCache.close();
         } catch (IOException e) {
+            Crashlytics.log(String.format("IOException occured when closing diskCache e -> %s", e.toString()));
             ctx.LOGE("Task.background()", "IOException occured when closing diskCache", e);
         }
         SharedPreferences shareds = ctx.getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE);
@@ -171,13 +192,15 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
             curr++;
         shareds.edit().putInt(KeyListClasses.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, curr).commit();
         // wait for the threads
-        while (finishedThreads != numOfThreads) {
+        while (finishedThreads < numOfThreads) {
             try {
-                Thread.sleep(100);
+                Thread.sleep(500);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Crashlytics.log(String.format("InterruptedException occured when waiting the threads, finishedThreads(%d) e -> %s", finishedThreads, e.toString()));
+
             }
         }
+        Crashlytics.log("Thread ended!");
         return ctx.app_condition;
     }
 
@@ -203,102 +226,22 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
         fileCache.mkdir();
     }
 
-    /*
-    private void updateDBIfItsNewVersion() throws IOException {
-        File path = new File(ctx.getApplicationInfo().dataDir, "files");
-        path.mkdir();
-        File content = new File(path, this.file_db_version);
-        if (!content.exists()) {
-            AssetManager assetManager = ctx.getAssets();
-            InputStream fis = assetManager.open(this.file_db_version);
-            FileOutputStream fos = new FileOutputStream(content);
-            int read;
-            while ((read = fis.read()) != -1) {
-                fos.write(read);
-            }
-            fis.close();
-            fos.close();
-            ctx.db_condition = KeyListClasses.DB_IS_FIRST_USAGE;
-            // update into databases
-            new CheckAndMoveDB(ctx, "database_penyakitpadi.db").upgradeDB();
-        }
-        // if exists
-        else {
-            int current_db_version = getDBVersion();
-            int available_db_version = getDBVersionInAssets();
-            // apply newer version
-            if (current_db_version < available_db_version) {
-                AssetManager assetManager = ctx.getAssets();
-                InputStream fis = assetManager.open(this.file_db_version);
-                FileOutputStream fos = new FileOutputStream(content);
-                int read;
-                while ((read = fis.read()) != -1) {
-                    fos.write(read);
-                }
-                fis.close();
-                fos.close();
-                // update into databases
-                new CheckAndMoveDB(ctx, "database_penyakitpadi.db").upgradeDB();
-                ctx.db_condition = KeyListClasses.DB_IS_NEWER_VERSION;
-            } else if (current_db_version > available_db_version)
-                ctx.db_condition = KeyListClasses.DB_IS_OLDER_IN_APP_VERSION;
-            else
-                ctx.db_condition = KeyListClasses.DB_IS_SAME_VERSION;
-        }
-
-    }
-
-    private int getDBVersionInAssets() throws IOException {
-        // gets the version
-        InputStream fis = ctx.getAssets().open(this.file_db_version);
-        byte[] available = new byte[fis.available()];
-        fis.read(available);
-        String out = new String(available);
-        fis.close();
-        return Integer.parseInt(out);
-    }
-
-    private int getDBVersion() throws IOException {
-        File path = new File(ctx.getApplicationInfo().dataDir, "files");
-        File content = new File(path, this.file_db_version);
-        // gets the version
-        FileInputStream fis = new FileInputStream(content);
-        byte[] available = new byte[fis.available()];
-        fis.read(available);
-        String out = new String(available);
-        fis.close();
-        return Integer.parseInt(out);
-    }
-*/
     private void checkAndSaveAppVersion() throws IOException {
         int version = BuildConfig.VERSION_CODE;
-        File path = new File(ctx.getApplicationInfo().dataDir, "files");
-        path.mkdir();
-        File content = new File(path, this.folder_app_version);
-        if (!content.exists()) {
+        SharedPreferences sharedPreferences = ctx.getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE);
+        if (!sharedPreferences.contains(KeyListClasses.KEY_APP_VERSION))
             ctx.app_condition = KeyListClasses.APP_IS_FIRST_USAGE;
-            String data = String.valueOf(version);
-            FileOutputStream fos = new FileOutputStream(content);
-            fos.write(data.getBytes());
-            fos.close();
-        } else {
-            // check app version and if its newer, push command to Bundle args
-            FileInputStream fis = new FileInputStream(content);
-            byte[] buf = new byte[fis.available()];
-            fis.read(buf);
-            int current_version = Integer.parseInt(new String(buf));
-            fis.close();
-            if (current_version < version) {
+        else {
+            int curr_app_version = sharedPreferences.getInt(KeyListClasses.KEY_APP_VERSION, 0);
+            if (curr_app_version < version) {
                 ctx.app_condition = KeyListClasses.APP_IS_NEWER_VERSION;
-                String data = String.valueOf(version);
-                FileOutputStream fos = new FileOutputStream(content);
-                fos.write(data.getBytes());
-                fos.close();
-            } else if (current_version > version) {
+                sharedPreferences.edit().putInt(KeyListClasses.KEY_APP_VERSION, version).commit();
+            } else if (curr_app_version > version) {
                 ctx.app_condition = KeyListClasses.APP_IS_OLDER_VERSION;
             } else
                 ctx.app_condition = KeyListClasses.APP_IS_SAME_VERSION;
         }
+
     }
 
     @Override
@@ -340,6 +283,7 @@ public class LoaderTask extends AsyncTask<Void, Integer, Integer> {
             Bundle args = new Bundle();
             args.putInt(KeyListClasses.APP_CONDITION_KEY, ctx.app_condition);
             args.putInt(KeyListClasses.DB_CONDITION_KEY, ctx.db_condition);
+            args.putStringArray(KeyListClasses.KEY_LIST_VERSION_DB, dbversion);
             MylexzActivity activity = ctx;
             activity.finish();
             System.gc();

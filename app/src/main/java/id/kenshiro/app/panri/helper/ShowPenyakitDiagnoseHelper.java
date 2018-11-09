@@ -274,10 +274,24 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
                 }
                 else {
                     // Do into cara_atasi
-                    mContent1.setVisibility(View.GONE);
-                    mContent2.setVisibility(View.VISIBLE);
-                    mScrollContent.pageScroll(1);
-                    klikBawahText.setText(R.string.actdiagnose_string_klikbalikdiagnosa);
+                    dialogShowHelper.showDialog();
+                    Handler handler = new Handler(Looper.getMainLooper());
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            mContent1.setVisibility(View.GONE);
+                            mContent2.setVisibility(View.VISIBLE);
+                            mScrollContent.pageScroll(1);
+                            klikBawahText.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    klikBawahText.setText(R.string.actdiagnose_string_klikbalikdiagnosa);
+                                    dialogShowHelper.stopDialog();
+                                }
+                            }, 1000);
+
+                        }
+                    }, 1000);
                     /////////////////////
                 }
             }

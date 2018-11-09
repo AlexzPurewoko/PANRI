@@ -51,6 +51,8 @@ public class HowToResolveActivity extends MylexzActivity {
     String name_latin;
     Button mTextPetaniDesc;
     private boolean doubleBackToExitPressedOnce;
+    private GifImageView imgPetaniKedipView;
+    private Handler handlerPetani;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -67,9 +69,9 @@ public class HowToResolveActivity extends MylexzActivity {
     }
     private void setContent() throws IOException {
         mTextPetaniDesc = (Button) findViewById(R.id.actmain_id_section_petani_btn);
+        imgPetaniKedipView = findViewById(R.id.actsplash_id_gifpetanikedip);
         mTextPetaniDesc.setTextColor(Color.BLACK);
         mTextPetaniDesc.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.NORMAL);
-        mTextPetaniDesc.setText(getText(R.string.acthowto_string_speechfarmer_1));
         content_caraatasi = findViewById(R.id.acthowto_id_scrollpage);
         content_caraatasi.setVisibility(View.GONE);
         cardBottom = findViewById(R.id.acthowto_id_klikbawah);
@@ -77,7 +79,8 @@ public class HowToResolveActivity extends MylexzActivity {
         cardBottom.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mTextPetaniDesc.setText(getString(R.string.acthowto_string_speechfarmer_1));
+                //mTextPetaniDesc.setText(getString(R.string.acthowto_string_speechfarmer_1));
+                onButtonPetaniClicked(getText(R.string.acthowto_string_speechfarmer_1));
                 content_caraatasi.setVisibility(View.GONE);
                 cardBottom.setVisibility(View.GONE);
                 tampil.getmContentView().setVisibility(View.VISIBLE);
@@ -93,13 +96,15 @@ public class HowToResolveActivity extends MylexzActivity {
                 view.setVisibility(View.GONE);
                 content_caraatasi.setVisibility(View.VISIBLE);
                 cardBottom.setVisibility(View.VISIBLE);
-                mTextPetaniDesc.setText(getString(R.string.acthowto_string_speechfarmer_2));
+                //mTextPetaniDesc.setText(getString(R.string.acthowto_string_speechfarmer_2));
+                onButtonPetaniClicked(getText(R.string.acthowto_string_speechfarmer_2));
                 // SETS content to show
                 HowToResolveActivity.this.loadDataFromDB(position + 1);
                 HowToResolveActivity.this.setCaraAtasiContent();
             }
         });
         tampil.buildAndShow();
+        onButtonPetaniClicked(getText(R.string.acthowto_string_speechfarmer_1));
 
     }
 
@@ -124,6 +129,24 @@ public class HowToResolveActivity extends MylexzActivity {
         cursor.moveToFirst();
         this.name_latin = cursor.getString(0);
         cursor.close();
+        System.gc();
+    }
+
+    private void onButtonPetaniClicked(CharSequence text) {
+
+        mTextPetaniDesc.setText(text);
+        imgPetaniKedipView.setImageResource(R.drawable.petani_bicara);
+        if (handlerPetani == null) {
+            handlerPetani = new Handler();
+            handlerPetani.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    handlerPetani = null;
+                    System.gc();
+                    imgPetaniKedipView.setImageResource(R.drawable.petani_kedip);
+                }
+            }, 4000);
+        }
         System.gc();
     }
 
@@ -190,7 +213,8 @@ public class HowToResolveActivity extends MylexzActivity {
             if (content_caraatasi.getVisibility() == View.VISIBLE) {
                 content_caraatasi.setVisibility(View.GONE);
                 cardBottom.setVisibility(View.GONE);
-                mTextPetaniDesc.setText(getString(R.string.acthowto_string_speechfarmer_1));
+                //mTextPetaniDesc.setText(getString(R.string.acthowto_string_speechfarmer_1));
+                onButtonPetaniClicked(getText(R.string.acthowto_string_speechfarmer_1));
             }
             if (!tampil.onBackButtonPressed()) {
                 if (doubleBackToExitPressedOnce) {

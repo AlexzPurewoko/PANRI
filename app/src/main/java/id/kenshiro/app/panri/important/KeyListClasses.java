@@ -16,4 +16,15 @@ public class KeyListClasses {
     public static final String DB_CONDITION_KEY = "DB_CONDITION_KEY_EXTRAS";
     public static final String LIST_PENYAKIT_CIRI_KEY_CACHE = "key_ciri_data_penyakit";
     public static final String KEY_AUTOCHECKUPDATE_APPDATA = "enable_autocheck_update";
+
+    // for identification of available updates DB
+    public static final int UPDATE_DB_NOT_AVAILABLE_INTERNET_MISSING = 0x66;
+    public static final int UPDATE_DB_IS_AVAILABLE = 0x6A;
+    public static final int UPDATE_DB_NOT_AVAILABLE = 0x6b;
+
+    // FOR DATA VERSION
+    public static final String KEY_DATA_LIBRARY_VERSION = "data_library_version";
+    public static final String KEY_IKLAN_VERSION = "data_iklan_version";
+    public static final String KEY_APP_VERSION = "app_version";
+    public static final String KEY_LIST_VERSION_DB = "DB_LIST_VERSION_EXTRAS";
 }

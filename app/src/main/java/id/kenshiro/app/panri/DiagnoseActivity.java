@@ -59,6 +59,10 @@ public class DiagnoseActivity extends MylexzActivity
 	Button mTextPetaniDesc;
 	private boolean doubleBackToExitPressedOnce;
 	private boolean isDiagnosting = true;
+
+    private Handler handlerPetani;
+    private GifImageView imgPetaniKedipView;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -93,6 +97,7 @@ public class DiagnoseActivity extends MylexzActivity
 
 	private void loadLayoutAndShow() {
 		mTextPetaniDesc = (Button) findViewById(R.id.actmain_id_section_petani_btn);
+        imgPetaniKedipView = findViewById(R.id.actsplash_id_gifpetanikedip);
 		mTextPetaniDesc.setTextColor(Color.BLACK);
 		mTextPetaniDesc.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.NORMAL);
 	    diagnoseActivityHelper = new DiagnoseActivityHelper(this, this.listNamaPenyakitHashMap, this.listCiriCiriPenyakitHashMap);
@@ -102,7 +107,8 @@ public class DiagnoseActivity extends MylexzActivity
             public void onPenyakitSelected(RecyclerView a, RelativeLayout b, HashMap<Integer, ListNamaPenyakit> c, int d, double e) {
                 String penyakit = c.get(d).getName();
 				//DiagnoseActivity.this.TOAST(Toast.LENGTH_LONG, "Padi Anda terdiagnosa penyakit %s sebesar %s.", penyakit, String.valueOf(e));
-				mTextPetaniDesc.setText(String.format(getString(R.string.actdiagnose_string_speechfarmer_3), penyakit, Math.round(e)));
+                //mTextPetaniDesc.setText(String.format(getString(R.string.actdiagnose_string_speechfarmer_3), penyakit, Math.round(e)));
+                onButtonPetaniClicked(String.format(getString(R.string.actdiagnose_string_speechfarmer_3), penyakit, Math.round(e)));
                 a.setVisibility(View.GONE);
                 b.setVisibility(View.GONE);
 				isDiagnosting = false;
@@ -112,12 +118,14 @@ public class DiagnoseActivity extends MylexzActivity
 
 			@Override
 			public void onTanyaSection() {
-				mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_2));
+                //mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_2));
+                onButtonPetaniClicked(getString(R.string.actdiagnose_string_speechfarmer_2));
 			}
 
 			@Override
 			public void onPilihCiriSection() {
-				mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
+                //mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
+                onButtonPetaniClicked(getString(R.string.actdiagnose_string_speechfarmer_1));
 
 			}
 		});
@@ -131,8 +139,28 @@ public class DiagnoseActivity extends MylexzActivity
             }
 		});
 	    diagnoseActivityHelper.buildAndShow();
-		mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
-	}
+        //mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
+        onButtonPetaniClicked(getString(R.string.actdiagnose_string_speechfarmer_1));
+    }
+
+    private void onButtonPetaniClicked(String text) {
+
+        mTextPetaniDesc.setText(text);
+        imgPetaniKedipView.setImageResource(R.drawable.petani_bicara);
+        if (handlerPetani == null) {
+            handlerPetani = new Handler();
+            handlerPetani.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    handlerPetani = null;
+                    System.gc();
+                    imgPetaniKedipView.setImageResource(R.drawable.petani_kedip);
+                }
+            }, 4000);
+        }
+        System.gc();
+    }
+
 	private void loadAllDataCiri() throws IOException, ClassNotFoundException {
 		listCiriCiriPenyakitHashMap = (HashMap<Integer, ListCiriCiriPenyakit>) diskCache.getObjectWithDecode(KeyListClasses.LIST_PENYAKIT_CIRI_KEY_CACHE);
 		diskCache.closeReading();
@@ -201,7 +229,8 @@ public class DiagnoseActivity extends MylexzActivity
 					showPenyakitDiagnoseHelper.getmContent1().setVisibility(View.GONE);
 					showPenyakitDiagnoseHelper.getmContentView().setVisibility(View.GONE);
 					mTextPetaniDesc.setOnClickListener(null);
-					mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
+                    //mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
+                    onButtonPetaniClicked(getString(R.string.actdiagnose_string_speechfarmer_1));
 					diagnoseActivityHelper.setOnPushBackButtonPressed(true);
 					isDiagnosting = true;
 					return false;

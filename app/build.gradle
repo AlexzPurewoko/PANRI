@@ -1,3 +1,12 @@
+buildscript {
+    repositories {
+        maven { url 'https://maven.fabric.io/public' }
+    }
+
+    dependencies {
+        classpath 'io.fabric.tools:gradle:1.+'
+    }
+}
 apply plugin: 'com.android.application'
 apply plugin: 'io.fabric'
 apply plugin: 'com.google.gms.google-services'
@@ -15,8 +24,8 @@ android {
         applicationId "id.kenshiro.app.panri"
         minSdkVersion 16
         targetSdkVersion 28
-        versionCode 1
-        versionName "1.0B091018s"
+        versionCode 18110925
+        versionName "2.5B091118s"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -34,12 +43,13 @@ android {
 }
 repositories {
     mavenCentral()
+    maven { url 'https://maven.fabric.io/public' }
 }
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:28.0.0-rc02'
     implementation 'com.android.support:support-v4:28.0.0-rc02'
-    implementation 'com.android.support:design:28.0.0-rc01'
+    implementation 'com.android.support:design:28.0.0-rc02'
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
@@ -50,7 +60,7 @@ dependencies {
     // for firebase library and crashlytics
     implementation 'com.google.firebase:firebase-core:16.0.4'
     implementation 'com.google.firebase:firebase-storage:16.0.4'
-    implementation 'com.google.firebase:firebase-config:16.1.0'
-    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.5'
+    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.6'
     implementation 'org.jetbrains:annotations-java5:15.0'
+    implementation group: 'commons-io', name: 'commons-io', version: '2.4'
 }
