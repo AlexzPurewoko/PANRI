@@ -1,25 +1,18 @@
 package id.kenshiro.app.panri.adapter;
 
-import android.app.Activity;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
-import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.IdRes;
-import android.support.annotation.Nullable;
 import android.support.annotation.Px;
 import android.util.LruCache;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-import com.mylexz.utils.DiskLruObjectCache;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.SimpleDiskLruCache;
 
@@ -32,10 +25,9 @@ import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
-import id.kenshiro.app.panri.MainActivity;
 import id.kenshiro.app.panri.R;
-import id.kenshiro.app.panri.SplashScreenActivity;
 import id.kenshiro.app.panri.helper.DecodeBitmapHelper;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
 
 public class ImageGridViewAdapter implements Closeable{
     private List<Integer> listLocationResImages;
@@ -249,7 +241,10 @@ public class ImageGridViewAdapter implements Closeable{
                     try {
                         checkAndLoadAllBitmapsFromFiles();
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        String keyEx = "checkAndLoadAllBitmaps_PrepareBitmapTask";
+                        String resE = String.format("Error when exec checkAndLoadAllBitmapsFromFiles(); e -> %s", e.toString());
+                        LogIntoCrashlytics.logException(keyEx, resE, e);
+                        ctxCls.get().ctx.LOGE(keyEx, resE);
                     }
 
             }
@@ -289,7 +284,10 @@ public class ImageGridViewAdapter implements Closeable{
                     try {
                         is = diskLruObjectCache.get(nameID);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        String keyEx = "checkAndLoadAllBitmapsFromFiles_PrepareBitmapTask";
+                        String resE = String.format("Cannot get the Inputstream of {%s} e -> %s", nameID, e.toString());
+                        LogIntoCrashlytics.logException(keyEx, resE, e);
+                        ctxCls.get().ctx.LOGE(keyEx, resE);
                     }
                     if (is == null) {
                         diskLruObjectCache.closeReading();

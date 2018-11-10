@@ -16,14 +16,7 @@ import android.widget.TextView;
 
 import id.kenshiro.app.panri.R;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link FragmentFirstUse1.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link FragmentFirstUse1#newInstance} factory method to
- * create an instance of this fragment.
- */
+
 public class FragmentFirstUse1 extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -40,15 +33,7 @@ public class FragmentFirstUse1 extends Fragment {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment FragmentFirstUse1.
-     */
-    // TODO: Rename and change types and number of parameters
+
     public static FragmentFirstUse1 newInstance(String param1, String param2) {
         FragmentFirstUse1 fragment = new FragmentFirstUse1();
         Bundle args = new Bundle();
@@ -61,9 +46,7 @@ public class FragmentFirstUse1 extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        /*TextView txt = getView().findViewById(R.id.frag1_id_textview);
-        txt.setTypeface(Typeface.createFromAsset(this.getContext().getAssets(), "Comic_Sans_MS3.ttf"), Typeface.BOLD);
-        txt.setTextColor(Color.WHITE);*/
+
     }
 
     @Override
@@ -89,7 +72,6 @@ public class FragmentFirstUse1 extends Fragment {
         return layout;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
             mListener.onFragmentInteraction(uri);
@@ -99,12 +81,6 @@ public class FragmentFirstUse1 extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        /*if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }*/
     }
 
     @Override
@@ -113,16 +89,7 @@ public class FragmentFirstUse1 extends Fragment {
         mListener = null;
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
+
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(Uri uri);
     }

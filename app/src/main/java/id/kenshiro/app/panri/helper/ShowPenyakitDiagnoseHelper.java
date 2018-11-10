@@ -30,6 +30,7 @@ import android.os.Handler;
 import id.kenshiro.app.panri.DiagnoseActivity;
 import id.kenshiro.app.panri.R;
 import id.kenshiro.app.panri.adapter.ImageGridViewAdapter;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
 import pl.droidsonroids.gif.GifImageView;
 
 public class ShowPenyakitDiagnoseHelper implements Closeable{
@@ -120,7 +121,10 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    String keyEx = "show_showPDHelper";
+                    String resE = String.format("Interrupted when pause a main thread e -> %s", e.toString());
+                    LogIntoCrashlytics.logException(keyEx, resE, e);
+                    activity.LOGE(keyEx, resE);
                 }
                 umum.setVisibility(View.VISIBLE);
                 gejala.setVisibility(View.VISIBLE);

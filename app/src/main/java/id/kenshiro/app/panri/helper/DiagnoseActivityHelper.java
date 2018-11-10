@@ -9,7 +9,6 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.mylexz.utils.MylexzActivity;
 
@@ -17,7 +16,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import id.kenshiro.app.panri.DiagnoseActivity;
 import id.kenshiro.app.panri.R;
 import id.kenshiro.app.panri.adapter.AdapterRecycler;
 

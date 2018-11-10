@@ -11,6 +11,8 @@ import android.support.v4.util.LruCache;
 
 import com.mylexz.utils.MylexzActivity;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
 
 public class ImageFragmentAdapter extends FragmentStatePagerAdapter {
@@ -22,7 +24,8 @@ public class ImageFragmentAdapter extends FragmentStatePagerAdapter {
     private Point requestedSize;
     private LruCache<Integer, Bitmap> bitmapLruCache;
     private int mode_operations = 0;
-    public ImageFragmentAdapter(Context mCurrentContext, FragmentManager fm, List<Integer> data, Point requestedSize) {
+
+    public ImageFragmentAdapter(@NotNull Context mCurrentContext, @NotNull FragmentManager fm, @NotNull List<Integer> data, @NotNull Point requestedSize) {
         super(fm);
         this.mCurrentContext = mCurrentContext;
         this.data = data;
@@ -30,7 +33,8 @@ public class ImageFragmentAdapter extends FragmentStatePagerAdapter {
         this.requestedSize = requestedSize;
         this.mode_operations = LIST_DATA_INTEGER_RES;
     }
-    public ImageFragmentAdapter(Context mCurrentContext, FragmentManager fm, LruCache<Integer, Bitmap> bitmapLruCache, Point requestedSize) {
+
+    public ImageFragmentAdapter(@NotNull Context mCurrentContext, @NotNull FragmentManager fm, @NotNull LruCache<Integer, Bitmap> bitmapLruCache, @NotNull Point requestedSize) {
         super(fm);
         this.mCurrentContext = mCurrentContext;
         this.bitmapLruCache = bitmapLruCache;

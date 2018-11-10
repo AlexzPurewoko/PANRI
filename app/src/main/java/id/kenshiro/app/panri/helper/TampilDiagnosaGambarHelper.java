@@ -7,31 +7,21 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Typeface;
-import android.os.AsyncTask;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.CardView;
-import android.text.Html;
-import android.text.SpannableString;
-import android.text.style.BulletSpan;
 import android.support.v4.util.LruCache;
 import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.mylexz.utils.DiskLruObjectCache;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.SimpleDiskLruCache;
 
@@ -51,6 +41,7 @@ import id.kenshiro.app.panri.adapter.AdapterRecycler;
 import id.kenshiro.app.panri.adapter.CustomViewPager;
 import id.kenshiro.app.panri.adapter.FadePageViewTransformer;
 import id.kenshiro.app.panri.adapter.ImageFragmentAdapter;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
 
 public class TampilDiagnosaGambarHelper implements Closeable{
     private RelativeLayout mRootView;
@@ -452,7 +443,10 @@ public class TampilDiagnosaGambarHelper implements Closeable{
                 try {
                     checkAndLoadAllBitmaps();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    String keyEx = "run_PreparecontentTask_cLoad";
+                    String resE = String.format("cannot execute checkAndLoadAllBitmaps(); rets = 2 e -> %s", e.toString());
+                    LogIntoCrashlytics.logException(keyEx, resE, e);
+                    tampilDiagnosaGambarHelper.get().activity.LOGE(keyEx, resE);
                 }
                 tampilDiagnosaGambarHelper.get().modes = 1;
                 rets = 2;
@@ -463,7 +457,10 @@ public class TampilDiagnosaGambarHelper implements Closeable{
                 try {
                     checkAndLoadAllBitmaps();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    String keyEx = "run_PreparecontentTask_cLoad";
+                    String resE = String.format("cannot execute checkAndLoadAllBitmaps(); rets = 1 e -> %s", e.toString());
+                    LogIntoCrashlytics.logException(keyEx, resE, e);
+                    tampilDiagnosaGambarHelper.get().activity.LOGE(keyEx, resE);
                 }
                 System.gc();
                 rets = 1;
@@ -538,7 +535,10 @@ public class TampilDiagnosaGambarHelper implements Closeable{
             try {
                 diskLruObjectCache.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                String keyEx = "run_PreparecontentTask_postEx";
+                String resE = String.format("cannot execute diskLruObjectCache.close(); e -> %s", e.toString());
+                LogIntoCrashlytics.logException(keyEx, resE, e);
+                tampilDiagnosaGambarHelper.get().activity.LOGE(keyEx, resE);
             }
             if(integer == 1) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2)

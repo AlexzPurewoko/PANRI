@@ -27,6 +27,7 @@ import java.util.List;
 
 import id.kenshiro.app.panri.R;
 import id.kenshiro.app.panri.adapter.AdapterRecycler;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
 
 public class TampilListPenyakitHelper implements Closeable{
     MylexzActivity activity;
@@ -60,7 +61,10 @@ public class TampilListPenyakitHelper implements Closeable{
             Handler handler = new Handler(Looper.getMainLooper());
             handler.postDelayed(prepareTask, 50);
         } catch (IOException e) {
-            e.printStackTrace();
+            String keyEx = "buildAndShow_TampilListPenyakitHelper";
+            String resE = String.format("Error execute the whole of methods e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            activity.LOGE(keyEx, resE);
         }
     }
     private synchronized void recycleBitmaps(){
@@ -156,13 +160,19 @@ public class TampilListPenyakitHelper implements Closeable{
             try {
                 checkAndLoadAllBitmaps();
             } catch (IOException e) {
-                e.printStackTrace();
+                String keyEx = "run_PrepareTask_cLoad2";
+                String resE = String.format("Error execute checkAndLoadAllBitmaps(); e -> %s", e.toString());
+                LogIntoCrashlytics.logException(keyEx, resE, e);
+                tampilListPenyakitHelper.get().activity.LOGE(keyEx, resE);
             }
             synchronized (diskLruObjectCache){
                 try {
                     diskLruObjectCache.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    String keyEx = "run_PrepareTask_closeDisk";
+                    String resE = String.format("Error execute diskLruObjectCache.close(); e -> %s", e.toString());
+                    LogIntoCrashlytics.logException(keyEx, resE, e);
+                    tampilListPenyakitHelper.get().activity.LOGE(keyEx, resE);
                 }
             }
             postExecute();
@@ -172,7 +182,10 @@ public class TampilListPenyakitHelper implements Closeable{
             try {
                 inflateListAndAddTouchable();
             } catch (IOException e) {
-                e.printStackTrace();
+                String keyEx = "run_PrepareTask_postExecute";
+                String resE = String.format("Error execute inflateListAndAddTouchable(); e -> %s", e.toString());
+                LogIntoCrashlytics.logException(keyEx, resE, e);
+                tampilListPenyakitHelper.get().activity.LOGE(keyEx, resE);
             }
             tampilListPenyakitHelper.get().finished_mode = 0;
             tampilListPenyakitHelper.get().dialogShowHelper.stopDialog();
@@ -183,7 +196,6 @@ public class TampilListPenyakitHelper implements Closeable{
             for (int x = 0; x < size; x++) {
                 inflateToList(x);
             }
-            //Log.i("tampilInflateSelesai", String.format("Size of lruCache = %d, size of bitmap value 1 = %d, isRecycled? : %s", mImagecache.size(), mImagecache.get(1).getByteCount(), String.valueOf(mImagecache.get(1).isRecycled())));
         }
 
         private void inflateToList(final int x) {
@@ -225,7 +237,10 @@ public class TampilListPenyakitHelper implements Closeable{
                     try {
                         is = diskLruObjectCache.get(nameID);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        String keyEx = "run_PrepareTask_checkAndLoadAllBitmaps";
+                        String resE = String.format("Error while getting the name of {%s} e -> %s", nameID, e.toString());
+                        LogIntoCrashlytics.logException(keyEx, resE, e);
+                        tampilListPenyakitHelper.get().activity.LOGE(keyEx, resE);
                     }
                     if(is == null){
                         diskLruObjectCache.closeReading();
