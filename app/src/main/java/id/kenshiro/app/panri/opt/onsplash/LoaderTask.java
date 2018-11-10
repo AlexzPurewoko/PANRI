@@ -15,6 +15,7 @@ import com.google.firebase.FirebaseApp;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.SimpleDiskLruCache;
 
+import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -70,9 +71,23 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
         synchronized (this) {
             switch (ctx.app_condition) {
                 case KeyListClasses.APP_IS_OLDER_VERSION:
+                    break;
                 case KeyListClasses.APP_IS_NEWER_VERSION: {
                     cleanCache();
+                    updateAppDataInApp();
                     createCacheOperation();
+                    try {
+                        String db_inapk_version = ExtractAndConfigureData.getStringFromAssets(ctx, "db_version");
+                        String db_current_version = ExtractAndConfigureData.getStringFromShareds(ctx, KeyListClasses.KEY_DATA_LIBRARY_VERSION, null);
+                        int dbcurr = Integer.parseInt(db_current_version);
+                        int dbleast = Integer.parseInt(db_inapk_version);
+                        if (dbleast > dbcurr) {
+                            ExtractAndConfigureData.configureStringInShareds(ctx, KeyListClasses.KEY_DATA_LIBRARY_VERSION, db_inapk_version);
+                            ctx.db_condition = KeyListClasses.DB_IS_NEWER_VERSION;
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
                 break;
                 case KeyListClasses.APP_IS_FIRST_USAGE: {
@@ -197,6 +212,32 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
         publishProgress("Selesai!");
         Crashlytics.log("Thread ended!");
         return ctx.app_condition;
+    }
+
+    private void updateAppDataInApp() {
+        File disk = ctx.getFilesDir();
+        // clean the files before update
+        try {
+            //FileUtils.deleteDirectory(disk);
+            // directory data for app
+            FileUtils.deleteDirectory(new File(disk, "data"));
+            FileUtils.deleteDirectory(new File(disk, "data_hama_html"));
+            FileUtils.deleteQuietly(new File(disk, "database_penyakitpadi.db"));
+        } catch (IOException e) {
+            String keyEx = "fileUtils_updateAppDataInApp_TaskDownloadDBUpdates";
+            String resE = String.format("Cannot delete the selected directory e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            ctx.LOGE(keyEx, resE);
+        }
+        disk.mkdirs();
+
+        // extract the data
+        try {
+            ExtractAndConfigureData.extractData(ctx, disk, "data_panri.zip");
+        } catch (IOException e) {
+            LogIntoCrashlytics.logException("IOExceptionExtractData", String.format("IOException occured when Extract and configure data e -> %s", e.toString()), e);
+            e.printStackTrace();
+        }
     }
 
     private boolean isAllowedToCheckDBOnline() {

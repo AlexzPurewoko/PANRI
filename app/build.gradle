@@ -30,8 +30,8 @@ android {
         applicationId "id.kenshiro.app.panri"
         minSdkVersion 16
         targetSdkVersion 28
-        versionCode 18110925
-        versionName "2.5B091118s"
+        versionCode 18111025
+        versionName "2.5B101118s"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         signingConfig signingConfigs.panri_key
     }

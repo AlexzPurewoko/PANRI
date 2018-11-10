@@ -211,6 +211,12 @@ public class MainActivity extends MylexzActivity
         switch (app_cond) {
             case KeyListClasses.APP_IS_FIRST_USAGE:
             case KeyListClasses.APP_IS_NEWER_VERSION:
+                DialogOnMain.showDialogWhatsNew(this, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
                 break;
             case KeyListClasses.APP_IS_OLDER_VERSION:
                 messageIfNeeded = "Aplikasi ini sudah usang dan tidak kompatibel dengan versi sebelumnya yang lebih baru, coba copot dan pasang lagi aplikasi ini";

@@ -104,6 +104,21 @@ public class DialogOnMain {
         builder.show();
     }
 
+    public static void showDialogWhatsNew(final MylexzActivity activity, DialogInterface.OnClickListener onbtnOk) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        builder.setTitle("Apa yang baru?");
+        builder.setIcon(R.mipmap.ic_launcher);
+        WebView webView = new WebView(activity);
+        webView.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+        ));
+        webView.loadUrl("file:///android_asset/whats_new.html");
+        builder.setView(webView);
+        builder.setPositiveButton("Okay!", onbtnOk);
+        builder.show();
+    }
+
     /*
      * showUpdateNotAvailable()
      * @param activity

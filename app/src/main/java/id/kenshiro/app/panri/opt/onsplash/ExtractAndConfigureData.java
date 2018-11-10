@@ -9,6 +9,7 @@ import android.util.Log;
 import com.mylexz.utils.MylexzActivity;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.xmlpull.v1.XmlPullParser;
 
 import java.io.File;
@@ -19,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import id.kenshiro.app.panri.BuildConfig;
+import id.kenshiro.app.panri.SplashScreenActivity;
 import id.kenshiro.app.panri.important.KeyListClasses;
 import id.kenshiro.app.panri.opt.UnzipFile;
 
@@ -57,7 +59,13 @@ public class ExtractAndConfigureData {
             shareds.edit().putBoolean(KeyListClasses.KEY_AUTOCHECKUPDATE_APPDATA, true).commit();
     }
 
-    private static String getStringFromAssets(Context c, String filename) throws IOException {
+    @NotNull
+    public static String getStringFromShareds(@NotNull Context c, @NotNull String key, @Nullable String defValue) throws IOException {
+        return c.getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE).getString(key, defValue);
+    }
+
+    @NotNull
+    public static String getStringFromAssets(@NotNull Context c, @NotNull String filename) throws IOException {
         InputStream fileStream = c.getAssets().open(filename);
         byte[] buf = new byte[fileStream.available()];
         fileStream.read(buf);
@@ -109,5 +117,9 @@ public class ExtractAndConfigureData {
         }
 
         return map;
+    }
+
+    public static void configureStringInShareds(@NotNull SplashScreenActivity ctx, String keyData, String data) {
+        ctx.getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE).edit().putString(keyData, data).commit();
     }
 }
