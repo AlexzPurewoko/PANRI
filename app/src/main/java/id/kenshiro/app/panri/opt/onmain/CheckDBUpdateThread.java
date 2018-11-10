@@ -14,6 +14,7 @@ import java.lang.ref.WeakReference;
 import id.kenshiro.app.panri.helper.DialogShowHelper;
 import id.kenshiro.app.panri.important.KeyListClasses;
 import id.kenshiro.app.panri.opt.CheckConnection;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
 import id.kenshiro.app.panri.opt.onsplash.ThreadPerformCallbacks;
 
 public class CheckDBUpdateThread extends AsyncTask<Void, Integer, Integer> {
@@ -39,9 +40,12 @@ public class CheckDBUpdateThread extends AsyncTask<Void, Integer, Integer> {
     protected Integer doInBackground(Void... voids) {
         boolean isConnected = CheckConnection.isConnected(actReference.get());
         try {
-            Thread.sleep(1500);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            String keyEx = "interrupt_doInBackground_CheckDBUpdate";
+            String resE = String.format("Interrupt when sleep millis e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            actReference.get().LOGE(keyEx, resE);
         }
         // jika tidak connect?
         if (!isConnected) {
@@ -81,7 +85,10 @@ public class CheckDBUpdateThread extends AsyncTask<Void, Integer, Integer> {
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                String keyEx = "interrupt_doInBackground_CheckDBUpdate_wait";
+                String resE = String.format("Interrupt when wait thread for millis e -> %s", e.toString());
+                LogIntoCrashlytics.logException(keyEx, resE, e);
+                actReference.get().LOGE(keyEx, resE);
             }
         }
 

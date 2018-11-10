@@ -62,7 +62,6 @@ public class CheckDBCloudThread implements Runnable {
 
     private Map<String, Object> getDefaults() {
         SharedPreferences shareds = activity.getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE);
-        //String obj = shareds.getString(KeyListClasses.)
         Map<String, Object> returned = new HashMap<>();
         returned.put(KeyListClasses.KEY_DATA_LIBRARY_VERSION, shareds.getString(KeyListClasses.KEY_DATA_LIBRARY_VERSION, null));
         returned.put(KeyListClasses.KEY_IKLAN_VERSION, shareds.getString(KeyListClasses.KEY_IKLAN_VERSION, null));

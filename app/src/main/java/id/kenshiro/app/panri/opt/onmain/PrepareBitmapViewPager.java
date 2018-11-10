@@ -25,6 +25,7 @@ import id.kenshiro.app.panri.adapter.CustomPageViewTransformer;
 import id.kenshiro.app.panri.adapter.CustomViewPager;
 import id.kenshiro.app.panri.adapter.ImageFragmentAdapter;
 import id.kenshiro.app.panri.important.KeyListClasses;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
 
 public class PrepareBitmapViewPager implements Runnable {
     LruCache<Integer, Bitmap> memCache;
@@ -64,7 +65,10 @@ public class PrepareBitmapViewPager implements Runnable {
         try {
             loadBitmapIntoCache(key);
         } catch (IOException e) {
-            e.printStackTrace();
+            String keyEx = "run_PrepareBitmapViewPager";
+            String resE = String.format("Cannot execute loadBitmapIntoCache(key); e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            mainActivity.get().LOGE(keyEx, resE);
         }
         final int current = mainActivity.get().getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE).getInt(KeyListClasses.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, 0);
         final int current1 = (current == memCache.size()) ? 0 : current;
@@ -79,7 +83,10 @@ public class PrepareBitmapViewPager implements Runnable {
                 diskLruCache = SimpleDiskLruCache.getsInstance(sourceCache);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            String keyEx = "loadBitmapIntoCache_PrepareBitmapViewPager";
+            String resE = String.format("Cannot execute diskLruCache = SimpleDiskLruCache.getsInstance(sourceCache); e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            mainActivity.get().LOGE(keyEx, resE);
             return;
         }
         int x = 0;

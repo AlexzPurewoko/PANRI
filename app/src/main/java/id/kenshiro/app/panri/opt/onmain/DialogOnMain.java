@@ -81,7 +81,6 @@ public class DialogOnMain {
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
                 Intent i = new Intent(Intent.ACTION_VIEW);
-                //i.putExtra(Intent.EXTRA_TEXT, "https://api.whatsapp.com/send?phone=6282223518455&text=Hallo%20Admin%20Saya%20Mau%20Pasang%20Iklan");
                 i.setData(Uri.parse("https://api.whatsapp.com/send?phone=6282223518455&text=Hallo%20Admin%20Saya%20Mau%20Pasang%20Iklan"));
                 PackageManager pm = activity.getPackageManager();
                 PackageInfo info = null;
@@ -93,8 +92,6 @@ public class DialogOnMain {
                 }
                 if (info != null)
                     i.setPackage("com.whatsapp");
-                //i.setPackage("com.whatsapp");
-                //i.setType("text/uri-list");
                 activity.startActivity(Intent.createChooser(i, "Hubungi Dengan"));
             }
         });
@@ -104,8 +101,6 @@ public class DialogOnMain {
                 dialog.dismiss();
             }
         });
-        // url ->
-        //https://api.whatsapp.com/send?phone=6282223518455&text=Hallo%20Admin%20Saya%20Mau%20Pasang%20Iklan
         builder.show();
     }
 

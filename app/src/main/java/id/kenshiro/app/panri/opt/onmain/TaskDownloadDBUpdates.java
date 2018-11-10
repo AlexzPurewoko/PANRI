@@ -5,7 +5,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.widget.LinearLayout;
@@ -26,15 +25,13 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.nio.file.Files;
 
 import id.kenshiro.app.panri.R;
 import id.kenshiro.app.panri.important.KeyListClasses;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
 import id.kenshiro.app.panri.opt.UnzipFile;
-import id.kenshiro.app.panri.opt.onsplash.ExtractAndConfigureData;
 import id.kenshiro.app.panri.opt.onsplash.ThreadPerformCallbacks;
 
 public class TaskDownloadDBUpdates extends AsyncTask<Void, Object, Integer> {
@@ -112,7 +109,10 @@ public class TaskDownloadDBUpdates extends AsyncTask<Void, Object, Integer> {
             try {
                 Thread.sleep(350);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                String keyEx = "checkState_TaskDownloadDBUpdates";
+                String resE = String.format("interrupt when pause for check state for thread e -> %s", e.toString());
+                LogIntoCrashlytics.logException(keyEx, resE, e);
+                activity.get().LOGE(keyEx, resE);
             }
             publishProgress(update);
         }
@@ -129,7 +129,10 @@ public class TaskDownloadDBUpdates extends AsyncTask<Void, Object, Integer> {
             FileUtils.deleteDirectory(new File(disk, "data_hama_html"));
             FileUtils.deleteQuietly(new File(disk, "database_penyakitpadi.db"));
         } catch (IOException e) {
-            e.printStackTrace();
+            String keyEx = "fileUtils_deleteDirectory_TaskDownloadDBUpdates";
+            String resE = String.format("Cannot delete the selected directory e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            activity.get().LOGE(keyEx, resE);
         }
         disk.mkdirs();
         // extract a file
@@ -140,7 +143,10 @@ public class TaskDownloadDBUpdates extends AsyncTask<Void, Object, Integer> {
             fisZip.close();
 
         } catch (IOException e) {
-            e.printStackTrace();
+            String keyEx = "UnzipFile_TaskDownloadDBUpdates";
+            String resE = String.format("Cannot unzip the selected zip = {%s} e -> %s", panriTmp.getAbsolutePath(), e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            activity.get().LOGE(keyEx, resE);
         }
         update[1] = (double) 100;
         File fileCache = new File(activity.get().getCacheDir(), "cache");
@@ -148,7 +154,10 @@ public class TaskDownloadDBUpdates extends AsyncTask<Void, Object, Integer> {
         try {
             FileUtils.deleteDirectory(fileCache);
         } catch (IOException e) {
-            e.printStackTrace();
+            String keyEx = "fileUtils_cleanCache_TaskDownloadDBUpdates";
+            String resE = String.format("Cannot clean the cache e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            activity.get().LOGE(keyEx, resE);
         }
         fileCache.mkdirs();
         SharedPreferences sharedPreferences = activity.get().getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE);
@@ -247,7 +256,10 @@ public class TaskDownloadDBUpdates extends AsyncTask<Void, Object, Integer> {
                             }
                         });
             } catch (IOException e) {
-                e.printStackTrace();
+                String keyEx = "run_UpdateDBThread";
+                String resE = String.format("Exception occured when executing the whole of run() method e -> %s", e.toString());
+                LogIntoCrashlytics.logException(keyEx, resE, e);
+                activity.LOGE(keyEx, resE);
             }
         }
     }
