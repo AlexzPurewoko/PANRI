@@ -1,1 +1,19 @@
-[{"outputType":{"type":"APK"},"apkInfo":{"type":"MAIN","splits":[],"versionCode":1,"versionName":"1.0B091018s","enabled":true,"outputFile":"app-release.apk","fullName":"release","baseName":"release"},"path":"app-release.apk","properties":{}}]
+[
+  {
+    "outputType": {
+      "type": "APK"
+    },
+    "apkInfo": {
+      "type": "MAIN",
+      "splits": [],
+      "versionCode": 18110925,
+      "versionName": "2.5B091118s",
+      "enabled": true,
+      "outputFile": "app-release.apk",
+      "fullName": "release",
+      "baseName": "release"
+    },
+    "path": "app-release.apk",
+    "properties": {}
+  }
+]

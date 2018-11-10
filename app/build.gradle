@@ -18,6 +18,12 @@ android {
             storeFile file('/home/mylexz/key_panri.jks')
             storePassword 'panri_dev'
         }
+        panri_key {
+            keyAlias 'HOPEProjects'
+            keyPassword 'hopeteam300'
+            storeFile file('/home/mylexz/key_hope_project.jks')
+            storePassword 'hopeteam300'
+        }
     }
     compileSdkVersion 28
     defaultConfig {
@@ -27,6 +33,7 @@ android {
         versionCode 18110925
         versionName "2.5B091118s"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        signingConfig signingConfigs.panri_key
     }
     buildTypes {
         release {
@@ -39,6 +46,8 @@ android {
     compileOptions {
         targetCompatibility 1.7
         sourceCompatibility 1.7
+    }
+    productFlavors {
     }
 }
 repositories {
@@ -56,11 +65,10 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation project(':mylexzlibrary')
     implementation 'pl.droidsonroids.gif:android-gif-drawable:+'
-
     // for firebase library and crashlytics
     implementation 'com.google.firebase:firebase-core:16.0.4'
     implementation 'com.google.firebase:firebase-storage:16.0.4'
     implementation 'com.crashlytics.sdk.android:crashlytics:2.9.6'
     implementation 'org.jetbrains:annotations-java5:15.0'
-    implementation group: 'commons-io', name: 'commons-io', version: '2.4'
+    implementation 'commons-io:commons-io:2.4'
 }
