@@ -7,37 +7,28 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Typeface;
-import android.os.AsyncTask;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.CardView;
-import android.text.Html;
-import android.text.SpannableString;
-import android.text.style.BulletSpan;
 import android.support.v4.util.LruCache;
 import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.mylexz.utils.DiskLruObjectCache;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.SimpleDiskLruCache;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -50,6 +41,7 @@ import id.kenshiro.app.panri.adapter.AdapterRecycler;
 import id.kenshiro.app.panri.adapter.CustomViewPager;
 import id.kenshiro.app.panri.adapter.FadePageViewTransformer;
 import id.kenshiro.app.panri.adapter.ImageFragmentAdapter;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
 
 public class TampilDiagnosaGambarHelper implements Closeable{
     private RelativeLayout mRootView;
@@ -75,12 +67,14 @@ public class TampilDiagnosaGambarHelper implements Closeable{
     private final DialogShowHelper dialogShowHelper;
     private volatile int curr_pos_image = 0;
     private volatile Runnable mSwitcherImages = null;
+    private String path_img_file;
     public TampilDiagnosaGambarHelper(MylexzActivity activity, RelativeLayout mRootView, SQLiteDatabase sqlDB) {
         this.mRootView = mRootView;
         this.sqlDB = sqlDB;
         this.activity = activity;
         this.dialogShowHelper = new DialogShowHelper(activity);
         dialogShowHelper.buildLoadingLayout();
+        this.path_img_file = activity.getFilesDir().getAbsolutePath() + "/data/images/diagnose";
     }
 
     public void buildAndShow() {
@@ -302,7 +296,7 @@ public class TampilDiagnosaGambarHelper implements Closeable{
     }
 
     private void getDataFromDB(int position) {
-        dataCiriPenyakit = new DataCiriPenyakit(null, null, null);
+        dataCiriPenyakit = new DataCiriPenyakit(null, null, null, path_img_file);
 
         // gets the nama penyakit
         Cursor cursor = sqlDB.rawQuery("select nama from penyakit where no=" + position, null);
@@ -328,7 +322,7 @@ public class TampilDiagnosaGambarHelper implements Closeable{
         // gets the listGambar
         cursor = sqlDB.rawQuery("select gambarid from list_gambarid where no=" + position, null);
         cursor.moveToFirst();
-        dataCiriPenyakit.setListGambarId(cursor.getString(0));
+        dataCiriPenyakit.setListGambarId(cursor.getString(0), path_img_file);
         cursor.close();
         System.gc();
     }
@@ -383,12 +377,13 @@ public class TampilDiagnosaGambarHelper implements Closeable{
         String nama_latin;
         String listCiriHtml;
         //SpannableString listCiriHtml;
-        List<Integer> listGambarId;
+        List<String> listGambarPath;
 
-        public DataCiriPenyakit(String nama_penyakit, String nama_latin, String gambarList) {
+
+        public DataCiriPenyakit(String nama_penyakit, String nama_latin, String gambarList, String path_img_files) {
             this.nama_latin = nama_latin;
             this.nama_penyakit = nama_penyakit;
-            setListGambarId(gambarList);
+            setListGambarId(gambarList, path_img_files);
         }
 
         public void setNama_penyakit(String nama_penyakit) {
@@ -413,17 +408,12 @@ public class TampilDiagnosaGambarHelper implements Closeable{
             this.listCiriHtml = bufHtml.toString();
         }
 
-        public void setListGambarId(String listId) {
+        public void setListGambarId(String listId, String path_img_files) {
             if (listId == null) return;
             String[] list = listId.split(",");
-            this.listGambarId = new ArrayList<Integer>();
+            this.listGambarPath = new ArrayList<String>();
             for (int x = 0; x < list.length; x++) {
-                int resId = activity.getResources().getIdentifier(
-                        list[x],
-                        "drawable",
-                        activity.getPackageName()
-                );
-                this.listGambarId.add(resId);
+                this.listGambarPath.add(path_img_files + "/" + list[x]);
             }
         }
 
@@ -453,7 +443,10 @@ public class TampilDiagnosaGambarHelper implements Closeable{
                 try {
                     checkAndLoadAllBitmaps();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    String keyEx = "run_PreparecontentTask_cLoad";
+                    String resE = String.format("cannot execute checkAndLoadAllBitmaps(); rets = 2 e -> %s", e.toString());
+                    LogIntoCrashlytics.logException(keyEx, resE, e);
+                    tampilDiagnosaGambarHelper.get().activity.LOGE(keyEx, resE);
                 }
                 tampilDiagnosaGambarHelper.get().modes = 1;
                 rets = 2;
@@ -464,7 +457,10 @@ public class TampilDiagnosaGambarHelper implements Closeable{
                 try {
                     checkAndLoadAllBitmaps();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    String keyEx = "run_PreparecontentTask_cLoad";
+                    String resE = String.format("cannot execute checkAndLoadAllBitmaps(); rets = 1 e -> %s", e.toString());
+                    LogIntoCrashlytics.logException(keyEx, resE, e);
+                    tampilDiagnosaGambarHelper.get().activity.LOGE(keyEx, resE);
                 }
                 System.gc();
                 rets = 1;
@@ -478,13 +474,15 @@ public class TampilDiagnosaGambarHelper implements Closeable{
             tampilDiagnosaGambarHelper.get().activity.getWindowManager().getDefaultDisplay().getSize(reqSize);
             reqSize.y = Math.round(tampilDiagnosaGambarHelper.get().activity.getResources().getDimension(R.dimen.actmain_dimen_viewpager_height));
             tampilDiagnosaGambarHelper.get().mImagecache = new LruCache<Integer, Bitmap>(reqSize.x * reqSize.y);
-            int sizeslist = tampilDiagnosaGambarHelper.get().dataCiriPenyakit.listGambarId.size();
+            int sizeslist = tampilDiagnosaGambarHelper.get().dataCiriPenyakit.listGambarPath.size();
             for(int x = 0; x < sizeslist; x++){
-                int resID = tampilDiagnosaGambarHelper.get().dataCiriPenyakit.listGambarId.get(x);
-                String nameID = getLasts(tampilDiagnosaGambarHelper.get().activity.getResources().getResourceName(resID));
+                String path = tampilDiagnosaGambarHelper.get().dataCiriPenyakit.listGambarPath.get(x);
+                String nameID = getLasts(path);
                 if(!diskLruObjectCache.isKeyExists(nameID)){
-                    final Bitmap bitmap = DecodeBitmapHelper.decodeAndResizeBitmapsResources(tampilDiagnosaGambarHelper.get().activity.getResources(), resID, reqSize.y, reqSize.x);
+                    final InputStream inputStream = new FileInputStream(path + ".jpg");
+                    final Bitmap bitmap = DecodeBitmapHelper.decodeBitmapStream(inputStream);
                     Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, reqSize.x, reqSize.y, false);
+                    inputStream.close();
                     //gets the byte of bitmap
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     float scaling = bitmap.getHeight() / reqSize.y;
@@ -537,7 +535,10 @@ public class TampilDiagnosaGambarHelper implements Closeable{
             try {
                 diskLruObjectCache.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                String keyEx = "run_PreparecontentTask_postEx";
+                String resE = String.format("cannot execute diskLruObjectCache.close(); e -> %s", e.toString());
+                LogIntoCrashlytics.logException(keyEx, resE, e);
+                tampilDiagnosaGambarHelper.get().activity.LOGE(keyEx, resE);
             }
             if(integer == 1) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2)

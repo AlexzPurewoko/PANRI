@@ -39,65 +39,71 @@ public class MylexzActivity extends AppCompatActivity
 			mAppLogger = new Logger(this, getPackageManager().getApplicationLabel(appInfo).toString()+".log", Logger.MODE_PRIVATE);
 		}
 	}
-	protected void LOGI(@NonNull String tag, @NonNull String format, Object... p){
+
+    public void LOGI(@NonNull String tag, @NonNull String format, Object... p) {
 		if(mLogMode == LOGMODE_FILE)
 			mAppLogger.I(tag, format, p);
 		else
 			Log.i(tag, String.format(format, p));
 	}
-	protected void LOGI(@NonNull String tag, @NonNull String message, Throwable exception){
+
+    public void LOGI(@NonNull String tag, @NonNull String message, Throwable exception) {
 		if(mLogMode == LOGMODE_FILE)
 			mAppLogger.I(tag, message+" : %s", exception.toString());
 		else
 			Log.i(tag, message, exception);
 	}
-	
-	protected void LOGE(@NonNull String tag, @NonNull String format, Object... p){
+
+    public void LOGE(@NonNull String tag, @NonNull String format, Object... p) {
 		if(mLogMode == LOGMODE_FILE)
 			mAppLogger.E(tag, format, p);
 		else
 			Log.e(tag, String.format(format, p));
 	}
-	protected void LOGE(@NonNull String tag, @NonNull String message, Throwable exception){
+
+    public void LOGE(@NonNull String tag, @NonNull String message, Throwable exception) {
 		if(mLogMode == LOGMODE_FILE)
 			mAppLogger.E(tag, message+" : %s", exception.toString());
 		else
 			Log.e(tag, message, exception);
 	}
-	
-	protected void LOGD(@NonNull String tag, @NonNull String format, Object... p){
+
+    public void LOGD(@NonNull String tag, @NonNull String format, Object... p) {
 		if(mLogMode == LOGMODE_FILE)
 			mAppLogger.D(tag, format, p);
 		else
 			Log.d(tag, String.format(format, p));
 	}
-	protected void LOGD(@NonNull String tag, @NonNull String message, Throwable exception){
+
+    public void LOGD(@NonNull String tag, @NonNull String message, Throwable exception) {
 		if(mLogMode == LOGMODE_FILE)
 			mAppLogger.D(tag, message+" : %s", exception.toString());
 		else
 			Log.d(tag, message, exception);
 	}
-	
-	protected void LOGV(@NonNull String tag, @NonNull String format, Object... p){
+
+    public void LOGV(@NonNull String tag, @NonNull String format, Object... p) {
 		if(mLogMode == LOGMODE_FILE)
 			mAppLogger.V(tag, format, p);
 		else
 			Log.v(tag, String.format(format, p));
 	}
-	protected void LOGV(@NonNull String tag, @NonNull String message, Throwable exception){
+
+    public void LOGV(@NonNull String tag, @NonNull String message, Throwable exception) {
 		if(mLogMode == LOGMODE_FILE)
 			mAppLogger.V(tag, message+" : %s", exception.toString());
 		else
 			Log.v(tag, message, exception);
 	}
-	
-	protected void LOGW(@NonNull String tag, @NonNull String format, Object... p){
+
+    public void LOGW(@NonNull String tag, @NonNull String format, Object... p) {
 		if(mLogMode == LOGMODE_FILE)
 			mAppLogger.W(tag, format, p);
 		else
 			Log.w(tag, String.format(format, p));
 	}
-	protected void LOGW(@NonNull String tag, @NonNull String message, Throwable exception){
+
+    public void LOGW(@NonNull String tag, @NonNull String message, Throwable exception) {
 		if(mLogMode == LOGMODE_FILE)
 			mAppLogger.W(tag, message+" : %s", exception.toString());
 		else

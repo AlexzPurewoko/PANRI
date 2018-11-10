@@ -1,40 +1,33 @@
 package id.kenshiro.app.panri.adapter;
 
-import android.app.Activity;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
-import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.IdRes;
-import android.support.annotation.Nullable;
 import android.support.annotation.Px;
 import android.util.LruCache;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-import com.mylexz.utils.DiskLruObjectCache;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.SimpleDiskLruCache;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
-import id.kenshiro.app.panri.MainActivity;
 import id.kenshiro.app.panri.R;
-import id.kenshiro.app.panri.SplashScreenActivity;
 import id.kenshiro.app.panri.helper.DecodeBitmapHelper;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
 
 public class ImageGridViewAdapter implements Closeable{
     private List<Integer> listLocationResImages;
@@ -88,6 +81,12 @@ public class ImageGridViewAdapter implements Closeable{
     @Override
     public void close() {
         recycleBitmaps();
+    }
+
+    public void setListLocationFileImages(List<String> listLocationFileImages, String idSuffix) {
+        this.listLocationAssetsImages = listLocationFileImages;
+        this.idSuffix = idSuffix;
+        mode = 2;
     }
 
     public void setListLocationAssetsImages(List<String> listLocationAssetsImages, String idSuffix) {
@@ -237,9 +236,69 @@ public class ImageGridViewAdapter implements Closeable{
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                    break;
+                case 2:
+                    try {
+                        checkAndLoadAllBitmapsFromFiles();
+                    } catch (IOException e) {
+                        String keyEx = "checkAndLoadAllBitmaps_PrepareBitmapTask";
+                        String resE = String.format("Error when exec checkAndLoadAllBitmapsFromFiles(); e -> %s", e.toString());
+                        LogIntoCrashlytics.logException(keyEx, resE, e);
+                        ctxCls.get().ctx.LOGE(keyEx, resE);
+                    }
+
             }
 
         }
+
+        private void checkAndLoadAllBitmapsFromFiles() throws IOException {
+            for (int x = 0; x < ctxCls.get().listLocationAssetsImages.size(); x++) {
+                String name = ctxCls.get().listLocationAssetsImages.get(x);
+                String nameID = getLasts(name) + ctxCls.get().idSuffix;
+                if (!diskLruObjectCache.isKeyExists(nameID)) {
+                    InputStream inputStream = new FileInputStream(name);
+                    final Bitmap bitmap = DecodeBitmapHelper.decodeBitmapStream(inputStream);
+                    Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, ctxCls.get().imageItemSize.x, ctxCls.get().imageItemSize.y, false);
+                    inputStream.close();
+                    //gets the byte of bitmap
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    float scaling = bitmap.getHeight() / ctxCls.get().imageItemSize.y;
+                    scaling = ((scaling < 1.0f) ? 1.0f : scaling);
+                    scaledBitmap.compress(Bitmap.CompressFormat.JPEG, Math.round(QUALITY_FACTOR / scaling), bos);
+                    // put into cache
+                    try {
+                        diskLruObjectCache.put(nameID, bos.toByteArray());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        bos.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    ctxCls.get().mImagecache.put(x, scaledBitmap);
+                    bitmap.recycle();
+                    System.gc();
+                } else {
+                    InputStream is = null;
+                    try {
+                        is = diskLruObjectCache.get(nameID);
+                    } catch (IOException e) {
+                        String keyEx = "checkAndLoadAllBitmapsFromFiles_PrepareBitmapTask";
+                        String resE = String.format("Cannot get the Inputstream of {%s} e -> %s", nameID, e.toString());
+                        LogIntoCrashlytics.logException(keyEx, resE, e);
+                        ctxCls.get().ctx.LOGE(keyEx, resE);
+                    }
+                    if (is == null) {
+                        diskLruObjectCache.closeReading();
+                        continue;
+                    }
+                    ctxCls.get().mImagecache.put(x, BitmapFactory.decodeStream(is));
+                    diskLruObjectCache.closeReading();
+                }
+            }
+        }
+
         private void settingSize(){
             // set size per images
             int screenHeight = ctxCls.get().screenSize.y;

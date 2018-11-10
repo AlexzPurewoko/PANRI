@@ -23,6 +23,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
@@ -33,6 +34,8 @@ import id.kenshiro.app.panri.helper.DiagnoseActivityHelper;
 import id.kenshiro.app.panri.helper.ShowPenyakitDiagnoseHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 import id.kenshiro.app.panri.helper.TampilListPenyakitHelper;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
+import io.fabric.sdk.android.Fabric;
 import pl.droidsonroids.gif.GifImageView;
 
 public class InfoPenyakitActivity extends MylexzActivity {
@@ -40,20 +43,30 @@ public class InfoPenyakitActivity extends MylexzActivity {
     private TampilListPenyakitHelper tampil;
     private SQLiteDatabase sqlDB;
     private ShowPenyakitDiagnoseHelper showPenyakitDiagnoseHelper;
+    private Handler handlerPetani;
     Button mTextPetaniDesc;
     private boolean doubleBackToExitPressedOnce;
+    private GifImageView imgPetaniKedipView;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.actinfo_main);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        setMyActionBar();
-        setDB();
+        final Fabric fabric = new Fabric.Builder(this)
+                .kits(new Crashlytics())
+                .debuggable(true)  // Enables Crashlytics debugger
+                .build();
+        Fabric.with(fabric);
         try {
+            setContentView(R.layout.actinfo_main);
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            setMyActionBar();
+            setDB();
             setContent();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Throwable e) {
+            String keyEx = getClass().getName() + "_onCreate()";
+            String resE = String.format("UnHandled Exception Occurs(Throwable) e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            LOGE(keyEx, resE);
         }
     }
 
@@ -61,22 +74,24 @@ public class InfoPenyakitActivity extends MylexzActivity {
     public void onConfigurationChanged(Configuration newConfig) {
 
     }
-    private void setContent() throws IOException {
+
+    private void setContent() {
         loadLayoutAndShow();
         mTextPetaniDesc = (Button) findViewById(R.id.actmain_id_section_petani_btn);
+        imgPetaniKedipView = findViewById(R.id.actsplash_id_gifpetanikedip);
         mTextPetaniDesc.setTextColor(Color.BLACK);
         mTextPetaniDesc.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.NORMAL);
-        mTextPetaniDesc.setText(getText(R.string.actinfo_string_speechfarmer_1));
         tampil = new TampilListPenyakitHelper(this, sqlDB, (RelativeLayout) findViewById(R.id.actinfo_id_layoutcontainer));
         tampil.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
             @Override
             public void onClick(View view, int position) {
                 view.setVisibility(View.GONE);
                 showPenyakitDiagnoseHelper.show(position + 1);
-                mTextPetaniDesc.setText(getText(R.string.actinfo_string_speechfarmer_2));
+                onButtonPetaniClicked(getText(R.string.actinfo_string_speechfarmer_2));
             }
         });
         tampil.buildAndShow();
+        onButtonPetaniClicked(getText(R.string.actinfo_string_speechfarmer_1));
     }
 
     private void loadLayoutAndShow() {
@@ -87,15 +102,34 @@ public class InfoPenyakitActivity extends MylexzActivity {
             public void onClick(View mContentView) {
                 mContentView.setVisibility(View.GONE);
                 // back into begin diagnostics
-                mTextPetaniDesc.setText(getText(R.string.actinfo_string_speechfarmer_1));
+                onButtonPetaniClicked(getText(R.string.actinfo_string_speechfarmer_1));
                 tampil.getmContentView().setVisibility(View.VISIBLE);
             }
         });
     }
 
     private void setDB() {
-        sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/databases/database_penyakitpadi.db", null);
+        sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/files/database_penyakitpadi.db", null);
     }
+
+    private void onButtonPetaniClicked(CharSequence text) {
+
+        mTextPetaniDesc.setText(text);
+        imgPetaniKedipView.setImageResource(R.drawable.petani_bicara);
+        if (handlerPetani == null) {
+            handlerPetani = new Handler();
+            handlerPetani.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    handlerPetani = null;
+                    System.gc();
+                    imgPetaniKedipView.setImageResource(R.drawable.petani_kedip);
+                }
+            }, 4000);
+        }
+        System.gc();
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -112,7 +146,10 @@ public class InfoPenyakitActivity extends MylexzActivity {
         try {
             tampil.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            String keyEx = getClass().getName() + "_onDestroy()";
+            String resE = String.format("Unable to execute tampil.close(); e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            LOGE(keyEx, resE);
         }
         super.onDestroy();
     }
@@ -166,7 +203,7 @@ public class InfoPenyakitActivity extends MylexzActivity {
                 } else if (showPenyakitDiagnoseHelper.getmContent1().getVisibility() == View.VISIBLE) {
                     showPenyakitDiagnoseHelper.getmContent1().setVisibility(View.GONE);
                     showPenyakitDiagnoseHelper.getmContentView().setVisibility(View.GONE);
-                    mTextPetaniDesc.setText(getText(R.string.actinfo_string_speechfarmer_1));
+                    onButtonPetaniClicked(getText(R.string.actinfo_string_speechfarmer_1));
                     tampil.getmContentView().setVisibility(View.VISIBLE);
                     --showPenyakitDiagnoseHelper.countBtn;
                     return false;

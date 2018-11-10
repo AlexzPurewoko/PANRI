@@ -21,6 +21,7 @@ import android.widget.TextView;
 import com.mylexz.utils.MylexzActivity;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,13 +30,14 @@ import android.os.Handler;
 import id.kenshiro.app.panri.DiagnoseActivity;
 import id.kenshiro.app.panri.R;
 import id.kenshiro.app.panri.adapter.ImageGridViewAdapter;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
 import pl.droidsonroids.gif.GifImageView;
 
 public class ShowPenyakitDiagnoseHelper implements Closeable{
     private MylexzActivity activity;
     private SQLiteDatabase sqLiteDatabase;
-    private static final String path_to_asset = "file:///android_asset/";
-    private static final String image_default_dirs = "data_hama/foto";
+    private String path_to_file;
+    private String image_default_dirs;
     // load layout elements
     private RelativeLayout mRootView, mContentView;
     private WebView gejala, umum, caraatasi;
@@ -60,6 +62,9 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         this.mRootView = mRootView;
         dialogShowHelper = new DialogShowHelper(activity);
         dialogShowHelper.buildLoadingLayout();
+        File tmp = new File(activity.getFilesDir(), "data_hama_html");
+        this.path_to_file = "file://" + tmp.getAbsolutePath() + "/";
+        this.image_default_dirs = activity.getFilesDir().getAbsolutePath() + "/" + "data/images/list";
     }
 
     public void setmTextPetaniDesc(Button mTextPetaniDesc) {
@@ -102,9 +107,9 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         gejala.clearCache(false);
         caraatasi.clearCache(false);
 
-        umum.loadUrl(path_to_asset+""+dataPath.getUmum_path());
-        gejala.loadUrl(path_to_asset+""+dataPath.getGejala_path());
-        caraatasi.loadUrl(path_to_asset+""+dataPath.getCara_atasi_path());
+        umum.loadUrl(path_to_file + "" + dataPath.getUmum_path());
+        gejala.loadUrl(path_to_file + "" + dataPath.getGejala_path());
+        caraatasi.loadUrl(path_to_file + "" + dataPath.getCara_atasi_path());
     }
     public void show(final int keyId){
         dialogShowHelper.showDialog();
@@ -116,7 +121,10 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    String keyEx = "show_showPDHelper";
+                    String resE = String.format("Interrupted when pause a main thread e -> %s", e.toString());
+                    LogIntoCrashlytics.logException(keyEx, resE, e);
+                    activity.LOGE(keyEx, resE);
                 }
                 umum.setVisibility(View.VISIBLE);
                 gejala.setVisibility(View.VISIBLE);
@@ -160,7 +168,7 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         if (imageViewPenyakit == null)
             imageViewPenyakit = new ImageGridViewAdapter(activity, p, R.id.actgallery_id_gridimage);
         imageViewPenyakit.setColumnCount(2);
-        imageViewPenyakit.setListLocationAssetsImages(mListResImage, "show_diagnose");
+        imageViewPenyakit.setListLocationFileImages(mListResImage, "show_diagnose");
         int dimen = Math.round(activity.getResources().getDimension(R.dimen.margin_img_penyakit));
         imageViewPenyakit.setMargin(0, dimen, dimen, dimen, dimen);
         imageViewPenyakit.buildAndShow();
@@ -270,10 +278,24 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
                 }
                 else {
                     // Do into cara_atasi
-                    mContent1.setVisibility(View.GONE);
-                    mContent2.setVisibility(View.VISIBLE);
-                    mScrollContent.pageScroll(1);
-                    klikBawahText.setText(R.string.actdiagnose_string_klikbalikdiagnosa);
+                    dialogShowHelper.showDialog();
+                    Handler handler = new Handler(Looper.getMainLooper());
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            mContent1.setVisibility(View.GONE);
+                            mContent2.setVisibility(View.VISIBLE);
+                            mScrollContent.pageScroll(1);
+                            klikBawahText.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    klikBawahText.setText(R.string.actdiagnose_string_klikbalikdiagnosa);
+                                    dialogShowHelper.stopDialog();
+                                }
+                            }, 1000);
+
+                        }
+                    }, 1000);
                     /////////////////////
                 }
             }

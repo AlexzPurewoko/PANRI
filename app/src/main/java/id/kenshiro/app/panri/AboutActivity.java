@@ -13,10 +13,13 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.crashlytics.android.Crashlytics;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
+import io.fabric.sdk.android.Fabric;
 
 public class AboutActivity extends MylexzActivity {
     TextView judul, version;
@@ -25,26 +28,43 @@ public class AboutActivity extends MylexzActivity {
     private Toolbar toolbar;
     private static final String[] listsThanksTo = {
             "SMKN 1 Giritontro",
-            "Bu Purwari selaku pembimbing",
             "Bu Lian selaku pembimbing",
             "Pak Sitam selaku narasumber",
+            "Pak Wahyudi selaku narasumber dari validasi data penyakit",
+            "BPP (Balai Penyuluhan Pertanian) 'Harjaning Tani' Giriwoyo",
             "Android Studio",
             "<a href=\"https://stackoverflow.com\">StackOverflow</a>",
             "Library pihak ketiga : <a href=\"https://github.com/koral--/android-gif-drawable\">GifImageView (pl.droidsonroids.gif:android-gif-drawable)</a>",
             "Library pihak ketiga : <a href=\"https://github.com/AlexzPurewoko/MyLEXZ-Library\">MyLEXZ Library</a>",
-            "Library pihak ketiga : <a href=\"https://commons.apache.org/codec\">Apache Commons Codec</a>"
+            "Library pihak ketiga : <a href=\"https://commons.apache.org/codec\">Apache Commons Codec</a>",
+            "Library pihak ketiga : <a href=\"https://firebase.google.com\">Google Firebase</a>",
+            "Library pihak ketiga : <a href=\"https://fabric.io\">Fabric Crashlytics</a>",
+            "Library pihak ketiga : <a href=\"https://commons.apache.org/proper/commons-io\">Apache Commons IO</a>"
     };
 
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.actabout_main);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        setMyActionBar();
-        prepareLayout();
-        prepareAboutPeople();
-        setsWebContent();
+        final Fabric fabric = new Fabric.Builder(this)
+                .kits(new Crashlytics())
+                .debuggable(true)  // Enables Crashlytics debugger
+                .build();
+        Fabric.with(fabric);
+        // if any exception occurs
+        try {
+            setContentView(R.layout.actabout_main);
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            setMyActionBar();
+            prepareLayout();
+            prepareAboutPeople();
+            setsWebContent();
+        } catch (Throwable e) {
+            String keyEx = getClass().getName() + "_onCreate()";
+            String resE = String.format("UnHandled Exception Occurs(Throwable) e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            LOGE(keyEx, resE);
+        }
     }
 
     private void setsWebContent() {
@@ -61,6 +81,7 @@ public class AboutActivity extends MylexzActivity {
 
     private void prepareAboutPeople() {
         int[] imageResLocation = {
+                R.drawable.bu_purwari_puji,
                 R.drawable.roman_av,
                 R.drawable.bagus_cahyono,
                 R.drawable.alexpw,
@@ -68,6 +89,7 @@ public class AboutActivity extends MylexzActivity {
                 R.drawable.wahyu_catur,
         };
         String[] names = {
+                "Purwari Puji Rahayu, S.Pd",
                 "Roman Aqviriyoso",
                 "Bagus Cahyono",
                 "Alexzander Purwoko W",
@@ -75,9 +97,10 @@ public class AboutActivity extends MylexzActivity {
                 "Wahyu Catur"
         };
         String[] jobs = {
+                "Penanggung jawab",
                 "Produser\nDesainer\nArtist 2D",
                 "Programmer\nContent Writer",
-                "Developer Apps\nProgrammer",
+                "Software Engineer\nApp Developer\nProgrammer",
                 "Content Writer",
                 "Content Writer\nArtist 2D"
         };

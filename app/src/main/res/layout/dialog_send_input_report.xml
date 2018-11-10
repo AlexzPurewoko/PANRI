@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="10dp"
+    android:orientation="vertical">
+
+    <EditText
+        android:layout_margin="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:hint="Nama Anda"
+        android:id="@+id/name_text" />
+
+    <EditText
+        android:layout_margin="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxLines="2"
+        android:hint="Judul"
+        android:id="@+id/judul_report" />
+
+    <EditText
+        android:layout_margin="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/actmain_dimen_opimg_incard_wh"
+        android:hint="Description"
+        android:id="@+id/description_report" />
+
+    <LinearLayout
+        android:layout_margin="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="right">
+
+        <Button
+            android:layout_height="wrap_content"
+            android:text="Batal"
+            android:textColor="@android:color/white"
+            android:layout_width="wrap_content"
+            android:id="@+id/actmain_id_dialogexit_btnno"
+            android:background="@drawable/ic_btn_red" />
+
+        <Button
+            android:layout_height="wrap_content"
+            android:text="Laporkan"
+            android:textColor="@android:color/white"
+            android:layout_width="wrap_content"
+            android:id="@+id/actmain_id_dialogexit_btnyes"
+            android:background="@drawable/ic_btn_blue" />
+
+    </LinearLayout>
+</LinearLayout>

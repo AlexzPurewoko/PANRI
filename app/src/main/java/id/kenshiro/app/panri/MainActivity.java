@@ -2,12 +2,16 @@ package id.kenshiro.app.panri;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -23,12 +27,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.text.SpannableString;
 
+import com.crashlytics.android.Crashlytics;
 import com.mylexz.utils.DiskLruObjectCache;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.SimpleDiskLruCache;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
 import android.graphics.Typeface;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import java.io.File;
@@ -44,12 +50,20 @@ import id.kenshiro.app.panri.adapter.ImageFragmentAdapter;
 
 import android.view.Gravity;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import id.kenshiro.app.panri.adapter.CustomPageViewTransformer;
 import id.kenshiro.app.panri.helper.CheckAndMoveDB;
 import id.kenshiro.app.panri.helper.DecodeBitmapHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
+import id.kenshiro.app.panri.important.KeyListClasses;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
+import id.kenshiro.app.panri.opt.onmain.CheckDBUpdateThread;
+import id.kenshiro.app.panri.opt.onmain.DialogOnMain;
+import id.kenshiro.app.panri.opt.onmain.PrepareBitmapViewPager;
+import id.kenshiro.app.panri.opt.onmain.TaskDownloadDBUpdates;
+import io.fabric.sdk.android.Fabric;
 import pl.droidsonroids.gif.GifImageView;
 
 import android.os.AsyncTask;
@@ -64,12 +78,14 @@ import android.view.KeyEvent;
 public class MainActivity extends MylexzActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     private static final long TIME_BETWEEN_IMAGE = 6000;
+    private static final long TIME_AUTO_UPDATE_TEXT_MILLIS = 5000; // 5s
     Toolbar toolbar;
     // for view image pager
-    LinearLayout indicators;
-    private CustomViewPager mImageSelector;
+    public LinearLayout indicators;
+    public CustomViewPager mImageSelector;
     private TextView mTextDetails;
     private Handler handlerPetani;
+    private Handler autoClick = null;
     // for section petani
     private Button mTextPetaniDesc;
     private GifImageView imgPetaniKedipView;
@@ -86,37 +102,82 @@ public class MainActivity extends MylexzActivity
     private LinearLayout mListOp;
     private List<CardView> mListCard;
     private volatile Runnable mImageSwitcher = null;
+    private volatile Runnable mAutoClickHandler = null;
     private volatile Handler mImageHandlerSw = null;
-    private volatile int curr_pos_image = 0;
+    public volatile int curr_pos_image = 0;
 
     private boolean doubleBackToExitPressedOnce;
-    LruCache<Integer, Bitmap> mImageMemCache;
+    public LruCache<Integer, Bitmap> mImageMemCache;
     private WeakReference<PrepareBitmapViewPager> prepareBitmapViewPagerWeakReference;
-    private int has_finished = 0;
+    public int has_finished = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        setDB();
-        setMyActionBar();
-        setInitialPagerData();
-        setInitialTextInds();
-        setInitialSectPetani();
-        setInitialSectOpIntent();
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
+        final Fabric fabric = new Fabric.Builder(this)
+                .kits(new Crashlytics())
+                .debuggable(true)  // Enables Crashlytics debugger
+                .build();
+        Fabric.with(fabric);
+        try {
+            setContentView(R.layout.activity_main);
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            setDB();
+            setMyActionBar();
+            setInitialPagerData();
+            setInitialTextInds();
+            setInitialSectPetani();
+            setInitialSectOpIntent();
+            DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+            ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                    this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+            drawer.addDrawerListener(toggle);
+            toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-        checkVersion();
+            NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+            navigationView.setNavigationItemSelectedListener(this);
+            checkVersion();
+        } catch (Throwable e) {
+            String keyEx = getClass().getName() + "_onCreate()";
+            String resE = String.format("UnHandled Exception Occurs(Throwable) e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            LOGE(keyEx, resE);
+        }
     }
 
-    private void setHandlers(final CustomViewPager customViewPager, final int size) {
+    public void setAutoClickUpdate() {
+        if (mAutoClickHandler == null && autoClick == null) {
+            mAutoClickHandler = new Runnable() {
+                @Override
+                public void run() {
+                    onButtonPetaniClicked(false);
+
+                    Handler inner = new Handler(Looper.getMainLooper());
+                    inner.postDelayed(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            clearAutoClickUpdate(mAutoClickHandler);
+                            setAutoClickUpdate();
+                        }
+                    }, TIME_AUTO_UPDATE_TEXT_MILLIS);
+                }
+            };
+            autoClick = new Handler(Looper.getMainLooper());
+            autoClick.postDelayed(mAutoClickHandler, TIME_AUTO_UPDATE_TEXT_MILLIS);
+        }
+    }
+
+    public void clearAutoClickUpdate(Runnable runnable) {
+        if (autoClick != null) {
+            autoClick.removeCallbacks(runnable);
+            autoClick = null;
+            mAutoClickHandler = null;
+            System.gc();
+        }
+    }
+
+    public void setHandlers(final CustomViewPager customViewPager, final int size) {
         mImageSwitcher = new Runnable() {
             @Override
             public void run() {
@@ -143,28 +204,51 @@ public class MainActivity extends MylexzActivity
 
     private void checkVersion() {
         Bundle bundle = getIntent().getExtras();
-        int app_cond = bundle.getInt(SplashScreenActivity.APP_CONDITION_KEY);
-        int db_cond = bundle.getInt(SplashScreenActivity.DB_CONDITION_KEY);
+        int app_cond = bundle.getInt(KeyListClasses.APP_CONDITION_KEY);
+        int db_cond = bundle.getInt(KeyListClasses.DB_CONDITION_KEY);
         String messageIfNeeded = null;
         String dbErrorMesageIfNeeded = null;
         switch (app_cond) {
-            case SplashScreenActivity.APP_IS_FIRST_USAGE:
-            case SplashScreenActivity.APP_IS_NEWER_VERSION:
+            case KeyListClasses.APP_IS_FIRST_USAGE:
+            case KeyListClasses.APP_IS_NEWER_VERSION:
+                DialogOnMain.showDialogWhatsNew(this, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
                 break;
-            case SplashScreenActivity.APP_IS_OLDER_VERSION:
+            case KeyListClasses.APP_IS_OLDER_VERSION:
                 messageIfNeeded = "Aplikasi ini sudah usang dan tidak kompatibel dengan versi sebelumnya yang lebih baru, coba copot dan pasang lagi aplikasi ini";
-            case SplashScreenActivity.APP_IS_SAME_VERSION:
+            case KeyListClasses.APP_IS_SAME_VERSION:
                 break;
         }
         switch (db_cond) {
-            case SplashScreenActivity.DB_IS_FIRST_USAGE:
+            case KeyListClasses.DB_REQUEST_UPDATE: {
+                final String[] dbVersion = bundle.getStringArray(KeyListClasses.KEY_LIST_VERSION_DB);
+                DialogOnMain.showUpdateDBDialog(this, KeyListClasses.UPDATE_DB_IS_AVAILABLE, new Object[]{
+                        dbVersion[0],
+                        dbVersion[1],
+                        "Update",
+                        new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                new TaskDownloadDBUpdates(MainActivity.this, dbVersion[1]).execute();
+                            }
+                        }
+                });
+            }
+            break;
+            case KeyListClasses.DB_IS_FIRST_USAGE:
                 break;
-            case SplashScreenActivity.DB_IS_NEWER_VERSION:
+            case KeyListClasses.DB_IS_NEWER_VERSION:
                 TOAST(Toast.LENGTH_SHORT, "The data now is new version !");
                 break;
-            case SplashScreenActivity.DB_IS_OLDER_IN_APP_VERSION:
+            case KeyListClasses.DB_IS_OLDER_IN_APP_VERSION:
                 dbErrorMesageIfNeeded = "Current Database dengan database di aplikasi sudah usang, mohon copot dan pasang aplikasi untuk membenahi";
-            case SplashScreenActivity.DB_IS_SAME_VERSION:
+            case KeyListClasses.DB_IS_SAME_VERSION:
                 break;
         }
         showDialog(messageIfNeeded, dbErrorMesageIfNeeded);
@@ -215,20 +299,26 @@ public class MainActivity extends MylexzActivity
         try {
             new CheckAndMoveDB(this, "database_penyakitpadi.db").upgradeDB();
         } catch (IOException e) {
-            LOGE("MainActivity", "ERROR WHEN HANDLING checkAndMoveDB()", e);
+            String keyEx = getClass().getName() + "_setDB()";
+            String resE = String.format("ERROR WHEN HANDLING checkAndMoveDB() e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            LOGE(keyEx, resE);
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (has_finished == 1)
+        if (has_finished == 1) {
             setHandlers(mImageSelector, mImageMemCache.size());
+            setAutoClickUpdate();
+        }
     }
 
     @Override
     protected void onPause() {
         clearHandlers(mImageSwitcher);
+        clearAutoClickUpdate(mAutoClickHandler);
         super.onPause();
     }
 
@@ -267,6 +357,7 @@ public class MainActivity extends MylexzActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            SwitchIntoMainActivity.switchTo(this, PanriSettingActivity.class, null);
             return true;
         }
 
@@ -282,15 +373,33 @@ public class MainActivity extends MylexzActivity
             case R.id.nav_gallery:
                 SwitchIntoMainActivity.switchTo(this, GalleryActivity.class, null);
                 break;
+            case R.id.send_report:
+                DialogOnMain.showReportDialog(this);
+                break;
             case R.id.nav_about:
                 SwitchIntoMainActivity.switchTo(this, AboutActivity.class, null);
                 break;
             case R.id.nav_out:
                 this.finish();
                 break;
-            case R.id.nav_rate:
+            case R.id.update_db:
+                new CheckDBUpdateThread(this).execute();
                 break;
-            case R.id.nav_share:
+            case R.id.nav_rate: {
+                // https://play.google.com/store/apps/details?id=ohi.andre.consolelauncher
+                String packageApp = getPackageName().toString();
+                Intent i = new Intent(Intent.ACTION_VIEW);
+                i.setData(Uri.parse("https://play.google.com/store/apps/details?id=" + packageApp));
+                i.setPackage("com.android.vending");
+                startActivity(Intent.createChooser(i, "Beri Nilai dengan..."));
+            }
+                break;
+            case R.id.nav_share: {
+                Intent i = new Intent(Intent.ACTION_SEND);
+                i.putExtra(Intent.EXTRA_TEXT, String.format("Download Aplikasi PANRI ke smartphone Android kamu dengan klik https://play.google.com/store/apps/details?id=%s", getPackageName().toString()));
+                i.setType("text/plain");
+                startActivity(Intent.createChooser(i, "Bagikan Aplikasi dengan..."));
+            }
                 break;
         }
 
@@ -348,25 +457,55 @@ public class MainActivity extends MylexzActivity
         for (int x = 0; x < mListCard.size(); x++) {
             mListOp.addView(mListCard.get(x));
         }
+        addPasangIklanCard();
     }
 
-    private void onButtonPetaniClicked() {
-        if (++mPosTxtPetani == TextPetaniDesc.length)
+    private void addPasangIklanCard() {
+        CardView cardView = (CardView) CardView.inflate(this, R.layout.actmain_instadds, null);
+        cardView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DialogOnMain.showDialogPasangIklan(MainActivity.this);
+            }
+        });
+        mListOp.addView(cardView);
+    }
+
+    private void onButtonPetaniClicked(boolean isOnStart) {
+        if (!isOnStart) {
+            if (++mPosTxtPetani == TextPetaniDesc.length)
+                mPosTxtPetani = 0;
+            mTextPetaniDesc.setText(TextPetaniDesc[mPosTxtPetani]);
+            imgPetaniKedipView.setImageResource(R.drawable.petani_bicara);
+            if (handlerPetani == null) {
+                handlerPetani = new Handler();
+                handlerPetani.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        handlerPetani = null;
+                        System.gc();
+                        imgPetaniKedipView.setImageResource(R.drawable.petani_kedip);
+                    }
+                }, 4000);
+            }
+            System.gc();
+        } else {
             mPosTxtPetani = 0;
-        mTextPetaniDesc.setText(TextPetaniDesc[mPosTxtPetani]);
-        imgPetaniKedipView.setImageResource(R.drawable.petani_bicara);
-        if (handlerPetani == null) {
-            handlerPetani = new Handler();
-            handlerPetani.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    handlerPetani = null;
-                    System.gc();
-                    imgPetaniKedipView.setImageResource(R.drawable.petani_kedip);
-                }
-            }, 2000);
+            mTextPetaniDesc.setText(TextPetaniDesc[mPosTxtPetani]);
+            imgPetaniKedipView.setImageResource(R.drawable.petani_bicara);
+            if (handlerPetani == null) {
+                handlerPetani = new Handler();
+                handlerPetani.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        handlerPetani = null;
+                        System.gc();
+                        imgPetaniKedipView.setImageResource(R.drawable.petani_kedip);
+                    }
+                }, 4000);
+            }
+            System.gc();
         }
-        System.gc();
     }
 
     private void setInitialSectPetani() {
@@ -377,18 +516,19 @@ public class MainActivity extends MylexzActivity
         mTextPetaniDesc.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View p1) {
-                onButtonPetaniClicked();
+                onButtonPetaniClicked(false);
             }
         });
-        mTextPetaniDesc.setText(TextPetaniDesc[mPosTxtPetani]);
+        //mTextPetaniDesc.setText(TextPetaniDesc[mPosTxtPetani]);
         imgPetaniKedipView.setVisibility(View.VISIBLE);
         imgPetaniKedipView.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                onButtonPetaniClicked();
+                onButtonPetaniClicked(false);
             }
         });
+        onButtonPetaniClicked(true);
     }
 
     private void setInitialTextInds() {
@@ -425,7 +565,7 @@ public class MainActivity extends MylexzActivity
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             if (doubleBackToExitPressedOnce) {
-                showExitDialog();
+                DialogOnMain.showExitDialog(this);
                 return true;
             }
 
@@ -446,6 +586,7 @@ public class MainActivity extends MylexzActivity
     @Override
     protected void onDestroy() {
         clearHandlers(mImageSwitcher);
+        clearAutoClickUpdate(mAutoClickHandler);
         if (mImageMemCache != null) {
             for (int x = 0; x < mImageMemCache.size(); x++) {
                 mImageMemCache.get(x).recycle();
@@ -453,189 +594,5 @@ public class MainActivity extends MylexzActivity
             mImageMemCache.evictAll();
         }
         super.onDestroy();
-    }
-
-    private void showExitDialog() {
-        AlertDialog.Builder build = new AlertDialog.Builder(this);
-        LinearLayout layoutDialog = (LinearLayout) LinearLayout.inflate(this, R.layout.actmain_dialog_on_exit, null);
-        TextView text = (TextView) layoutDialog.findViewById(R.id.actmain_id_dialogexit_content);
-        Button btnyes = (Button) layoutDialog.findViewById(R.id.actmain_id_dialogexit_btnyes);
-        Button btnno = (Button) layoutDialog.findViewById(R.id.actmain_id_dialogexit_btnno);
-        text.setTextColor(Color.BLACK);
-        text.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.BOLD);
-        text.setText(R.string.actmain_string_dialogexit_desc);
-        btnyes.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.BOLD);
-        btnyes.setTextColor(Color.WHITE);
-        btnyes.setText(R.string.actmain_string_dialogexit_btnyes);
-        btnno.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.BOLD);
-        btnno.setTextColor(Color.WHITE);
-        btnno.setText(R.string.actmain_string_dialogexit_btnno);
-        build.setView(layoutDialog);
-        final AlertDialog mAlert = build.create();
-        btnyes.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View p1) {
-                mAlert.cancel();
-                MainActivity.this.finish();
-            }
-
-
-        });
-        btnno.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View p1) {
-                mAlert.cancel();
-            }
-
-
-        });
-        mAlert.show();
-    }
-
-    private static class PrepareBitmapViewPager implements Runnable {
-        LruCache<Integer, Bitmap> memCache;
-        private final File sourceCache;
-        private ImageFragmentAdapter mImageControllerFragment;
-        private WeakReference<CustomViewPager> mImageSelector;
-        private WeakReference<Point> reqSize;
-        private static volatile SimpleDiskLruCache diskLruCache;
-        private WeakReference<MainActivity> mainActivity;
-        //private int mDotCount;
-        //private LinearLayout[] mDots;
-        private WeakReference<LinearLayout> indicators;
-
-        PrepareBitmapViewPager(MainActivity mainActivity, Point reqSize, File cacheDirs) {
-            this.mainActivity = new WeakReference<MainActivity>(mainActivity);
-            this.memCache = mainActivity.mImageMemCache;
-            this.sourceCache = cacheDirs;
-            this.mImageSelector = new WeakReference<CustomViewPager>(mainActivity.mImageSelector);
-            this.reqSize = new WeakReference<Point>(reqSize);
-            this.indicators = new WeakReference<LinearLayout>(mainActivity.indicators);
-
-
-            sourceCache.mkdir();
-        }
-
-        @Override
-        public void run() {
-            //add your items here
-            String[] key = {
-                    "viewpager_area_1",
-                    "viewpager_area_2",
-                    "viewpager_area_3",
-                    "viewpager_area_4"
-            };
-            //////////
-            // loads from a cache
-            try {
-                loadBitmapIntoCache(key);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            final int current = mainActivity.get().getSharedPreferences(SplashScreenActivity.SHARED_PREF_NAME, Context.MODE_PRIVATE).getInt(SplashScreenActivity.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, 0);
-            final int current1 = (current == memCache.size()) ? 0 : current;
-            postExecute(memCache.get(current1));
-        }
-
-        private void loadBitmapIntoCache(String[] key) throws IOException {
-            try {
-                synchronized (this) {
-                    //File source = sourceCache;
-                    Log.i("checkeraaa", "the curr cache dirs is " + sourceCache.getAbsolutePath());
-                    diskLruCache = SimpleDiskLruCache.getsInstance(sourceCache);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                return;
-            }
-            int x = 0;
-
-            synchronized (diskLruCache) {
-                for (String result : key) {
-                    InputStream bis = diskLruCache.get(result);
-                    memCache.put(x++, BitmapFactory.decodeStream(bis));
-                    diskLruCache.closeReading();
-                    bis.close();
-
-                }
-            }
-            System.gc();
-
-            synchronized (diskLruCache) {
-                diskLruCache.close();
-            }
-        }
-
-        private void postExecute(final Bitmap bitmapResult) {
-
-            // sets the image for nav header
-            final ImageView img = (ImageView) mainActivity.get().findViewById(R.id.actmain_id_navheadermain_layoutimg);
-            if (img != null)
-                synchronized (img) {
-                    if (bitmapResult != null) {
-                        img.setImageBitmap(bitmapResult);
-                    }
-                }
-            mImageControllerFragment = new ImageFragmentAdapter(mainActivity.get(), mainActivity.get().getSupportFragmentManager(), memCache, reqSize.get());
-            mImageSelector.get().setAdapter(mImageControllerFragment);
-            mImageSelector.get().setCurrentItem(0);
-            mImageSelector.get().setPageTransformer(true, new CustomPageViewTransformer());
-            mImageSelector.get().setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    int curr_img = mImageSelector.get().getCurrentItem();
-                    if (++curr_img == memCache.size())
-                        curr_img = 0;
-                    mImageSelector.get().setCurrentItem(curr_img);
-
-                    System.gc();
-                    mImageSelector.get().setPageTransformer(true, new CustomPageViewTransformer());
-                    System.gc();
-                }
-            });
-            final int mDotCount = mImageControllerFragment.getCount();
-            final LinearLayout[] mDots = new LinearLayout[mDotCount];
-            for (int x = 0; x < mDotCount; x++) {
-                mDots[x] = new LinearLayout(mainActivity.get());
-                mDots[x].setBackgroundResource(R.drawable.indicator_unselected_item_oval);
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-                params.setMargins(0, 0, 4, 4);
-                mDots[x].setGravity(Gravity.RIGHT | Gravity.BOTTOM | Gravity.END);
-                indicators.get().addView(mDots[x], params);
-
-            }
-            mDots[0].setBackgroundResource(R.drawable.indicator_selected_item_oval);
-            mImageSelector.get().addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-                @Override
-                public void onPageScrolled(int i, float v, int i1) {
-
-                }
-
-                @Override
-                public void onPageSelected(int i) {
-                    for (int x = 0; x < mDotCount; x++) {
-                        mDots[x].setBackgroundResource(R.drawable.indicator_unselected_item_oval);
-                    }
-                    mainActivity.get().curr_pos_image = i;
-                    mDots[i].setBackgroundResource(R.drawable.indicator_selected_item_oval);
-                }
-
-                @Override
-                public void onPageScrollStateChanged(int i) {
-                    int pos = mImageSelector.get().getCurrentItem();
-                    // if reaching last and state is DRAGGING, back into first
-                    if (pos == memCache.size() - 1 && i == ViewPager.SCROLL_STATE_DRAGGING)
-                        mImageSelector.get().setCurrentItem(0, true);
-                }
-            });
-            System.gc();
-            mainActivity.get().has_finished = 1;
-            mainActivity.get().setHandlers(mainActivity.get().mImageSelector, memCache.size());
-        }
     }
 }

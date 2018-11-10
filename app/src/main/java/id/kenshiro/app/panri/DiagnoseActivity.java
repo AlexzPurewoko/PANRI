@@ -24,6 +24,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.mylexz.utils.DiskLruObjectCache;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.SimpleDiskLruCache;
@@ -42,6 +43,9 @@ import id.kenshiro.app.panri.helper.ListCiriCiriPenyakit;
 import id.kenshiro.app.panri.helper.ListNamaPenyakit;
 import id.kenshiro.app.panri.helper.ShowPenyakitDiagnoseHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
+import id.kenshiro.app.panri.important.KeyListClasses;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
+import io.fabric.sdk.android.Fabric;
 import pl.droidsonroids.gif.GifImageView;
 
 public class DiagnoseActivity extends MylexzActivity
@@ -58,23 +62,35 @@ public class DiagnoseActivity extends MylexzActivity
 	Button mTextPetaniDesc;
 	private boolean doubleBackToExitPressedOnce;
 	private boolean isDiagnosting = true;
+
+    private Handler handlerPetani;
+    private GifImageView imgPetaniKedipView;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.actdiagnose_maincontent);
-		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-		setMyActionBar();
-		setDB();
-		dialogShowHelper = new DialogShowHelper(this);
-		dialogShowHelper.buildLoadingLayout();
-		dialogShowHelper.showDialog();
+		final Fabric fabric = new Fabric.Builder(this)
+				.kits(new Crashlytics())
+				.debuggable(true)  // Enables Crashlytics debugger
+				.build();
+		Fabric.with(fabric);
 		try {
+			setContentView(R.layout.actdiagnose_maincontent);
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+			setMyActionBar();
+			setDB();
+			dialogShowHelper = new DialogShowHelper(this);
+			dialogShowHelper.buildLoadingLayout();
+			dialogShowHelper.showDialog();
 			PrepareHandlerTask prepareHandlerTask = new PrepareHandlerTask(this);
 			Handler handler = new Handler(Looper.getMainLooper());
 			handler.postDelayed(prepareHandlerTask, 50);
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (Throwable e) {
+			String keyEx = getClass().getName() + "_onCreate()";
+			String resE = String.format("UnHandled Exception Occurs(Throwable) e -> %s", e.toString());
+			LogIntoCrashlytics.logException(keyEx, resE, e);
+			LOGE(keyEx, resE);
 		}
 
 	}
@@ -92,6 +108,7 @@ public class DiagnoseActivity extends MylexzActivity
 
 	private void loadLayoutAndShow() {
 		mTextPetaniDesc = (Button) findViewById(R.id.actmain_id_section_petani_btn);
+        imgPetaniKedipView = findViewById(R.id.actsplash_id_gifpetanikedip);
 		mTextPetaniDesc.setTextColor(Color.BLACK);
 		mTextPetaniDesc.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.NORMAL);
 	    diagnoseActivityHelper = new DiagnoseActivityHelper(this, this.listNamaPenyakitHashMap, this.listCiriCiriPenyakitHashMap);
@@ -101,7 +118,8 @@ public class DiagnoseActivity extends MylexzActivity
             public void onPenyakitSelected(RecyclerView a, RelativeLayout b, HashMap<Integer, ListNamaPenyakit> c, int d, double e) {
                 String penyakit = c.get(d).getName();
 				//DiagnoseActivity.this.TOAST(Toast.LENGTH_LONG, "Padi Anda terdiagnosa penyakit %s sebesar %s.", penyakit, String.valueOf(e));
-				mTextPetaniDesc.setText(String.format(getString(R.string.actdiagnose_string_speechfarmer_3), penyakit, Math.round(e)));
+                //mTextPetaniDesc.setText(String.format(getString(R.string.actdiagnose_string_speechfarmer_3), penyakit, Math.round(e)));
+                onButtonPetaniClicked(String.format(getString(R.string.actdiagnose_string_speechfarmer_3), penyakit, Math.round(e)));
                 a.setVisibility(View.GONE);
                 b.setVisibility(View.GONE);
 				isDiagnosting = false;
@@ -111,12 +129,14 @@ public class DiagnoseActivity extends MylexzActivity
 
 			@Override
 			public void onTanyaSection() {
-				mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_2));
+                //mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_2));
+                onButtonPetaniClicked(getString(R.string.actdiagnose_string_speechfarmer_2));
 			}
 
 			@Override
 			public void onPilihCiriSection() {
-				mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
+                //mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
+                onButtonPetaniClicked(getString(R.string.actdiagnose_string_speechfarmer_1));
 
 			}
 		});
@@ -130,10 +150,30 @@ public class DiagnoseActivity extends MylexzActivity
             }
 		});
 	    diagnoseActivityHelper.buildAndShow();
-		mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
-	}
+        //mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
+        onButtonPetaniClicked(getString(R.string.actdiagnose_string_speechfarmer_1));
+    }
+
+    private void onButtonPetaniClicked(String text) {
+
+        mTextPetaniDesc.setText(text);
+        imgPetaniKedipView.setImageResource(R.drawable.petani_bicara);
+        if (handlerPetani == null) {
+            handlerPetani = new Handler();
+            handlerPetani.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    handlerPetani = null;
+                    System.gc();
+                    imgPetaniKedipView.setImageResource(R.drawable.petani_kedip);
+                }
+            }, 4000);
+        }
+        System.gc();
+    }
+
 	private void loadAllDataCiri() throws IOException, ClassNotFoundException {
-		listCiriCiriPenyakitHashMap = (HashMap<Integer, ListCiriCiriPenyakit>) diskCache.getObjectWithDecode(SplashScreenActivity.LIST_PENYAKIT_CIRI_KEY_CACHE);
+		listCiriCiriPenyakitHashMap = (HashMap<Integer, ListCiriCiriPenyakit>) diskCache.getObjectWithDecode(KeyListClasses.LIST_PENYAKIT_CIRI_KEY_CACHE);
 		diskCache.closeReading();
 	}
 
@@ -164,7 +204,7 @@ public class DiagnoseActivity extends MylexzActivity
 		System.gc();
 	}
 	private void setDB() {
-		sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/databases/database_penyakitpadi.db", null);
+		sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/files/database_penyakitpadi.db", null);
 	}
 
 	@Override
@@ -200,7 +240,8 @@ public class DiagnoseActivity extends MylexzActivity
 					showPenyakitDiagnoseHelper.getmContent1().setVisibility(View.GONE);
 					showPenyakitDiagnoseHelper.getmContentView().setVisibility(View.GONE);
 					mTextPetaniDesc.setOnClickListener(null);
-					mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
+                    //mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
+                    onButtonPetaniClicked(getString(R.string.actdiagnose_string_speechfarmer_1));
 					diagnoseActivityHelper.setOnPushBackButtonPressed(true);
 					isDiagnosting = true;
 					return false;
@@ -218,13 +259,12 @@ public class DiagnoseActivity extends MylexzActivity
 		sqlDB.close();
 		try {
 			diskCache.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		try {
 			showPenyakitDiagnoseHelper.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			String keyEx = getClass().getName() + "_onDestroy()";
+			String resE = String.format("Unable to close diskCache and showPenyakitDiagnoseHelper e -> %s", e.toString());
+			LogIntoCrashlytics.logException(keyEx, resE, e);
+			LOGE(keyEx, resE);
 		}
 		super.onDestroy();
 	}
@@ -265,10 +305,11 @@ public class DiagnoseActivity extends MylexzActivity
 			diagnoseActivity.get().loadListPenyakit();
 			try {
 				diagnoseActivity.get().loadAllDataCiri();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
+			} catch (Exception e) {
+				String keyEx = "PrepareHandleTask_run_gallery";
+				String resE = String.format("Unable to execute diagnoseActivity.get().loadAllDataCiri(); e -> %s", e.toString());
+				LogIntoCrashlytics.logException(keyEx, resE, e);
+				diagnoseActivity.get().LOGE(keyEx, resE);
 			}
 			diagnoseActivity.get().loadLayoutAndShow();
 			diagnoseActivity.get().dialogShowHelper.stopDialog();

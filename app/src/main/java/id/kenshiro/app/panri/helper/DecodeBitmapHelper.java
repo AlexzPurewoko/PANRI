@@ -5,7 +5,6 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.annotation.DrawableRes;
-import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Px;
 
@@ -46,7 +45,7 @@ public class DecodeBitmapHelper {
 
         // load image in inputstream
         Bitmap b = BitmapFactory.decodeStream(stream, null, optionBitmaps);
-        stream.reset();
+        //stream.reset();
         optionBitmaps.inSampleSize = calculateImageInSampleSize(optionBitmaps, reqHeight, reqWidth);
         optionBitmaps.inJustDecodeBounds = false;
         Bitmap results = BitmapFactory.decodeStream(stream, null, optionBitmaps);
@@ -54,6 +53,11 @@ public class DecodeBitmapHelper {
         System.gc();
         return results;
     }
+
+    public static Bitmap decodeBitmapStream(@NonNull InputStream stream) throws IOException {
+        return BitmapFactory.decodeStream(stream);
+    }
+
     public static int calculateImageInSampleSize(BitmapFactory.Options optionBitmaps, int reqHeight, int reqWidth) {
         final int height = optionBitmaps.outHeight;
         final int width = optionBitmaps.outWidth;

@@ -16,6 +16,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
@@ -25,6 +26,8 @@ import java.util.List;
 import id.kenshiro.app.panri.adapter.ImageGridViewAdapter;
 import id.kenshiro.app.panri.helper.DialogShowHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
+import io.fabric.sdk.android.Fabric;
 
 public class GalleryActivity extends MylexzActivity {
     Toolbar toolbar;
@@ -33,16 +36,28 @@ public class GalleryActivity extends MylexzActivity {
     private SQLiteDatabase sqlDB;
     List<String> dataPathGambar;
     private DialogShowHelper dialogShowHelper;
-    private static final String image_default_dirs = "data_hama/foto";
+    private String image_default_dirs;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.actgallery_main);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        setMyActionBar();
-        loadFromDB();
-
+        final Fabric fabric = new Fabric.Builder(this)
+                .kits(new Crashlytics())
+                .debuggable(true)  // Enables Crashlytics debugger
+                .build();
+        Fabric.with(fabric);
+        try {
+            setContentView(R.layout.actgallery_main);
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            this.image_default_dirs = getFilesDir().getAbsolutePath() + "/data/images/list";
+            setMyActionBar();
+            loadFromDB();
+        } catch (Throwable e) {
+            String keyEx = getClass().getName() + "_onCreate()";
+            String resE = String.format("UnHandled Exception Occurs(Throwable) e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            LOGE(keyEx, resE);
+        }
     }
 
     private void loadFromDB() {
@@ -54,7 +69,7 @@ public class GalleryActivity extends MylexzActivity {
             @Override
             public void run() {
                 synchronized (this) {
-                    sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/databases/database_penyakitpadi.db", null);
+                    sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/files/database_penyakitpadi.db", null);
                     dataPathGambar = new ArrayList<>();
                     Cursor cursor = sqlDB.rawQuery("select path_gambar from gambar_penyakit", null);
                     cursor.moveToFirst();
@@ -74,7 +89,7 @@ public class GalleryActivity extends MylexzActivity {
                     int dimen = Math.round(getResources().getDimension(R.dimen.margin_img_penyakit));
                     adapterGrid = new ImageGridViewAdapter(GalleryActivity.this, p, R.id.actgallery_id_gridimage);
                     adapterGrid.setColumnCount(2);
-                    adapterGrid.setListLocationAssetsImages(dataPathGambar, "gallery_act");
+                    adapterGrid.setListLocationFileImages(dataPathGambar, "gallery_act");
                     adapterGrid.setMargin(dimen, dimen, dimen, dimen, dimen);
                     adapterGrid.setOnItemClickListener(new ImageGridViewAdapter.OnItemClickListener() {
                                                            @Override

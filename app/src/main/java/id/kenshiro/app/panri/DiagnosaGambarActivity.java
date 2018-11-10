@@ -27,6 +27,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
@@ -35,6 +36,8 @@ import java.io.IOException;
 import id.kenshiro.app.panri.helper.ShowPenyakitDiagnoseHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 import id.kenshiro.app.panri.helper.TampilDiagnosaGambarHelper;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
+import io.fabric.sdk.android.Fabric;
 import pl.droidsonroids.gif.GifImageView;
 
 public class DiagnosaGambarActivity extends MylexzActivity {
@@ -43,24 +46,39 @@ public class DiagnosaGambarActivity extends MylexzActivity {
     TampilDiagnosaGambarHelper tampilDiagnosaGambarHelper;
     ShowPenyakitDiagnoseHelper showPenyakitDiagnoseHelper;
     Button mTextPetaniDesc;
+    private Handler handlerPetani;
     private RelativeLayout relativeLayout;
     private boolean doubleBackToExitPressedOnce;
+    private GifImageView imgPetaniKedipView;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.actdiagnoseimg_main);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        setMyActionBar();
-        setDB();
-        setContentV();
+        final Fabric fabric = new Fabric.Builder(this)
+                .kits(new Crashlytics())
+                .debuggable(true)  // Enables Crashlytics debugger
+                .build();
+        Fabric.with(fabric);
+        try {
+            setContentView(R.layout.actdiagnoseimg_main);
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            setMyActionBar();
+            setDB();
+            setContentV();
+        } catch (Throwable e) {
+            String keyEx = getClass().getName() + "_onCreate()";
+            String resE = String.format("UnHandled Exception Occurs(Throwable) e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            LOGE(keyEx, resE);
+        }
     }
 
     private void setContentV() {
         mTextPetaniDesc = (Button) findViewById(R.id.actmain_id_section_petani_btn);
+        imgPetaniKedipView = findViewById(R.id.actsplash_id_gifpetanikedip);
         mTextPetaniDesc.setTextColor(Color.BLACK);
         mTextPetaniDesc.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.NORMAL);
-        mTextPetaniDesc.setText(getText(R.string.actdiagnose_string_speechfarmer_img_1));
+        //mTextPetaniDesc.setText(getText(R.string.actdiagnose_string_speechfarmer_img_1));
         showPenyakitDiagnoseHelper = new ShowPenyakitDiagnoseHelper(this, sqlDB, (RelativeLayout) findViewById(R.id.actdim_id_layoutcontainer));
         tampilDiagnosaGambarHelper = new TampilDiagnosaGambarHelper(this, (RelativeLayout) findViewById(R.id.actdim_id_layoutcontainer), sqlDB);
         tampilDiagnosaGambarHelper.setOnItemListener(new TampilDiagnosaGambarHelper.OnItemListener() {
@@ -71,13 +89,13 @@ public class DiagnosaGambarActivity extends MylexzActivity {
                                                              tampilDiagnosaGambarHelper.hideContentView();
                                                              showPenyakitDiagnoseHelper.setmTextPetaniDesc(mTextPetaniDesc);
                                                              showPenyakitDiagnoseHelper.show(position);
-                                                             mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_img_2));
-
+                                                             //mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_img_2));
+                                                             onButtonPetaniClicked(getString(R.string.actdiagnose_string_speechfarmer_img_2));
                                                          }
 
                                                          @Override
                                                          public void onBtnTidakClicked(View v, View btn, int position) {
-
+                                                             onButtonPetaniClicked(getString(R.string.actdiagnose_string_speechfarmer_img_1));
                                                          }
 
                                                          @Override
@@ -130,7 +148,26 @@ public class DiagnosaGambarActivity extends MylexzActivity {
         showPenyakitDiagnoseHelper.build();
         tampilDiagnosaGambarHelper.buildAndShow();
         tampilDiagnosaGambarHelper.showContentView();
+        onButtonPetaniClicked(getString(R.string.actdiagnose_string_speechfarmer_img_1));
         //showPenyakitDiagnoseHelper.show(1);
+    }
+
+    private void onButtonPetaniClicked(String text) {
+
+        mTextPetaniDesc.setText(text);
+        imgPetaniKedipView.setImageResource(R.drawable.petani_bicara);
+        if (handlerPetani == null) {
+            handlerPetani = new Handler();
+            handlerPetani.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    handlerPetani = null;
+                    System.gc();
+                    imgPetaniKedipView.setImageResource(R.drawable.petani_kedip);
+                }
+            }, 4000);
+        }
+        System.gc();
     }
     @Override
     protected void onResume() {
@@ -142,7 +179,7 @@ public class DiagnosaGambarActivity extends MylexzActivity {
     }
 
     private void setDB() {
-        sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/databases/database_penyakitpadi.db", null);
+        sqlDB = SQLiteDatabase.openOrCreateDatabase("/data/data/id.kenshiro.app.panri/files/database_penyakitpadi.db", null);
     }
 
     @Override
@@ -212,7 +249,8 @@ public class DiagnosaGambarActivity extends MylexzActivity {
                     showPenyakitDiagnoseHelper.getmContentView().setVisibility(View.GONE);
                     tampilDiagnosaGambarHelper.showContentView();
                     mTextPetaniDesc.setOnClickListener(null);
-                    mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_img_1));
+                    //mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_img_1));
+                    onButtonPetaniClicked(getString(R.string.actdiagnose_string_speechfarmer_img_1));
                     tampilDiagnosaGambarHelper.mContentView.pageScroll(0);
                     //--showPenyakitDiagnoseHelper.countBtn;
                     return false;

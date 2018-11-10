@@ -17,13 +17,16 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.mylexz.utils.MylexzActivity;
 
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
 import id.kenshiro.app.panri.page_fragment_first_usage.FragmentFirstUse1;
 import id.kenshiro.app.panri.page_fragment_first_usage.FragmentFirstUse2;
 import id.kenshiro.app.panri.page_fragment_first_usage.FragmentFirstUse3;
 import id.kenshiro.app.panri.page_fragment_first_usage.FragmentFirstUse4;
+import io.fabric.sdk.android.Fabric;
 
 public class TutorialFirstUseActivity extends MylexzActivity {
     private static final int ON_BTN_BACK_CLICKED = 0xaaf;
@@ -63,11 +66,23 @@ public class TutorialFirstUseActivity extends MylexzActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.acttutor_main);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        setLayout();
-        setColorsLyt(colorResListsBtn[current_position]);
-        replaceFragment();
+        final Fabric fabric = new Fabric.Builder(this)
+                .kits(new Crashlytics())
+                .debuggable(true)  // Enables Crashlytics debugger
+                .build();
+        Fabric.with(fabric);
+        try {
+            setContentView(R.layout.acttutor_main);
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            setLayout();
+            setColorsLyt(colorResListsBtn[current_position]);
+            replaceFragment();
+        } catch (Throwable e) {
+            String keyEx = getClass().getName() + "_onCreate()";
+            String resE = String.format("UnHandled Exception Occurs(Throwable) e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            LOGE(keyEx, resE);
+        }
     }
 
     private void setColorsLyt(int resColors) {
