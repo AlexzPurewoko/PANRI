@@ -6,8 +6,8 @@
     "apkInfo": {
       "type": "MAIN",
       "splits": [],
-      "versionCode": 18110925,
-      "versionName": "2.5B091118s",
+      "versionCode": 18111025,
+      "versionName": "2.5B101118s",
       "enabled": true,
       "outputFile": "app-release.apk",
       "fullName": "release",
