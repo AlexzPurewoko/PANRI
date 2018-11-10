@@ -13,10 +13,13 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.crashlytics.android.Crashlytics;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
+import io.fabric.sdk.android.Fabric;
 
 public class AboutActivity extends MylexzActivity {
     TextView judul, version;
@@ -43,12 +46,25 @@ public class AboutActivity extends MylexzActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.actabout_main);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        setMyActionBar();
-        prepareLayout();
-        prepareAboutPeople();
-        setsWebContent();
+        final Fabric fabric = new Fabric.Builder(this)
+                .kits(new Crashlytics())
+                .debuggable(true)  // Enables Crashlytics debugger
+                .build();
+        Fabric.with(fabric);
+        // if any exception occurs
+        try {
+            setContentView(R.layout.actabout_main);
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            setMyActionBar();
+            prepareLayout();
+            prepareAboutPeople();
+            setsWebContent();
+        } catch (Throwable e) {
+            String keyEx = getClass().getName() + "_onCreate()";
+            String resE = String.format("UnHandled Exception Occurs(Throwable) e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            LOGE(keyEx, resE);
+        }
     }
 
     private void setsWebContent() {
@@ -65,7 +81,7 @@ public class AboutActivity extends MylexzActivity {
 
     private void prepareAboutPeople() {
         int[] imageResLocation = {
-                R.drawable.baseline_bug_report_black,
+                R.drawable.bu_purwari_puji,
                 R.drawable.roman_av,
                 R.drawable.bagus_cahyono,
                 R.drawable.alexpw,
@@ -84,7 +100,7 @@ public class AboutActivity extends MylexzActivity {
                 "Penanggung jawab",
                 "Produser\nDesainer\nArtist 2D",
                 "Programmer\nContent Writer",
-                "Software Engineer\nDeveloper Apps\nProgrammer",
+                "Software Engineer\nApp Developer\nProgrammer",
                 "Content Writer",
                 "Content Writer\nArtist 2D"
         };

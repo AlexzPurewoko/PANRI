@@ -15,6 +15,7 @@ import android.widget.TextView;
 import com.crashlytics.android.Crashlytics;
 import com.mylexz.utils.MylexzActivity;
 
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
 import io.fabric.sdk.android.Fabric;
 import id.kenshiro.app.panri.important.KeyListClasses;
 import id.kenshiro.app.panri.opt.onsplash.LoaderTask;
@@ -40,14 +41,21 @@ public class SplashScreenActivity extends MylexzActivity {
                 .debuggable(true)  // Enables Crashlytics debugger
                 .build();
         Fabric.with(fabric);
-        setContentView(R.layout.actsplash_main);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        setAllViews();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                getWindow().setStatusBarColor(getColor(R.color.color_status_white_dark));
-            } else
-                getWindow().setStatusBarColor(getResources().getColor(R.color.color_status_white_dark));
+        try {
+            setContentView(R.layout.actsplash_main);
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            setAllViews();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    getWindow().setStatusBarColor(getColor(R.color.color_status_white_dark));
+                } else
+                    getWindow().setStatusBarColor(getResources().getColor(R.color.color_status_white_dark));
+            }
+        } catch (Throwable e) {
+            String keyEx = getClass().getName() + "_onCreate()";
+            String resE = String.format("UnHandled Exception Occurs(Throwable) e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            LOGE(keyEx, resE);
         }
         // start a task into main activity
         new LoaderTask(this).execute();

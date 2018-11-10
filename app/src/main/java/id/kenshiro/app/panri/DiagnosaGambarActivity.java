@@ -27,6 +27,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
@@ -35,6 +36,8 @@ import java.io.IOException;
 import id.kenshiro.app.panri.helper.ShowPenyakitDiagnoseHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 import id.kenshiro.app.panri.helper.TampilDiagnosaGambarHelper;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
+import io.fabric.sdk.android.Fabric;
 import pl.droidsonroids.gif.GifImageView;
 
 public class DiagnosaGambarActivity extends MylexzActivity {
@@ -51,11 +54,23 @@ public class DiagnosaGambarActivity extends MylexzActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.actdiagnoseimg_main);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        setMyActionBar();
-        setDB();
-        setContentV();
+        final Fabric fabric = new Fabric.Builder(this)
+                .kits(new Crashlytics())
+                .debuggable(true)  // Enables Crashlytics debugger
+                .build();
+        Fabric.with(fabric);
+        try {
+            setContentView(R.layout.actdiagnoseimg_main);
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            setMyActionBar();
+            setDB();
+            setContentV();
+        } catch (Throwable e) {
+            String keyEx = getClass().getName() + "_onCreate()";
+            String resE = String.format("UnHandled Exception Occurs(Throwable) e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            LOGE(keyEx, resE);
+        }
     }
 
     private void setContentV() {

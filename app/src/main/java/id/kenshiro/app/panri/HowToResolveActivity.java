@@ -26,6 +26,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.text.TextSpanFormat;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
@@ -36,6 +37,8 @@ import java.io.IOException;
 import id.kenshiro.app.panri.adapter.AdapterRecycler;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 import id.kenshiro.app.panri.helper.TampilListPenyakitHelper;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
+import io.fabric.sdk.android.Fabric;
 import pl.droidsonroids.gif.GifImageView;
 
 public class HowToResolveActivity extends MylexzActivity {
@@ -57,17 +60,26 @@ public class HowToResolveActivity extends MylexzActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.acthowto_main);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        setMyActionBar();
-        setDB();
+        final Fabric fabric = new Fabric.Builder(this)
+                .kits(new Crashlytics())
+                .debuggable(true)  // Enables Crashlytics debugger
+                .build();
+        Fabric.with(fabric);
         try {
+            setContentView(R.layout.acthowto_main);
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            setMyActionBar();
+            setDB();
             setContent();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Throwable e) {
+            String keyEx = getClass().getName() + "_onCreate()";
+            String resE = String.format("UnHandled Exception Occurs(Throwable) e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            LOGE(keyEx, resE);
         }
     }
-    private void setContent() throws IOException {
+
+    private void setContent() {
         mTextPetaniDesc = (Button) findViewById(R.id.actmain_id_section_petani_btn);
         imgPetaniKedipView = findViewById(R.id.actsplash_id_gifpetanikedip);
         mTextPetaniDesc.setTextColor(Color.BLACK);
@@ -184,7 +196,10 @@ public class HowToResolveActivity extends MylexzActivity {
         try {
             tampil.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            String keyEx = getClass().getName() + "_onDestroy()";
+            String resE = String.format("Unable to execute tampil.close(); e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            LOGE(keyEx, resE);
         }
         super.onDestroy();
     }

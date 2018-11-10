@@ -24,6 +24,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.mylexz.utils.DiskLruObjectCache;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.SimpleDiskLruCache;
@@ -43,6 +44,8 @@ import id.kenshiro.app.panri.helper.ListNamaPenyakit;
 import id.kenshiro.app.panri.helper.ShowPenyakitDiagnoseHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 import id.kenshiro.app.panri.important.KeyListClasses;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
+import io.fabric.sdk.android.Fabric;
 import pl.droidsonroids.gif.GifImageView;
 
 public class DiagnoseActivity extends MylexzActivity
@@ -67,19 +70,27 @@ public class DiagnoseActivity extends MylexzActivity
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.actdiagnose_maincontent);
-		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-		setMyActionBar();
-		setDB();
-		dialogShowHelper = new DialogShowHelper(this);
-		dialogShowHelper.buildLoadingLayout();
-		dialogShowHelper.showDialog();
+		final Fabric fabric = new Fabric.Builder(this)
+				.kits(new Crashlytics())
+				.debuggable(true)  // Enables Crashlytics debugger
+				.build();
+		Fabric.with(fabric);
 		try {
+			setContentView(R.layout.actdiagnose_maincontent);
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+			setMyActionBar();
+			setDB();
+			dialogShowHelper = new DialogShowHelper(this);
+			dialogShowHelper.buildLoadingLayout();
+			dialogShowHelper.showDialog();
 			PrepareHandlerTask prepareHandlerTask = new PrepareHandlerTask(this);
 			Handler handler = new Handler(Looper.getMainLooper());
 			handler.postDelayed(prepareHandlerTask, 50);
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (Throwable e) {
+			String keyEx = getClass().getName() + "_onCreate()";
+			String resE = String.format("UnHandled Exception Occurs(Throwable) e -> %s", e.toString());
+			LogIntoCrashlytics.logException(keyEx, resE, e);
+			LOGE(keyEx, resE);
 		}
 
 	}
@@ -248,13 +259,12 @@ public class DiagnoseActivity extends MylexzActivity
 		sqlDB.close();
 		try {
 			diskCache.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		try {
 			showPenyakitDiagnoseHelper.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			String keyEx = getClass().getName() + "_onDestroy()";
+			String resE = String.format("Unable to close diskCache and showPenyakitDiagnoseHelper e -> %s", e.toString());
+			LogIntoCrashlytics.logException(keyEx, resE, e);
+			LOGE(keyEx, resE);
 		}
 		super.onDestroy();
 	}
@@ -295,10 +305,11 @@ public class DiagnoseActivity extends MylexzActivity
 			diagnoseActivity.get().loadListPenyakit();
 			try {
 				diagnoseActivity.get().loadAllDataCiri();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
+			} catch (Exception e) {
+				String keyEx = "PrepareHandleTask_run_gallery";
+				String resE = String.format("Unable to execute diagnoseActivity.get().loadAllDataCiri(); e -> %s", e.toString());
+				LogIntoCrashlytics.logException(keyEx, resE, e);
+				diagnoseActivity.get().LOGE(keyEx, resE);
 			}
 			diagnoseActivity.get().loadLayoutAndShow();
 			diagnoseActivity.get().dialogShowHelper.stopDialog();

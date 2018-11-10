@@ -19,11 +19,14 @@ import android.text.SpannableString;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 import id.kenshiro.app.panri.important.KeyListClasses;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
+import io.fabric.sdk.android.Fabric;
 
 public class PanriSettingActivity extends MylexzActivity {
     Toolbar toolbar;
@@ -33,10 +36,22 @@ public class PanriSettingActivity extends MylexzActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.actpreference_panrisettings);
-        setMyActionBar();
-        pref = getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE);
-        getFragmentManager().beginTransaction().replace(R.id.actsettings_id_placeholder, new PanriFragment()).commit();
+        final Fabric fabric = new Fabric.Builder(this)
+                .kits(new Crashlytics())
+                .debuggable(true)  // Enables Crashlytics debugger
+                .build();
+        Fabric.with(fabric);
+        try {
+            setContentView(R.layout.actpreference_panrisettings);
+            setMyActionBar();
+            pref = getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE);
+            getFragmentManager().beginTransaction().replace(R.id.actsettings_id_placeholder, new PanriFragment()).commit();
+        } catch (Throwable e) {
+            String keyEx = getClass().getName() + "_onCreate()";
+            String resE = String.format("UnHandled Exception Occurs(Throwable) e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            LOGE(keyEx, resE);
+        }
     }
 
     private void setMyActionBar() {

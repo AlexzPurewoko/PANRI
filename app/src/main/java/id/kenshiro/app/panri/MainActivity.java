@@ -27,6 +27,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.text.SpannableString;
 
+import com.crashlytics.android.Crashlytics;
 import com.mylexz.utils.DiskLruObjectCache;
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.SimpleDiskLruCache;
@@ -57,10 +58,12 @@ import id.kenshiro.app.panri.helper.CheckAndMoveDB;
 import id.kenshiro.app.panri.helper.DecodeBitmapHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 import id.kenshiro.app.panri.important.KeyListClasses;
+import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
 import id.kenshiro.app.panri.opt.onmain.CheckDBUpdateThread;
 import id.kenshiro.app.panri.opt.onmain.DialogOnMain;
 import id.kenshiro.app.panri.opt.onmain.PrepareBitmapViewPager;
 import id.kenshiro.app.panri.opt.onmain.TaskDownloadDBUpdates;
+import io.fabric.sdk.android.Fabric;
 import pl.droidsonroids.gif.GifImageView;
 
 import android.os.AsyncTask;
@@ -111,23 +114,35 @@ public class MainActivity extends MylexzActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        setDB();
-        setMyActionBar();
-        setInitialPagerData();
-        setInitialTextInds();
-        setInitialSectPetani();
-        setInitialSectOpIntent();
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
+        final Fabric fabric = new Fabric.Builder(this)
+                .kits(new Crashlytics())
+                .debuggable(true)  // Enables Crashlytics debugger
+                .build();
+        Fabric.with(fabric);
+        try {
+            setContentView(R.layout.activity_main);
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            setDB();
+            setMyActionBar();
+            setInitialPagerData();
+            setInitialTextInds();
+            setInitialSectPetani();
+            setInitialSectOpIntent();
+            DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+            ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                    this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+            drawer.addDrawerListener(toggle);
+            toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-        checkVersion();
+            NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+            navigationView.setNavigationItemSelectedListener(this);
+            checkVersion();
+        } catch (Throwable e) {
+            String keyEx = getClass().getName() + "_onCreate()";
+            String resE = String.format("UnHandled Exception Occurs(Throwable) e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            LOGE(keyEx, resE);
+        }
     }
 
     public void setAutoClickUpdate() {
@@ -278,7 +293,10 @@ public class MainActivity extends MylexzActivity
         try {
             new CheckAndMoveDB(this, "database_penyakitpadi.db").upgradeDB();
         } catch (IOException e) {
-            LOGE("MainActivity", "ERROR WHEN HANDLING checkAndMoveDB()", e);
+            String keyEx = getClass().getName() + "_setDB()";
+            String resE = String.format("ERROR WHEN HANDLING checkAndMoveDB() e -> %s", e.toString());
+            LogIntoCrashlytics.logException(keyEx, resE, e);
+            LOGE(keyEx, resE);
         }
     }
 
