@@ -10,6 +10,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Button;
@@ -40,7 +41,7 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
     private String image_default_dirs;
     // load layout elements
     private RelativeLayout mRootView, mContentView;
-    private WebView gejala, umum, caraatasi;
+    //private WebView gejala, umum, caraatasi;
     private TextView judul, latin;
     private CardView klikBawah;
     public TextView klikBawahText;
@@ -55,6 +56,11 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
     private Button mTextPetaniDesc;
     boolean mTxtPeralihan = false;
     private final DialogShowHelper dialogShowHelper;
+
+    // for item
+    LinearLayout baseUmumLayout;
+    CardView baseGejala, baseCaraAtasi;
+    boolean firstCondition = true;
     // dialog Alert
     public ShowPenyakitDiagnoseHelper(@NonNull MylexzActivity activity, @NonNull SQLiteDatabase sqLiteDatabase, @NonNull RelativeLayout mRootView){
         this.activity = activity;
@@ -77,13 +83,23 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         mContentView.setVisibility(View.GONE);
         mRootView.addView(mContentView);
     }
-    private void showKeyId(final int keyId){
+
+    private WebView[] showKeyId(final int keyId) {
         setPenyakitText(keyId);
         selectContentOnDB(keyId);
         setImagePager(keyId);
         mContentView.setVisibility(View.VISIBLE);
         mContent1.setVisibility(View.VISIBLE);
         mContent2.setVisibility(View.GONE);
+        if (!firstCondition) {
+            clearViewOn(baseUmumLayout, baseUmumLayout.getChildCount() - 1);
+            clearViewOn(baseGejala, baseGejala.getChildCount() - 1);
+            clearViewOn(baseCaraAtasi, baseCaraAtasi.getChildCount() - 1);
+        } else
+            firstCondition = true;
+        WebView umum = setWebView(baseUmumLayout);
+        WebView gejala = setWebView(baseGejala);
+        WebView caraatasi = setWebView(baseCaraAtasi);
         umum.setVisibility(View.GONE);
         gejala.setVisibility(View.GONE);
         caraatasi.setVisibility(View.GONE);
@@ -110,6 +126,7 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         umum.loadUrl(path_to_file + "" + dataPath.getUmum_path());
         gejala.loadUrl(path_to_file + "" + dataPath.getGejala_path());
         caraatasi.loadUrl(path_to_file + "" + dataPath.getCara_atasi_path());
+        return new WebView[]{umum, gejala, caraatasi};
     }
     public void show(final int keyId){
         dialogShowHelper.showDialog();
@@ -117,7 +134,7 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                showKeyId(keyId);
+                WebView[] key = showKeyId(keyId);
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
@@ -126,9 +143,9 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
                     LogIntoCrashlytics.logException(keyEx, resE, e);
                     activity.LOGE(keyEx, resE);
                 }
-                umum.setVisibility(View.VISIBLE);
-                gejala.setVisibility(View.VISIBLE);
-                caraatasi.setVisibility(View.VISIBLE);
+                key[0].setVisibility(View.VISIBLE);
+                key[1].setVisibility(View.VISIBLE);
+                key[2].setVisibility(View.VISIBLE);
                 dialogShowHelper.stopDialog();
             }
         }, 1000);
@@ -245,8 +262,10 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         mContent2.setVisibility(View.GONE);
         mContent1.setVisibility(View.VISIBLE);
         // prepare webView
-
-        gejala = (WebView) mContentView.findViewById(R.id.actdiagnose_id_gejala);
+        baseUmumLayout = mContentView.findViewById(R.id.actdiagnose_id_umumcard_baselayout);
+        baseGejala = mContentView.findViewById(R.id.actdiagnose_id_gejalacard);
+        baseCaraAtasi = mContentView.findViewById(R.id.actdiagnose_id_howtocard);
+        /*gejala = (WebView) mContentView.findViewById(R.id.actdiagnose_id_gejala);
         umum = (WebView) mContentView.findViewById(R.id.actdiagnose_id_umum);
         caraatasi = (WebView) mContentView.findViewById(R.id.actdiagnose_id_caraatasi);
         //// settings the whole webview
@@ -263,7 +282,7 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         WebSettings webCaraAtasiSettings = caraatasi.getSettings();
         webCaraAtasiSettings.setAllowContentAccess(true);
         webCaraAtasiSettings.setAllowFileAccessFromFileURLs(true);
-        webCaraAtasiSettings.setJavaScriptEnabled(true);
+        webCaraAtasiSettings.setJavaScriptEnabled(true);*/
         klikBawah = (CardView) mContentView.findViewById(R.id.actdiagnose_id_klikbawah);
         klikBawahText = (TextView) klikBawah.getChildAt(0);
         klikBawahText.setTypeface(Typeface.createFromAsset(activity.getAssets(), "Comic_Sans_MS3.ttf"));
@@ -301,6 +320,28 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
             }
         });
 
+    }
+
+    private WebView setWebView(ViewGroup baseLayout) {
+        WebView web = new WebView(activity);
+        web.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+        WebSettings webGejalaSettings = web.getSettings();
+        webGejalaSettings.setAllowContentAccess(true);
+        webGejalaSettings.setAllowFileAccessFromFileURLs(true);
+        webGejalaSettings.setJavaScriptEnabled(true);
+        baseLayout.addView(web);
+        return web;
+    }
+
+    private void clearViewOn(View baseLayout, int index) {
+        if (baseLayout instanceof LinearLayout) {
+            ((LinearLayout) baseLayout).removeViewAt(index);
+        } else if (baseLayout instanceof CardView) {
+            ((CardView) baseLayout).removeViewAt(index);
+        }
     }
     @Override
     public void close() throws IOException {

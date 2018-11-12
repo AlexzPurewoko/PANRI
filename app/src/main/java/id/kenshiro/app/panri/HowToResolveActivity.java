@@ -18,9 +18,12 @@ import android.text.SpannableString;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -47,7 +50,7 @@ public class HowToResolveActivity extends MylexzActivity {
     SQLiteDatabase sqlDB;
     ScrollView content_caraatasi;
     CardView cardBottom;
-    WebView webContent;
+    //WebView webContent;
     TextView penyakitnama, latinnya;
     String data_url;
     String name_penyakit;
@@ -56,6 +59,8 @@ public class HowToResolveActivity extends MylexzActivity {
     private boolean doubleBackToExitPressedOnce;
     private GifImageView imgPetaniKedipView;
     private Handler handlerPetani;
+    private boolean firstCondition = true;
+    private CardView webCard;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -100,7 +105,8 @@ public class HowToResolveActivity extends MylexzActivity {
         });
         penyakitnama = findViewById(R.id.acthowto_id_judulpenyakit);
         latinnya = findViewById(R.id.acthowto_id_namalatin);
-        webContent = findViewById(R.id.acthowto_id_caraatasi);
+        webCard = findViewById(R.id.howto_id_howtocard);
+        //webContent = findViewById(R.id.acthowto_id_caraatasi);
         tampil = new TampilListPenyakitHelper(this, sqlDB, (RelativeLayout) findViewById(R.id.acthowto_id_layoutcontainer));
         tampil.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
             @Override
@@ -170,6 +176,11 @@ public class HowToResolveActivity extends MylexzActivity {
     private void setCaraAtasiContent() {
         penyakitnama.setText(this.name_penyakit);
         latinnya.setText(this.name_latin == null ? "" : this.name_latin);
+        if (!firstCondition)
+            clearViewOn(webCard, webCard.getChildCount() - 1);
+        else
+            firstCondition = false;
+        WebView webContent = setWebView(webCard);
         webContent.loadUrl(this.data_url);
     }
 
@@ -259,5 +270,27 @@ public class HowToResolveActivity extends MylexzActivity {
     public boolean onSupportNavigateUp() {
         SwitchIntoMainActivity.switchToMain(this);
         return true;
+    }
+
+    private WebView setWebView(ViewGroup baseLayout) {
+        WebView web = new WebView(this);
+        web.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+        WebSettings webGejalaSettings = web.getSettings();
+        webGejalaSettings.setAllowContentAccess(true);
+        webGejalaSettings.setAllowFileAccessFromFileURLs(true);
+        webGejalaSettings.setJavaScriptEnabled(true);
+        baseLayout.addView(web);
+        return web;
+    }
+
+    private void clearViewOn(View baseLayout, int index) {
+        if (baseLayout instanceof LinearLayout) {
+            ((LinearLayout) baseLayout).removeViewAt(index);
+        } else if (baseLayout instanceof CardView) {
+            ((CardView) baseLayout).removeViewAt(index);
+        }
     }
 }
