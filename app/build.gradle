@@ -30,8 +30,8 @@ android {
         applicationId "id.kenshiro.app.panri"
         minSdkVersion 16
         targetSdkVersion 28
-        versionCode 18111025
-        versionName "2.5B101118s"
+        versionCode 181110251
+        versionName "2.51B101118s"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         signingConfig signingConfigs.panri_key
     }
@@ -65,6 +65,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation project(':mylexzlibrary')
     implementation 'pl.droidsonroids.gif:android-gif-drawable:+'
+    implementation 'com.felipecsl:gifimageview:2.2.0'
     // for firebase library and crashlytics
     implementation 'com.google.firebase:firebase-core:16.0.4'
     implementation 'com.google.firebase:firebase-storage:16.0.4'

@@ -27,4 +27,6 @@ public class KeyListClasses {
     public static final String KEY_IKLAN_VERSION = "data_iklan_version";
     public static final String KEY_APP_VERSION = "app_version";
     public static final String KEY_LIST_VERSION_DB = "DB_LIST_VERSION_EXTRAS";
+    public static final String FOLDER_IKLAN_CLOUD = "iklan";
+    public static final String NAME_IKLAN_DATABASES = "database_iklan.db";
 }

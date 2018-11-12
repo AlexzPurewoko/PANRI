@@ -122,7 +122,6 @@ public class MainActivity extends MylexzActivity
         try {
             setContentView(R.layout.activity_main);
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-            setDB();
             setMyActionBar();
             setInitialPagerData();
             setInitialTextInds();
@@ -294,18 +293,6 @@ public class MainActivity extends MylexzActivity
         });
         alert.show();
     }
-
-    private void setDB() {
-        try {
-            new CheckAndMoveDB(this, "database_penyakitpadi.db").upgradeDB();
-        } catch (IOException e) {
-            String keyEx = getClass().getName() + "_setDB()";
-            String resE = String.format("ERROR WHEN HANDLING checkAndMoveDB() e -> %s", e.toString());
-            LogIntoCrashlytics.logException(keyEx, resE, e);
-            LOGE(keyEx, resE);
-        }
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
