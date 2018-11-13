@@ -1,5 +1,6 @@
 package id.kenshiro.app.panri.helper;
 
+import android.annotation.SuppressLint;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
@@ -10,12 +11,15 @@ import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.CardView;
 import android.support.v4.util.LruCache;
 import android.view.Gravity;
 import android.view.View;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -24,6 +28,8 @@ import android.widget.TextView;
 
 import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.SimpleDiskLruCache;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -244,7 +250,22 @@ public class TampilDiagnosaGambarHelper implements Closeable{
                 int pos = customViewPager.getCurrentItem();
                 // if reaching last and state is DRAGGING, back into first
                 if (pos == mImagecache.size() - 1 && i == ViewPager.SCROLL_STATE_DRAGGING)
-                    customViewPager.setCurrentItem(0, true);
+                    try {
+                        customViewPager.setCurrentItem(0, true);
+                    } catch (NullPointerException e) {
+                        // handle it, if returned exception again, possible to not handle
+                        String keyEx = "onPageScrollStateChanged_PreparecontentTask_";
+                        String resE = String.format("cannot execute customViewPager.setCurrentItem(0, true); %s", e.toString());
+                        LogIntoCrashlytics.logException(keyEx, resE, e);
+                        try {
+                            customViewPager.setCurrentItem(1, true);
+                        } catch (Exception ex) {
+                            resE = String.format("cannot execute customViewPager.setCurrentItem(1, true); e -> %s", e.toString());
+                            LogIntoCrashlytics.logException(keyEx, resE, e);
+                        }
+                    } catch (Exception e) {
+                        // possible not to handle
+                    }
             }
         });
         // set the indicators
@@ -426,6 +447,7 @@ public class TampilDiagnosaGambarHelper implements Closeable{
         SimpleDiskLruCache diskLruObjectCache;
         private static final int QUALITY_FACTOR = 10;
         private static final long MAX_CACHE_BUFFERED_SIZE = 1048576;
+        WebView ciriP;
         private WeakReference<TampilDiagnosaGambarHelper> tampilDiagnosaGambarHelper;
         PreparecontentTask(TampilDiagnosaGambarHelper tampilDiagnosaGambarHelper) throws IOException {
             this.tampilDiagnosaGambarHelper = new WeakReference<>(tampilDiagnosaGambarHelper);
@@ -520,7 +542,8 @@ public class TampilDiagnosaGambarHelper implements Closeable{
             }
         }
 
-        private String getLasts(String resourceName) {
+        @NotNull
+        private String getLasts(@NotNull String resourceName) {
             StringBuffer stringBuffer = new StringBuffer();
             for(int x = resourceName.length() - 1; x >= 0; x--){
                 char s = resourceName.charAt(x);
@@ -545,8 +568,12 @@ public class TampilDiagnosaGambarHelper implements Closeable{
                     tampilDiagnosaGambarHelper.get().mContentView.pageScroll(0);
                 TextView judul = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_judulpenyakit);
                 CustomViewPager customViewPager = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_id_viewpagerimg);
+                LinearLayout base = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.adapterdim_basecontent);
                 LinearLayout indicators = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_id_layoutIndicators);
-                WebView ciriP = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_ciriciri);
+                // clean the WebView
+                cleanWebView(base);
+                WebView ciriTxt = setWebView(base);
+                //setupWebView();
                 // sets the judul
                 tampilDiagnosaGambarHelper.get().setJudulText(judul, tampilDiagnosaGambarHelper.get().dataCiriPenyakit.nama_penyakit);
 
@@ -554,7 +581,7 @@ public class TampilDiagnosaGambarHelper implements Closeable{
                 tampilDiagnosaGambarHelper.get().setViewPagerImage(customViewPager, indicators);
 
                 // sets the TextView CiriP
-                tampilDiagnosaGambarHelper.get().setCiriPenyakitText(ciriP, tampilDiagnosaGambarHelper.get().dataCiriPenyakit.listCiriHtml);
+                tampilDiagnosaGambarHelper.get().setCiriPenyakitText(ciriTxt, tampilDiagnosaGambarHelper.get().dataCiriPenyakit.listCiriHtml);
                 System.gc();
             }
             else if(integer == 2){
@@ -564,10 +591,11 @@ public class TampilDiagnosaGambarHelper implements Closeable{
                 TextView judul = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_judulpenyakit);
                 CustomViewPager customViewPager = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_id_viewpagerimg);
                 LinearLayout indicators = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_id_layoutIndicators);
-                WebView ciriP = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_ciriciri);
+                //ciriP = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.actimgdiagnose_ciriciri);
                 Button btnYa = tampilDiagnosaGambarHelper.get().btnBawah.findViewById(R.id.actimgdiagnose_buttonya);
                 Button btnTidak = tampilDiagnosaGambarHelper.get().btnBawah.findViewById(R.id.actimgdiagnose_buttontidak);
-
+                LinearLayout base = tampilDiagnosaGambarHelper.get().content.findViewById(R.id.adapterdim_basecontent);
+                WebView txtCiri = setWebView(base);
                 // sets the judul
                 tampilDiagnosaGambarHelper.get().setJudulText(judul, tampilDiagnosaGambarHelper.get().dataCiriPenyakit.nama_penyakit);
 
@@ -575,7 +603,7 @@ public class TampilDiagnosaGambarHelper implements Closeable{
                 tampilDiagnosaGambarHelper.get().setViewPagerImage(customViewPager, indicators);
 
                 // sets the TextView CiriP
-                tampilDiagnosaGambarHelper.get().setCiriPenyakitText(ciriP, tampilDiagnosaGambarHelper.get().dataCiriPenyakit.listCiriHtml);
+                tampilDiagnosaGambarHelper.get().setCiriPenyakitText(txtCiri, tampilDiagnosaGambarHelper.get().dataCiriPenyakit.listCiriHtml);
 
                 // sets the button
                 tampilDiagnosaGambarHelper.get().setBtn(btnYa, btnTidak);
@@ -588,5 +616,20 @@ public class TampilDiagnosaGambarHelper implements Closeable{
             tampilDiagnosaGambarHelper.get().dialogShowHelper.stopDialog();
         }
 
+        @NotNull
+        private WebView setWebView(@NotNull LinearLayout base) {
+            WebView web = new WebView(tampilDiagnosaGambarHelper.get().activity);
+            web.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            ));
+            base.addView(web);
+            return web;
+        }
+
+        @NotNull
+        private void cleanWebView(@NotNull LinearLayout base) {
+            base.removeViewAt(2);
+        }
     }
 }

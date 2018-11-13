@@ -21,6 +21,7 @@ import com.mylexz.utils.MylexzActivity;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
+import id.kenshiro.app.panri.MainActivity;
 import id.kenshiro.app.panri.R;
 import id.kenshiro.app.panri.important.KeyListClasses;
 
@@ -65,7 +66,7 @@ public class DialogOnMain {
         mAlert.show();
     }
 
-    public static void showDialogPasangIklan(final MylexzActivity activity) {
+    public static void showDialogPasangIklan(final MylexzActivity activity, final Uri uriData, String url) {
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder.setTitle("Pasang Iklan");
         builder.setIcon(R.mipmap.ic_launcher);
@@ -74,14 +75,14 @@ public class DialogOnMain {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
         ));
-        webView.loadUrl("file:///android_asset/introduce_ads.html");
+        webView.loadUrl(url);
         builder.setView(webView);
         builder.setPositiveButton("Hubungi Kami", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
                 Intent i = new Intent(Intent.ACTION_VIEW);
-                i.setData(Uri.parse("https://api.whatsapp.com/send?phone=6282223518455&text=Hallo%20Admin%20Saya%20Mau%20Pasang%20Iklan"));
+                i.setData(uriData);
                 PackageManager pm = activity.getPackageManager();
                 PackageInfo info = null;
                 try {
@@ -241,4 +242,61 @@ public class DialogOnMain {
         dialog.show();
     }
 
+    public static void showOnClickedIklanViews(final MylexzActivity activity, final String url, final String info_produk, final int methodPost) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        builder.setTitle("Iklan");
+        builder.setIcon(R.mipmap.ic_launcher);
+        WebView webView = new WebView(activity);
+        webView.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+        ));
+        webView.loadData(info_produk, "text/html", "utf-8");
+        builder.setView(webView);
+        builder.setPositiveButton("Hubungi Kami", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+
+                switch (methodPost) {
+                    case KeyListClasses.CALL_BY_WHATSAPP: {
+                        Intent i = new Intent(Intent.ACTION_VIEW);
+                        i.setData(Uri.parse(url));
+                        PackageManager pm = activity.getPackageManager();
+                        PackageInfo info = null;
+                        try {
+                            info = pm.getPackageInfo("com.whatsapp", PackageManager.GET_META_DATA);
+                        } catch (PackageManager.NameNotFoundException e) {
+                            e.printStackTrace();
+                            info = null;
+                        }
+                        if (info != null)
+                            i.setPackage("com.whatsapp");
+                        activity.startActivity(Intent.createChooser(i, "Hubungi Pengiklan"));
+                    }
+                    break;
+                    case KeyListClasses.CALL_BY_WEB: {
+                        Intent i = new Intent(Intent.ACTION_VIEW);
+                        i.setData(Uri.parse(url));
+                        activity.startActivity(Intent.createChooser(i, "Hubungi Pengiklan"));
+                    }
+                    break;
+                    case KeyListClasses.CALL_BY_TELEPHONE: {
+                        Intent i = new Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", url, null));
+                        activity.startActivity(Intent.createChooser(i, "Hubungi Pengiklan"));
+                    }
+                    break;
+                    //case KeyListClasses.CALL_BY_EMAIL:
+                }
+
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        builder.show();
+    }
 }

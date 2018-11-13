@@ -223,12 +223,13 @@ public class DiagnoseActivityHelper{
         count_when_accept++;
         view_mode_saved.add(view_modes);
         saved_temp_list_nums.add(temp_list_nums);
-        int itemPosition = temp_list_nums.get(cardPosition);
+        int itemPosition =
+                temp_list_nums.get(cardPosition);
 
         view_modes = listCiriCiriPenyakitHashMap.get(itemPosition).listused_mode_flags;
         // if reached the end
 
-        if(count_position_data >= temp_list_nums.size()){
+        if (count_position_data >= temp_list_nums.size() || listCiriCiriPenyakitHashMap.get(itemPosition).listused_flags == null) {
             // check whether the data ciri next is any or not
             boolean any = listCiriCiriPenyakitHashMap.get(itemPosition).listused_flags != null;
             if(!any) {

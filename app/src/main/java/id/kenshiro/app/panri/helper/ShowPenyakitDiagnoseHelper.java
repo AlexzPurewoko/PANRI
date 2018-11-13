@@ -1,15 +1,19 @@
 package id.kenshiro.app.panri.helper;
 
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Point;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Button;
@@ -27,10 +31,19 @@ import java.util.ArrayList;
 import java.util.List;
 import android.os.Handler;
 
+import org.jetbrains.annotations.NotNull;
+
 import id.kenshiro.app.panri.DiagnoseActivity;
+import id.kenshiro.app.panri.HowToResolveActivity;
 import id.kenshiro.app.panri.R;
 import id.kenshiro.app.panri.adapter.ImageGridViewAdapter;
+import id.kenshiro.app.panri.important.KeyListClasses;
 import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
+import id.kenshiro.app.panri.opt.ads.DownloadIklanFiles;
+import id.kenshiro.app.panri.opt.ads.GetResultedIklanThr;
+import id.kenshiro.app.panri.opt.ads.SendAdsBReceiver;
+import id.kenshiro.app.panri.opt.ads.UpdateAdsService;
+import id.kenshiro.app.panri.opt.onmain.DialogOnMain;
 import pl.droidsonroids.gif.GifImageView;
 
 public class ShowPenyakitDiagnoseHelper implements Closeable{
@@ -40,7 +53,7 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
     private String image_default_dirs;
     // load layout elements
     private RelativeLayout mRootView, mContentView;
-    private WebView gejala, umum, caraatasi;
+    //private WebView gejala, umum, caraatasi;
     private TextView judul, latin;
     private CardView klikBawah;
     public TextView klikBawahText;
@@ -55,6 +68,17 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
     private Button mTextPetaniDesc;
     boolean mTxtPeralihan = false;
     private final DialogShowHelper dialogShowHelper;
+
+    // for item
+    LinearLayout baseUmumLayout;
+    CardView baseGejala, baseCaraAtasi, basePasangIklan;
+    LinearLayout pasangIklanHolder;
+    boolean firstCondition = true;
+
+    private LinearLayout iklanHolder;
+    private SendAdsBReceiver sendAdsBReceiver = null;
+    List<com.felipecsl.gifimageview.library.GifImageView> gifImageViewListIklan = new ArrayList<>();
+
     // dialog Alert
     public ShowPenyakitDiagnoseHelper(@NonNull MylexzActivity activity, @NonNull SQLiteDatabase sqLiteDatabase, @NonNull RelativeLayout mRootView){
         this.activity = activity;
@@ -76,14 +100,25 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         // sets the layout visibility and apply into rootView
         mContentView.setVisibility(View.GONE);
         mRootView.addView(mContentView);
+        requestIklan();
     }
-    private void showKeyId(final int keyId){
+
+    private WebView[] showKeyId(final int keyId) {
         setPenyakitText(keyId);
         selectContentOnDB(keyId);
         setImagePager(keyId);
         mContentView.setVisibility(View.VISIBLE);
         mContent1.setVisibility(View.VISIBLE);
         mContent2.setVisibility(View.GONE);
+        if (!firstCondition) {
+            clearViewOn(baseUmumLayout, baseUmumLayout.getChildCount() - 1);
+            clearViewOn(baseGejala, baseGejala.getChildCount() - 1);
+            clearViewOn(baseCaraAtasi, baseCaraAtasi.getChildCount() - 1);
+        } else
+            firstCondition = true;
+        WebView umum = setWebView(baseUmumLayout);
+        WebView gejala = setWebView(baseGejala);
+        WebView caraatasi = setWebView(baseCaraAtasi);
         umum.setVisibility(View.GONE);
         gejala.setVisibility(View.GONE);
         caraatasi.setVisibility(View.GONE);
@@ -110,6 +145,8 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         umum.loadUrl(path_to_file + "" + dataPath.getUmum_path());
         gejala.loadUrl(path_to_file + "" + dataPath.getGejala_path());
         caraatasi.loadUrl(path_to_file + "" + dataPath.getCara_atasi_path());
+        startAnimIklan();
+        return new WebView[]{umum, gejala, caraatasi};
     }
     public void show(final int keyId){
         dialogShowHelper.showDialog();
@@ -117,7 +154,7 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                showKeyId(keyId);
+                WebView[] key = showKeyId(keyId);
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
@@ -126,9 +163,9 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
                     LogIntoCrashlytics.logException(keyEx, resE, e);
                     activity.LOGE(keyEx, resE);
                 }
-                umum.setVisibility(View.VISIBLE);
-                gejala.setVisibility(View.VISIBLE);
-                caraatasi.setVisibility(View.VISIBLE);
+                key[0].setVisibility(View.VISIBLE);
+                key[1].setVisibility(View.VISIBLE);
+                key[2].setVisibility(View.VISIBLE);
                 dialogShowHelper.stopDialog();
             }
         }, 1000);
@@ -191,6 +228,62 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         System.gc();
     }
 
+    private void requestIklan() {
+        sendAdsBReceiver = new SendAdsBReceiver(activity, new SendAdsBReceiver.OnReceiveAds() {
+            @Override
+            public void onReceiveByteAds(GetResultedIklanThr.ByteArray[] ads, DownloadIklanFiles.DBIklanCollection[] information) {
+                if (iklanHolder != null && ads != null && ads.length > 0) {
+                    //List<com.felipecsl.gifimageview.library.GifImageView> gifImageViewListIklan = new ArrayList<>();
+                    int x = 0;
+                    for (GetResultedIklanThr.ByteArray byteArr : ads) {
+                        byte[] bArr = byteArr.getArray();
+                        if (bArr != null && bArr.length > 1) {
+                            gifImageViewListIklan.add(setGifImgView(bArr, information[x]));
+                        }
+                        x++;
+                        //
+                    }
+                    // add its views
+                    for (com.felipecsl.gifimageview.library.GifImageView a : gifImageViewListIklan) {
+                        iklanHolder.addView(a);
+                    }
+                    for (int y = gifImageViewListIklan.size(); y < 2; y++) {
+                        pasangIklanHolder.getChildAt(pasangIklanHolder.getChildCount() - (y + 1)).setVisibility(View.VISIBLE);
+                    }
+                } else if (ads == null) {
+                    for (int x = 1; x <= 2; x++) {
+                        pasangIklanHolder.getChildAt(pasangIklanHolder.getChildCount() - x).setVisibility(View.VISIBLE);
+                    }
+                }
+                //
+            }
+
+            private com.felipecsl.gifimageview.library.GifImageView setGifImgView(byte[] bArr, final DownloadIklanFiles.DBIklanCollection info) {
+                com.felipecsl.gifimageview.library.GifImageView gifView = new com.felipecsl.gifimageview.library.GifImageView(activity);
+                gifView.setLayoutParams(new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                ));
+                gifView.setBytes(bArr);
+                gifView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        String url = info.getUrl();
+                        String info_produk = info.getInfo_produk();
+                        int methodPost = info.getTipe_url();
+                        DialogOnMain.showOnClickedIklanViews(activity, url, info_produk, methodPost);
+                    }
+                });
+                return gifView;
+            }
+        });
+        activity.registerReceiver(sendAdsBReceiver, new IntentFilter(KeyListClasses.INTENT_BROADCAST_SEND_IKLAN));
+        Intent intentService = new Intent(activity, UpdateAdsService.class);
+        intentService.putExtra(KeyListClasses.GET_ADS_MODE_START_SERVICE, KeyListClasses.IKLAN_MODE_GET_IKLAN);
+        intentService.putExtra(KeyListClasses.NUM_REQUEST_IKLAN_MODES, KeyListClasses.ADS_PLACED_ON_HOWTO);
+        activity.startService(intentService);
+        // send request into service
+    }
     private void selectContentOnDB(int keyId) {
         dataPath = new DataPath(null, null, null);
         // select umum_path
@@ -245,25 +338,22 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         mContent2.setVisibility(View.GONE);
         mContent1.setVisibility(View.VISIBLE);
         // prepare webView
-
-        gejala = (WebView) mContentView.findViewById(R.id.actdiagnose_id_gejala);
-        umum = (WebView) mContentView.findViewById(R.id.actdiagnose_id_umum);
-        caraatasi = (WebView) mContentView.findViewById(R.id.actdiagnose_id_caraatasi);
-        //// settings the whole webview
-        WebSettings webGejalaSettings = gejala.getSettings();
-        webGejalaSettings.setAllowContentAccess(true);
-        webGejalaSettings.setAllowFileAccessFromFileURLs(true);
-        webGejalaSettings.setJavaScriptEnabled(true);
-
-        WebSettings webUmumSettings = umum.getSettings();
-        webUmumSettings.setAllowContentAccess(true);
-        webUmumSettings.setAllowFileAccessFromFileURLs(true);
-        webUmumSettings.setJavaScriptEnabled(true);
-
-        WebSettings webCaraAtasiSettings = caraatasi.getSettings();
-        webCaraAtasiSettings.setAllowContentAccess(true);
-        webCaraAtasiSettings.setAllowFileAccessFromFileURLs(true);
-        webCaraAtasiSettings.setJavaScriptEnabled(true);
+        baseUmumLayout = mContentView.findViewById(R.id.actdiagnose_id_umumcard_baselayout);
+        baseGejala = mContentView.findViewById(R.id.actdiagnose_id_gejalacard);
+        baseCaraAtasi = mContentView.findViewById(R.id.actdiagnose_id_howtocard);
+        //iklanHolder = mContentView.findViewById(R.id.diagnose_iklan_layout);
+        pasangIklanHolder = mContentView.findViewById(R.id.diagnose_iklan_pasanglayout);
+        for (int x = 0; x < 2; x++) {
+            CardView cardView = (CardView) CardView.inflate(activity, R.layout.actmain_instadds, null);
+            cardView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    DialogOnMain.showDialogPasangIklan(activity, Uri.parse("https://api.whatsapp.com/send?phone=6282223518455&text=Hallo%20Admin%20Saya%20Mau%20Pasang%20Iklan"), "file:///android_asset/introduce_ads_howto.html");
+                }
+            });
+            cardView.setVisibility(View.GONE);
+            pasangIklanHolder.addView(cardView);
+        }
         klikBawah = (CardView) mContentView.findViewById(R.id.actdiagnose_id_klikbawah);
         klikBawahText = (TextView) klikBawah.getChildAt(0);
         klikBawahText.setTypeface(Typeface.createFromAsset(activity.getAssets(), "Comic_Sans_MS3.ttf"));
@@ -275,6 +365,7 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
                     onClickListener.onClick(mContentView); // the 1st parameters is main Content View so if you unvisible the layout its become easier
                     klikBawahText.setText(R.string.actdiagnose_string_klikcaramenanggulangi);
                     countBtn = 0;
+                    stopAnimIklan();
                 }
                 else {
                     // Do into cara_atasi
@@ -286,6 +377,12 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
                             mContent1.setVisibility(View.GONE);
                             mContent2.setVisibility(View.VISIBLE);
                             mScrollContent.pageScroll(1);
+                            if (gifImageViewListIklan != null && gifImageViewListIklan.size() >= 1) {
+                                for (com.felipecsl.gifimageview.library.GifImageView gif : gifImageViewListIklan) {
+                                    if (!gif.isAnimating())
+                                        gif.startAnimation();
+                                }
+                            }
                             klikBawahText.postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
@@ -302,10 +399,53 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         });
 
     }
+
+    public void stopAnimIklan() {
+        if (gifImageViewListIklan != null && gifImageViewListIklan.size() >= 1) {
+            for (com.felipecsl.gifimageview.library.GifImageView gif : gifImageViewListIklan) {
+                if (gif.isAnimating())
+                    gif.stopAnimation();
+            }
+        }
+    }
+
+    public void startAnimIklan() {
+        if (gifImageViewListIklan != null && gifImageViewListIklan.size() >= 1) {
+            for (com.felipecsl.gifimageview.library.GifImageView gif : gifImageViewListIklan) {
+                if (!gif.isAnimating())
+                    gif.startAnimation();
+            }
+        }
+    }
+
+
+    private WebView setWebView(@NotNull ViewGroup baseLayout) {
+        WebView web = new WebView(activity);
+        web.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+        WebSettings webGejalaSettings = web.getSettings();
+        webGejalaSettings.setAllowContentAccess(true);
+        webGejalaSettings.setAllowFileAccessFromFileURLs(true);
+        webGejalaSettings.setJavaScriptEnabled(true);
+        baseLayout.addView(web);
+        return web;
+    }
+
+    private void clearViewOn(View baseLayout, int index) {
+        if (baseLayout instanceof LinearLayout) {
+            ((LinearLayout) baseLayout).removeViewAt(index);
+        } else if (baseLayout instanceof CardView) {
+            ((CardView) baseLayout).removeViewAt(index);
+        }
+    }
     @Override
     public void close() throws IOException {
         if(imageViewPenyakit != null)
             imageViewPenyakit.close();
+        stopAnimIklan();
+        activity.unregisterReceiver(sendAdsBReceiver);
     }
 
     private class DataPath{

@@ -1,11 +1,14 @@
 package id.kenshiro.app.panri;
 
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -18,9 +21,12 @@ import android.text.SpannableString;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -33,11 +39,19 @@ import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import id.kenshiro.app.panri.adapter.AdapterRecycler;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 import id.kenshiro.app.panri.helper.TampilListPenyakitHelper;
+import id.kenshiro.app.panri.important.KeyListClasses;
 import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
+import id.kenshiro.app.panri.opt.ads.DownloadIklanFiles;
+import id.kenshiro.app.panri.opt.ads.GetResultedIklanThr;
+import id.kenshiro.app.panri.opt.ads.SendAdsBReceiver;
+import id.kenshiro.app.panri.opt.ads.UpdateAdsService;
+import id.kenshiro.app.panri.opt.onmain.DialogOnMain;
 import io.fabric.sdk.android.Fabric;
 import pl.droidsonroids.gif.GifImageView;
 
@@ -47,7 +61,7 @@ public class HowToResolveActivity extends MylexzActivity {
     SQLiteDatabase sqlDB;
     ScrollView content_caraatasi;
     CardView cardBottom;
-    WebView webContent;
+    //WebView webContent;
     TextView penyakitnama, latinnya;
     String data_url;
     String name_penyakit;
@@ -56,6 +70,12 @@ public class HowToResolveActivity extends MylexzActivity {
     private boolean doubleBackToExitPressedOnce;
     private GifImageView imgPetaniKedipView;
     private Handler handlerPetani;
+    private boolean firstCondition = true;
+    private CardView webCard;
+    private CardView basePasangIklan;
+    private LinearLayout iklanHolder, iklanPasang;
+    private SendAdsBReceiver sendAdsBReceiver = null;
+    List<com.felipecsl.gifimageview.library.GifImageView> gifImageViewListIklan = new ArrayList<>();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -71,12 +91,72 @@ public class HowToResolveActivity extends MylexzActivity {
             setMyActionBar();
             setDB();
             setContent();
+            requestIklan();
         } catch (Throwable e) {
             String keyEx = getClass().getName() + "_onCreate()";
             String resE = String.format("UnHandled Exception Occurs(Throwable) e -> %s", e.toString());
             LogIntoCrashlytics.logException(keyEx, resE, e);
             LOGE(keyEx, resE);
         }
+    }
+
+    private void requestIklan() {
+        sendAdsBReceiver = new SendAdsBReceiver(this, new SendAdsBReceiver.OnReceiveAds() {
+            @Override
+            public void onReceiveByteAds(GetResultedIklanThr.ByteArray[] ads, DownloadIklanFiles.DBIklanCollection[] information) {
+                if (iklanHolder != null && ads != null && ads.length > 0) {
+                    //List<com.felipecsl.gifimageview.library.GifImageView> gifImageViewListIklan = new ArrayList<>();
+                    int x = 0;
+                    for (GetResultedIklanThr.ByteArray byteArr : ads) {
+                        byte[] bArr = byteArr.getArray();
+                        if (bArr != null && bArr.length > 1) {
+                            gifImageViewListIklan.add(setGifImgView(bArr, information[x]));
+                        }
+                        x++;
+                        //
+                    }
+                    // add its views
+                    for (com.felipecsl.gifimageview.library.GifImageView a : gifImageViewListIklan) {
+                        iklanHolder.addView(a);
+                        a.startAnimation();
+                    }
+
+                    for (int y = gifImageViewListIklan.size(); y < 2; y++) {
+                        iklanPasang.getChildAt(iklanPasang.getChildCount() - (y + 1)).setVisibility(View.VISIBLE);
+                    }
+                } else if (ads == null) {
+                    for (int x = 1; x <= 2; x++) {
+                        iklanPasang.getChildAt(iklanPasang.getChildCount() - x).setVisibility(View.VISIBLE);
+                    }
+                }
+                //
+            }
+
+            private com.felipecsl.gifimageview.library.GifImageView setGifImgView(byte[] bArr, final DownloadIklanFiles.DBIklanCollection info) {
+                com.felipecsl.gifimageview.library.GifImageView gifView = new com.felipecsl.gifimageview.library.GifImageView(HowToResolveActivity.this);
+                gifView.setLayoutParams(new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                ));
+                gifView.setBytes(bArr);
+                gifView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        String url = info.getUrl();
+                        String info_produk = info.getInfo_produk();
+                        int methodPost = info.getTipe_url();
+                        DialogOnMain.showOnClickedIklanViews(HowToResolveActivity.this, url, info_produk, methodPost);
+                    }
+                });
+                return gifView;
+            }
+        });
+        registerReceiver(sendAdsBReceiver, new IntentFilter(KeyListClasses.INTENT_BROADCAST_SEND_IKLAN));
+        Intent intentService = new Intent(this, UpdateAdsService.class);
+        intentService.putExtra(KeyListClasses.GET_ADS_MODE_START_SERVICE, KeyListClasses.IKLAN_MODE_GET_IKLAN);
+        intentService.putExtra(KeyListClasses.NUM_REQUEST_IKLAN_MODES, KeyListClasses.ADS_PLACED_ON_HOWTO);
+        startService(intentService);
+        // send request into service
     }
 
     private void setContent() {
@@ -100,7 +180,8 @@ public class HowToResolveActivity extends MylexzActivity {
         });
         penyakitnama = findViewById(R.id.acthowto_id_judulpenyakit);
         latinnya = findViewById(R.id.acthowto_id_namalatin);
-        webContent = findViewById(R.id.acthowto_id_caraatasi);
+        webCard = findViewById(R.id.howto_id_howtocard);
+        //webContent = findViewById(R.id.acthowto_id_caraatasi);
         tampil = new TampilListPenyakitHelper(this, sqlDB, (RelativeLayout) findViewById(R.id.acthowto_id_layoutcontainer));
         tampil.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
             @Override
@@ -118,6 +199,19 @@ public class HowToResolveActivity extends MylexzActivity {
         tampil.buildAndShow();
         onButtonPetaniClicked(getText(R.string.acthowto_string_speechfarmer_1));
 
+        iklanPasang = findViewById(R.id.howto_iklan_pasanglayout);
+        for (int x = 0; x < 2; x++) {
+            CardView cardView = (CardView) CardView.inflate(this, R.layout.actmain_instadds, null);
+            cardView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    DialogOnMain.showDialogPasangIklan(HowToResolveActivity.this, Uri.parse("https://api.whatsapp.com/send?phone=6282223518455&text=Hallo%20Admin%20Saya%20Mau%20Pasang%20Iklan"), "file:///android_asset/introduce_ads_howto.html");
+                }
+            });
+            cardView.setVisibility(View.GONE);
+            iklanPasang.addView(cardView);
+        }
+        iklanHolder = findViewById(R.id.howto_iklan_layout);
     }
 
     private void loadDataFromDB(int position) {
@@ -170,6 +264,11 @@ public class HowToResolveActivity extends MylexzActivity {
     private void setCaraAtasiContent() {
         penyakitnama.setText(this.name_penyakit);
         latinnya.setText(this.name_latin == null ? "" : this.name_latin);
+        if (!firstCondition)
+            clearViewOn(webCard, webCard.getChildCount() - 1);
+        else
+            firstCondition = false;
+        WebView webContent = setWebView(webCard);
         webContent.loadUrl(this.data_url);
     }
 
@@ -179,6 +278,12 @@ public class HowToResolveActivity extends MylexzActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (gifImageViewListIklan != null && gifImageViewListIklan.size() >= 1) {
+            for (com.felipecsl.gifimageview.library.GifImageView gif : gifImageViewListIklan) {
+                if (!gif.isAnimating())
+                    gif.startAnimation();
+            }
+        }
     }
 
     @Override
@@ -201,6 +306,13 @@ public class HowToResolveActivity extends MylexzActivity {
             LogIntoCrashlytics.logException(keyEx, resE, e);
             LOGE(keyEx, resE);
         }
+        if (gifImageViewListIklan != null && gifImageViewListIklan.size() >= 1) {
+            for (com.felipecsl.gifimageview.library.GifImageView gif : gifImageViewListIklan) {
+                if (gif.isAnimating())
+                    gif.stopAnimation();
+            }
+        }
+        unregisterReceiver(sendAdsBReceiver);
         super.onDestroy();
     }
 
@@ -259,5 +371,27 @@ public class HowToResolveActivity extends MylexzActivity {
     public boolean onSupportNavigateUp() {
         SwitchIntoMainActivity.switchToMain(this);
         return true;
+    }
+
+    private WebView setWebView(ViewGroup baseLayout) {
+        WebView web = new WebView(this);
+        web.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+        WebSettings webGejalaSettings = web.getSettings();
+        webGejalaSettings.setAllowContentAccess(true);
+        webGejalaSettings.setAllowFileAccessFromFileURLs(true);
+        webGejalaSettings.setJavaScriptEnabled(true);
+        baseLayout.addView(web);
+        return web;
+    }
+
+    private void clearViewOn(View baseLayout, int index) {
+        if (baseLayout instanceof LinearLayout) {
+            ((LinearLayout) baseLayout).removeViewAt(index);
+        } else if (baseLayout instanceof CardView) {
+            ((CardView) baseLayout).removeViewAt(index);
+        }
     }
 }

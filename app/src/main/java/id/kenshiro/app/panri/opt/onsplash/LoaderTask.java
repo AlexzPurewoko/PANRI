@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 import id.kenshiro.app.panri.BuildConfig;
 import id.kenshiro.app.panri.MainActivity;
@@ -28,6 +29,7 @@ import id.kenshiro.app.panri.SplashScreenActivity;
 import id.kenshiro.app.panri.important.KeyListClasses;
 import id.kenshiro.app.panri.opt.CheckConnection;
 import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
+import id.kenshiro.app.panri.opt.ads.UpdateAdsService;
 
 public class LoaderTask extends AsyncTask<Void, String, Integer> {
     File fileCache;
@@ -94,6 +96,10 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
                     ctx.getFilesDir().mkdir();
                     try {
                         ExtractAndConfigureData.extractData(ctx, ctx.getFilesDir(), "data_panri.zip");
+                        File iklan = new File(ctx.getFilesDir(), KeyListClasses.FOLDER_IKLAN_CLOUD);
+                        iklan.mkdirs();
+                        if (getCurrentAdsVersionRenew() != 0)
+                            ExtractAndConfigureData.extractData(ctx, iklan, KeyListClasses.NAME_IKLAN_ON_ASSETS_PACK);
                     } catch (IOException e) {
                         LogIntoCrashlytics.logException("IOExceptionExtractData", String.format("IOException occured when Extract and configure data e -> %s", e.toString()), e);
                         e.printStackTrace();
@@ -103,7 +109,13 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
                 }
                 break;
                 case KeyListClasses.APP_IS_SAME_VERSION: {
-                    boolean isConnected = CheckConnection.isConnected(ctx);
+                    boolean isConnected = false;
+                    try {
+                        isConnected = CheckConnection.isConnected(ctx, 1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                        isConnected = false;
+                    }
                     if (!isConnected) {
                         boolean status_cache_dirs = validateCacheDirs();
                         if (status_cache_dirs) {
@@ -214,6 +226,12 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
         return ctx.app_condition;
     }
 
+    private int getCurrentAdsVersionRenew() throws IOException {
+        final String out = ExtractAndConfigureData.getStringFromAssets(ctx, "iklan_version");
+        if (out.equals("undefined")) return 0;
+        else return Integer.parseInt(out);
+    }
+
     private void updateAppDataInApp() {
         File disk = ctx.getFilesDir();
         // clean the files before update
@@ -223,6 +241,9 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
             FileUtils.deleteDirectory(new File(disk, "data"));
             FileUtils.deleteDirectory(new File(disk, "data_hama_html"));
             FileUtils.deleteQuietly(new File(disk, "database_penyakitpadi.db"));
+            File iklan = new File(disk, KeyListClasses.FOLDER_IKLAN_CLOUD);
+            if (iklan.exists())
+                FileUtils.deleteQuietly(iklan);
         } catch (IOException e) {
             String keyEx = "fileUtils_updateAppDataInApp_TaskDownloadDBUpdates";
             String resE = String.format("Cannot delete the selected directory e -> %s", e.toString());
@@ -234,6 +255,10 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
         // extract the data
         try {
             ExtractAndConfigureData.extractData(ctx, disk, "data_panri.zip");
+            File iklan = new File(ctx.getFilesDir(), KeyListClasses.FOLDER_IKLAN_CLOUD);
+            iklan.mkdirs();
+            if (getCurrentAdsVersionRenew() != 0)
+                ExtractAndConfigureData.extractData(ctx, iklan, KeyListClasses.NAME_IKLAN_ON_ASSETS_PACK);
         } catch (IOException e) {
             LogIntoCrashlytics.logException("IOExceptionExtractData", String.format("IOException occured when Extract and configure data e -> %s", e.toString()), e);
             e.printStackTrace();
@@ -292,8 +317,9 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
                 ctx.db_condition = KeyListClasses.DB_IS_SAME_VERSION;
             }
         }
-        //gifImageView.setVisibility(View.GONE);
-        //btnNext.setVisibility(View.VISIBLE);
+        Intent intentService = new Intent(ctx, UpdateAdsService.class);
+        intentService.putExtra(KeyListClasses.GET_ADS_MODE_START_SERVICE, KeyListClasses.IKLAN_MODE_START_SERVICE);
+        ctx.startService(intentService);
         animateAndForward();
 
     }
