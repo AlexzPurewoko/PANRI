@@ -115,7 +115,7 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
             clearViewOn(baseGejala, baseGejala.getChildCount() - 1);
             clearViewOn(baseCaraAtasi, baseCaraAtasi.getChildCount() - 1);
         } else
-            firstCondition = true;
+            firstCondition = false;
         WebView umum = setWebView(baseUmumLayout);
         WebView gejala = setWebView(baseGejala);
         WebView caraatasi = setWebView(baseCaraAtasi);
@@ -138,9 +138,6 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
                 }
             });
         mScrollContent.pageScroll(1);
-        umum.clearCache(false);
-        gejala.clearCache(false);
-        caraatasi.clearCache(false);
 
         umum.loadUrl(path_to_file + "" + dataPath.getUmum_path());
         gejala.loadUrl(path_to_file + "" + dataPath.getGejala_path());
