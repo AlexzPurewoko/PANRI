@@ -3,6 +3,7 @@ package id.kenshiro.app.panri;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -59,6 +60,10 @@ import id.kenshiro.app.panri.helper.DecodeBitmapHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 import id.kenshiro.app.panri.important.KeyListClasses;
 import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
+import id.kenshiro.app.panri.opt.ads.DownloadIklanFiles;
+import id.kenshiro.app.panri.opt.ads.GetResultedIklanThr;
+import id.kenshiro.app.panri.opt.ads.SendAdsBReceiver;
+import id.kenshiro.app.panri.opt.ads.UpdateAdsService;
 import id.kenshiro.app.panri.opt.onmain.CheckDBUpdateThread;
 import id.kenshiro.app.panri.opt.onmain.DialogOnMain;
 import id.kenshiro.app.panri.opt.onmain.PrepareBitmapViewPager;
@@ -111,6 +116,10 @@ public class MainActivity extends MylexzActivity
     private WeakReference<PrepareBitmapViewPager> prepareBitmapViewPagerWeakReference;
     public int has_finished = 0;
 
+    List<CardView> iklanCart = new ArrayList<CardView>();
+    private SendAdsBReceiver sendAdsBReceiver = null;
+    private LinearLayout adsLayout;
+    List<com.felipecsl.gifimageview.library.GifImageView> gifImageViewListIklan = new ArrayList<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -136,6 +145,61 @@ public class MainActivity extends MylexzActivity
             NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
             navigationView.setNavigationItemSelectedListener(this);
             checkVersion();
+            sendAdsBReceiver = new SendAdsBReceiver(this, new SendAdsBReceiver.OnReceiveAds() {
+                @Override
+                public void onReceiveByteAds(GetResultedIklanThr.ByteArray[] ads, DownloadIklanFiles.DBIklanCollection[] information) {
+                    if (adsLayout != null && ads != null && ads.length > 0) {
+                        //List<com.felipecsl.gifimageview.library.GifImageView> gifImageViewListIklan = new ArrayList<>();
+                        int x = 0;
+                        for (GetResultedIklanThr.ByteArray byteArr : ads) {
+                            byte[] bArr = byteArr.getArray();
+                            if (bArr != null && bArr.length > 1) {
+                                gifImageViewListIklan.add(setGifImgView(bArr, information[x]));
+                            }
+                            x++;
+                            //
+                        }
+                        // add its views
+                        for (com.felipecsl.gifimageview.library.GifImageView a : gifImageViewListIklan) {
+                            adsLayout.addView(a);
+                            a.startAnimation();
+                        }
+                        for (int y = gifImageViewListIklan.size(); y < 2; y++) {
+                            mListOp.getChildAt(mListOp.getChildCount() - (y + 1)).setVisibility(View.VISIBLE);
+                        }
+                    } else if (ads == null) {
+                        for (int x = 1; x <= 2; x++) {
+                            mListOp.getChildAt(mListOp.getChildCount() - x).setVisibility(View.VISIBLE);
+                        }
+                    }
+                    //
+                }
+
+                private com.felipecsl.gifimageview.library.GifImageView setGifImgView(byte[] bArr, final DownloadIklanFiles.DBIklanCollection info) {
+                    com.felipecsl.gifimageview.library.GifImageView gifView = new com.felipecsl.gifimageview.library.GifImageView(MainActivity.this);
+                    gifView.setLayoutParams(new LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT
+                    ));
+                    gifView.setBytes(bArr);
+                    gifView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            String url = info.getUrl();
+                            String info_produk = info.getInfo_produk();
+                            int methodPost = info.getTipe_url();
+                            DialogOnMain.showOnClickedIklanViews(MainActivity.this, url, info_produk, methodPost);
+                        }
+                    });
+                    return gifView;
+                }
+            });
+            registerReceiver(sendAdsBReceiver, new IntentFilter(KeyListClasses.INTENT_BROADCAST_SEND_IKLAN));
+            // start intent into service
+            Intent intentService = new Intent(this, UpdateAdsService.class);
+            intentService.putExtra(KeyListClasses.GET_ADS_MODE_START_SERVICE, KeyListClasses.IKLAN_MODE_GET_IKLAN);
+            intentService.putExtra(KeyListClasses.NUM_REQUEST_IKLAN_MODES, KeyListClasses.ADS_PLACED_ON_MAIN);
+            startService(intentService);
         } catch (Throwable e) {
             String keyEx = getClass().getName() + "_onCreate()";
             String resE = String.format("UnHandled Exception Occurs(Throwable) e -> %s", e.toString());
@@ -299,6 +363,14 @@ public class MainActivity extends MylexzActivity
         if (has_finished == 1) {
             setHandlers(mImageSelector, mImageMemCache.size());
             setAutoClickUpdate();
+            // start animate gif if they not activated
+            //gifImageViewListIklan
+            if (gifImageViewListIklan != null && gifImageViewListIklan.size() >= 1) {
+                for (com.felipecsl.gifimageview.library.GifImageView gif : gifImageViewListIklan) {
+                    if (!gif.isAnimating())
+                        gif.startAnimation();
+                }
+            }
         }
     }
 
@@ -306,6 +378,13 @@ public class MainActivity extends MylexzActivity
     protected void onPause() {
         clearHandlers(mImageSwitcher);
         clearAutoClickUpdate(mAutoClickHandler);
+        // pause the iklan
+        if (gifImageViewListIklan != null && gifImageViewListIklan.size() >= 1) {
+            for (com.felipecsl.gifimageview.library.GifImageView gif : gifImageViewListIklan) {
+                if (gif.isAnimating())
+                    gif.stopAnimation();
+            }
+        }
         super.onPause();
     }
 
@@ -448,14 +527,26 @@ public class MainActivity extends MylexzActivity
     }
 
     private void addPasangIklanCard() {
-        CardView cardView = (CardView) CardView.inflate(this, R.layout.actmain_instadds, null);
-        cardView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                DialogOnMain.showDialogPasangIklan(MainActivity.this);
-            }
-        });
-        mListOp.addView(cardView);
+        adsLayout = new LinearLayout(this);
+        adsLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
+        adsLayout.setBackgroundColor(Color.TRANSPARENT);
+        adsLayout.setOrientation(LinearLayout.VERTICAL);
+        mListOp.addView(adsLayout);
+        //iklanCart = new ArrayList<>();
+        for (int x = 0; x < 2; x++) {
+            CardView cardView = (CardView) CardView.inflate(this, R.layout.actmain_instadds, null);
+            cardView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    DialogOnMain.showDialogPasangIklan(MainActivity.this, Uri.parse("https://api.whatsapp.com/send?phone=6282223518455&text=Hallo%20Admin%20Saya%20Mau%20Pasang%20Iklan"), "file:///android_asset/introduce_ads_main.html");
+                }
+            });
+            cardView.setVisibility(View.GONE);
+            mListOp.addView(cardView);
+        }
     }
 
     private void onButtonPetaniClicked(boolean isOnStart) {
@@ -580,6 +671,13 @@ public class MainActivity extends MylexzActivity
             }
             mImageMemCache.evictAll();
         }
+        if (gifImageViewListIklan != null && gifImageViewListIklan.size() >= 1) {
+            for (com.felipecsl.gifimageview.library.GifImageView gif : gifImageViewListIklan) {
+                if (gif.isAnimating())
+                    gif.stopAnimation();
+            }
+        }
+        unregisterReceiver(sendAdsBReceiver);
         super.onDestroy();
     }
 }

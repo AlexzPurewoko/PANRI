@@ -45,4 +45,11 @@ public class KeyListClasses {
 
     public static final String EXTRA_LIST_IKLAN_FILE_BYTES = "DATA_FILE_IKLAN_BYTE_EXTRAS";
     public static final String INTENT_BROADCAST_SEND_IKLAN = "id.kenshiro.app.panri.SEND_IKLAN_RESULTED";
+    ////// method post iklan
+    public static final int CALL_BY_WHATSAPP = 0x0;
+    public static final int CALL_BY_WEB = 0x1;
+    public static final int CALL_BY_TELEPHONE = 0x2;
+    public static final int CALL_BY_EMAIL = 0x3;
+    ////// name iklan on assets
+    public static final String NAME_IKLAN_ON_ASSETS_PACK = "data_iklan.zip";
 }

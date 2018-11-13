@@ -1,5 +1,7 @@
 package id.kenshiro.app.panri.opt.ads;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
@@ -22,6 +24,7 @@ public class GetCollectionDBThr implements Runnable {
 
     @Override
     public void run() {
+        if (getCurrentAdsVersion() == 0) return;
         if (threadPerformCallbacks != null)
             threadPerformCallbacks.onStarting(this);
         // lock the db
@@ -43,6 +46,13 @@ public class GetCollectionDBThr implements Runnable {
         }
         if (threadPerformCallbacks != null)
             threadPerformCallbacks.onCompleted(this, collections);
+    }
+
+    private int getCurrentAdsVersion() {
+        SharedPreferences shareds = service.getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE);
+        String str = shareds.getString(KeyListClasses.KEY_IKLAN_VERSION, null);
+        if (str.equals("undefined")) return 0;
+        else return Integer.parseInt(str);
     }
 
     private void extractMetadataFromSQL(File file) {

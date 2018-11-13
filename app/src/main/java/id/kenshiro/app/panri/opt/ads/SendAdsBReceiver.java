@@ -29,8 +29,12 @@ public class SendAdsBReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         // open the bundle extras
         Bundle received = intent.getExtras();
-        if (receiveAdscallbacks != null)
-            receiveAdscallbacks.onReceiveByteAds((GetResultedIklanThr.ByteArray[]) received.getParcelableArray(KeyListClasses.EXTRA_LIST_IKLAN_FILE_BYTES), (DownloadIklanFiles.DBIklanCollection[]) received.getParcelableArray(KeyListClasses.EXTRA_LIST_INFO_IKLAN));
+        if (activityWeakReference != null && activityWeakReference.get() != null && !activityWeakReference.get().isFinishing() && receiveAdscallbacks != null) {
+            if (received.getParcelableArray(KeyListClasses.EXTRA_LIST_IKLAN_FILE_BYTES) == null)
+                receiveAdscallbacks.onReceiveByteAds(null, null);
+            else
+                receiveAdscallbacks.onReceiveByteAds((GetResultedIklanThr.ByteArray[]) received.getParcelableArray(KeyListClasses.EXTRA_LIST_IKLAN_FILE_BYTES), (DownloadIklanFiles.DBIklanCollection[]) received.getParcelableArray(KeyListClasses.EXTRA_LIST_INFO_IKLAN));
+        }
     }
 
     public interface OnReceiveAds {

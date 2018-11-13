@@ -45,7 +45,6 @@ public class DownloadIklanFiles implements Runnable {
 
     @Override
     public void run() {
-        if (currVersion == 0) return;
         if (threadPerformCallbacks != null)
             threadPerformCallbacks.onStarting(this);
         firebaseStorage = FirebaseStorage.getInstance();
@@ -107,6 +106,7 @@ public class DownloadIklanFiles implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         if (threadPerformCallbacks != null)
             threadPerformCallbacks.onCompleted(this, collections);
     }

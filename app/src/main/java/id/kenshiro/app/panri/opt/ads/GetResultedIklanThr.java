@@ -33,7 +33,15 @@ public class GetResultedIklanThr implements Runnable {
     @Override
     public void run() {
         // if ads is undefined, then stop it !
-        if (getCurrentAdsVersion() == 0) return;
+        if (getCurrentAdsVersion() == 0) {
+            Bundle args = new Bundle();
+            args.putParcelableArray(KeyListClasses.EXTRA_LIST_IKLAN_FILE_BYTES, null);
+            args.putParcelableArray(KeyListClasses.EXTRA_LIST_INFO_IKLAN, null);
+            Intent broadcast = new Intent(KeyListClasses.INTENT_BROADCAST_SEND_IKLAN);
+            broadcast.putExtras(args);
+            service.sendBroadcast(broadcast);
+            return;
+        }
         while (service.isIklanFolderLocked.get()) {
             try {
                 Thread.sleep(90);
@@ -111,6 +119,10 @@ public class GetResultedIklanThr implements Runnable {
 
         public void setArray(byte[] array) {
             this.array = array;
+        }
+
+        public byte[] getArray() {
+            return array;
         }
 
         @Override

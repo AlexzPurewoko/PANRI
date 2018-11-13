@@ -25,6 +25,7 @@ public class AboutActivity extends MylexzActivity {
     TextView judul, version;
     LinearLayout about_people_container;
     WebView content_special_thanks;
+    WebView content_third_party;
     private Toolbar toolbar;
     private static final String[] listsThanksTo = {
             "SMKN 1 Giritontro",
@@ -33,16 +34,18 @@ public class AboutActivity extends MylexzActivity {
             "Pak Wahyudi selaku narasumber dari validasi data penyakit",
             "BPP (Balai Penyuluhan Pertanian) 'Harjaning Tani' Giriwoyo",
             "Android Studio",
-            "<a href=\"https://stackoverflow.com\">StackOverflow</a>",
-            "Library pihak ketiga : <a href=\"https://github.com/koral--/android-gif-drawable\">GifImageView (pl.droidsonroids.gif:android-gif-drawable)</a>",
-            "Library pihak ketiga : <a href=\"https://github.com/AlexzPurewoko/MyLEXZ-Library\">MyLEXZ Library</a>",
-            "Library pihak ketiga : <a href=\"https://commons.apache.org/codec\">Apache Commons Codec</a>",
-            "Library pihak ketiga : <a href=\"https://firebase.google.com\">Google Firebase</a>",
-            "Library pihak ketiga : <a href=\"https://fabric.io\">Fabric Crashlytics</a>",
-            "Library pihak ketiga : <a href=\"https://commons.apache.org/proper/commons-io\">Apache Commons IO</a>"
+            "<a href=\"https://stackoverflow.com\">StackOverflow</a>"
     };
 
-
+    private static final String[] listThirdPartyLib = {
+            "<a href=\"https://github.com/koral--/android-gif-drawable\">GifImageView (pl.droidsonroids.gif:android-gif-drawable)</a>",
+            "<a href=\"https://github.com/AlexzPurewoko/MyLEXZ-Library\">MyLEXZ Library</a>",
+            "<a href=\"https://commons.apache.org/codec\">Apache Commons Codec</a>",
+            "<a href=\"https://firebase.google.com\">Google Firebase</a>",
+            "<a href=\"https://fabric.io\">Fabric Crashlytics</a>",
+            "<a href=\"https://commons.apache.org/proper/commons-io\">Apache Commons IO</a>",
+            "<a href=\"https://github.com/felipecsl/GifImageView\">GifImageView felpecsl(com.felipecsl:gifimageview:2.2.0)</a>"
+    };
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,12 +62,25 @@ public class AboutActivity extends MylexzActivity {
             prepareLayout();
             prepareAboutPeople();
             setsWebContent();
+            setsThirdParty();
         } catch (Throwable e) {
             String keyEx = getClass().getName() + "_onCreate()";
             String resE = String.format("UnHandled Exception Occurs(Throwable) e -> %s", e.toString());
             LogIntoCrashlytics.logException(keyEx, resE, e);
             LOGE(keyEx, resE);
         }
+    }
+
+    private void setsThirdParty() {
+        StringBuffer strHTML = new StringBuffer();
+        strHTML.append("<ul> <br />");
+        for (String x : listThirdPartyLib) {
+            strHTML.append("<li>");
+            strHTML.append(x);
+            strHTML.append("</li> <br />");
+        }
+        strHTML.append("</ul>");
+        content_third_party.loadData(strHTML.toString(), "text/html", "utf-8");
     }
 
     private void setsWebContent() {
@@ -131,6 +147,7 @@ public class AboutActivity extends MylexzActivity {
         version = findViewById(R.id.actabout_id_txtversion);
         about_people_container = findViewById(R.id.actabout_id_container_add);
         content_special_thanks = findViewById(R.id.actabout_id_content_special_thanks);
+        content_third_party = findViewById(R.id.actabout_id_content_third_party);
         setTxtV();
     }
 
@@ -138,6 +155,17 @@ public class AboutActivity extends MylexzActivity {
         judul.setTypeface(Typeface.createFromAsset(getAssets(), "Gecko_PersonalUseOnly.ttf"), Typeface.BOLD);
         String versionId = BuildConfig.VERSION_NAME;
         version.append(versionId);
+        switch (versionId.charAt(3) - '0') {
+            case 0:
+                version.append(" (alpha)");
+                break;
+            case 1:
+                version.append(" (beta)");
+                break;
+            case 2:
+                version.append(" (stable)");
+                break;
+        }
     }
 
     private void setMyActionBar() {

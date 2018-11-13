@@ -109,6 +109,7 @@ public class CheckAdsUpdates implements Runnable {
                         e.printStackTrace();
                     }
                 }
+                synchronizeIklanVersion(cloudVersion);
             }
 
 
@@ -116,8 +117,19 @@ public class CheckAdsUpdates implements Runnable {
             threadPerformCallbacks.onCancelled(this, new ConnectException("Cannot Connect into the cloud!"), null);
     }
 
+    private void synchronizeIklanVersion(int cloudVersion) {
+        SharedPreferences shareds = service.getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE);
+        String str = "" + cloudVersion;
+        shareds.edit().putString(KeyListClasses.KEY_IKLAN_VERSION, str).commit();
+    }
+
     private boolean cekKoneksi() {
-        return CheckConnection.isConnected(service);
+        try {
+            return CheckConnection.isConnected(service, 1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     private int getCurrentAdsVersion() {

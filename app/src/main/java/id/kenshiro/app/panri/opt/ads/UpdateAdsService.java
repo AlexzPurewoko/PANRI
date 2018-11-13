@@ -16,11 +16,11 @@ import id.kenshiro.app.panri.opt.onsplash.ThreadPerformCallbacks;
 
 public class UpdateAdsService extends Service {
     // for controlling the service alived
-    Thread remoteService;
+    Thread remoteService = null;
     // for checking the ads update
-    Thread checkAdsUpdate;
+    Thread checkAdsUpdate = null;
     // for get collections on databases
-    Thread getCollectionsDB;
+    Thread getCollectionsDB = null;
     // for get the ads requested by the main activity thread
     Thread getAdsThread = null;
     // for file lock/unlocking, true if its file is under locking
@@ -103,22 +103,24 @@ public class UpdateAdsService extends Service {
                 Log.i("Service", "Service has been started");
                 break;
             case KeyListClasses.IKLAN_MODE_GET_IKLAN: {
-                int iklanPosition = intent.getIntExtra(KeyListClasses.NUM_REQUEST_IKLAN_MODES, 0);
-                GetResultedIklanThr getResultedIklanThr = new GetResultedIklanThr(this, collections, iklanPosition);
-                if (getAdsThread != null) {
-                    if (getAdsThread.isAlive()) {
-                        // stop thread
-                        getAdsThread.interrupt();
-                        // unlock
-                        synchronized (isIklanFolderLocked) {
-                            isIklanFolderLocked.set(false);
+                int iklanPosition = intent.getIntExtra(KeyListClasses.NUM_REQUEST_IKLAN_MODES, -1);
+                if (iklanPosition >= 0) {
+                    GetResultedIklanThr getResultedIklanThr = new GetResultedIklanThr(this, collections, iklanPosition);
+                    if (getAdsThread != null) {
+                        if (getAdsThread.isAlive()) {
+                            // stop thread
+                            getAdsThread.interrupt();
+                            // unlock
+                            synchronized (isIklanFolderLocked) {
+                                isIklanFolderLocked.set(false);
+                            }
                         }
+                        getAdsThread = null;
                     }
-                    getAdsThread = null;
+                    getAdsThread = new Thread(getResultedIklanThr);
+                    getAdsThread.start();
+                    System.gc();
                 }
-                getAdsThread = new Thread(getResultedIklanThr);
-                getAdsThread.start();
-                System.gc();
             }
             break;
         }
@@ -128,13 +130,18 @@ public class UpdateAdsService extends Service {
     @Override
     public void onDestroy() {
         // check if another thread is alive and interrupt them
-        if (checkAdsUpdate.isAlive())
-            checkAdsUpdate.interrupt();
-        if (getAdsThread.isAlive())
-            getAdsThread.interrupt();
-        if (getCollectionsDB.isAlive())
-            getCollectionsDB.interrupt();
-
+        if (checkAdsUpdate != null) {
+            if (checkAdsUpdate.isAlive())
+                checkAdsUpdate.interrupt();
+        }
+        if (getAdsThread != null) {
+            if (getAdsThread.isAlive())
+                getAdsThread.interrupt();
+        }
+        if (getCollectionsDB != null) {
+            if (getCollectionsDB.isAlive())
+                getCollectionsDB.interrupt();
+        }
         super.onDestroy();
     }
 }
