@@ -5,6 +5,8 @@ import android.content.SharedPreferences;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.net.ConnectException;
+
 import id.kenshiro.app.panri.important.KeyListClasses;
 import id.kenshiro.app.panri.opt.CheckConnection;
 import id.kenshiro.app.panri.opt.onsplash.ThreadPerformCallbacks;
@@ -13,14 +15,18 @@ public class CheckAdsUpdates implements Runnable {
     UpdateAdsService service;
     int cloudVersion = 0;
     Boolean stateThread = false;
+    ThreadPerformCallbacks threadPerformCallbacks;
 
-    public CheckAdsUpdates(UpdateAdsService service) {
+    public CheckAdsUpdates(UpdateAdsService service, ThreadPerformCallbacks threadPerformCallbacks) {
         this.service = service;
+        this.threadPerformCallbacks = threadPerformCallbacks;
     }
 
     @Override
     public void run() {
         boolean isConnected = cekKoneksi();
+        if (threadPerformCallbacks != null)
+            threadPerformCallbacks.onStarting(this);
         if (isConnected) {
             int currentAds = getCurrentAdsVersion();
             // checks the current version in cloud
@@ -77,6 +83,8 @@ public class CheckAdsUpdates implements Runnable {
                     public void onCompleted(@NotNull Runnable runnedThread, @NotNull Object returnedCallbacks) {
                         synchronized (stateThread) {
                             stateThread = true;
+                            if (threadPerformCallbacks != null)
+                                threadPerformCallbacks.onCompleted(CheckAdsUpdates.this, returnedCallbacks);
                         }
                     }
 
@@ -104,7 +112,8 @@ public class CheckAdsUpdates implements Runnable {
             }
 
 
-        }
+        } else if (threadPerformCallbacks != null)
+            threadPerformCallbacks.onCancelled(this, new ConnectException("Cannot Connect into the cloud!"), null);
     }
 
     private boolean cekKoneksi() {

@@ -27,6 +27,22 @@ public class KeyListClasses {
     public static final String KEY_IKLAN_VERSION = "data_iklan_version";
     public static final String KEY_APP_VERSION = "app_version";
     public static final String KEY_LIST_VERSION_DB = "DB_LIST_VERSION_EXTRAS";
+
+    // for Iklan
     public static final String FOLDER_IKLAN_CLOUD = "iklan";
     public static final String NAME_IKLAN_DATABASES = "database_iklan.db";
+    public static final String NAME_IKLAN_CACHE_PATH = "iklan_cache";
+    public static final String NUM_REQUEST_IKLAN_MODES = "NUM_REQUESTED_IKLAN";
+    public static final String GET_ADS_MODE_START_SERVICE = "START_ADS_SERVICES";
+    ////// MODE IKLAN
+    public static final int IKLAN_MODE_START_SERVICE = 0xffa6;
+    public static final int IKLAN_MODE_GET_IKLAN = 0xffaa;
+    ////// PLACED ON
+    public static final int ADS_PLACED_ON_MAIN = 0x0;
+    public static final int ADS_PLACED_ON_HOWTO = 0x1;
+    ////// iklan extra messages
+    public static final String EXTRA_LIST_INFO_IKLAN = "DATA_IKLAN_EXTRAS";
+
+    public static final String EXTRA_LIST_IKLAN_FILE_BYTES = "DATA_FILE_IKLAN_BYTE_EXTRAS";
+    public static final String INTENT_BROADCAST_SEND_IKLAN = "id.kenshiro.app.panri.SEND_IKLAN_RESULTED";
 }
