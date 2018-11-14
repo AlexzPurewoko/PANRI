@@ -71,20 +71,8 @@ public class PanriSettingActivity extends MylexzActivity {
 
     @Override
     public void onBackPressed() {
-        if (doubleBackToExitPressedOnce) {
-            SwitchIntoMainActivity.switchToMain(this);
-            return;
-        }
-
-        this.doubleBackToExitPressedOnce = true;
-        TOAST(Toast.LENGTH_SHORT, "Klik lagi untuk kembali");
-        new Handler().postDelayed(new Runnable() {
-
-            @Override
-            public void run() {
-                doubleBackToExitPressedOnce = false;
-            }
-        }, 2000);
+        SwitchIntoMainActivity.switchToMain(this);
+        return;
     }
 
     @Override

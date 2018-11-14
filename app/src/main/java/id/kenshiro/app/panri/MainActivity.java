@@ -111,7 +111,6 @@ public class MainActivity extends MylexzActivity
     private volatile Handler mImageHandlerSw = null;
     public volatile int curr_pos_image = 0;
 
-    private boolean doubleBackToExitPressedOnce;
     public LruCache<Integer, Bitmap> mImageMemCache;
     private WeakReference<PrepareBitmapViewPager> prepareBitmapViewPagerWeakReference;
     public int has_finished = 0;
@@ -446,13 +445,12 @@ public class MainActivity extends MylexzActivity
                 SwitchIntoMainActivity.switchTo(this, AboutActivity.class, null);
                 break;
             case R.id.nav_out:
-                this.finish();
+                DialogOnMain.showExitDialog(this);
                 break;
             case R.id.update_db:
                 new CheckDBUpdateThread(this).execute();
                 break;
             case R.id.nav_rate: {
-                // https://play.google.com/store/apps/details?id=ohi.andre.consolelauncher
                 String packageApp = getPackageName().toString();
                 Intent i = new Intent(Intent.ACTION_VIEW);
                 i.setData(Uri.parse("https://play.google.com/store/apps/details?id=" + packageApp));
@@ -642,21 +640,8 @@ public class MainActivity extends MylexzActivity
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            if (doubleBackToExitPressedOnce) {
-                DialogOnMain.showExitDialog(this);
-                return true;
-            }
-
-            this.doubleBackToExitPressedOnce = true;
-            TOAST(Toast.LENGTH_SHORT, "Klik sekali lagi!");
-            new Handler().postDelayed(new Runnable() {
-
-                @Override
-                public void run() {
-                    doubleBackToExitPressedOnce = false;
-                }
-            }, 2000);
-            return false;
+            DialogOnMain.showExitDialog(this);
+            return true;
         }
         return super.onKeyDown(keyCode, event);
     }
