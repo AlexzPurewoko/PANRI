@@ -71,9 +71,10 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
 
     // for item
     LinearLayout baseUmumLayout;
-    CardView baseGejala, baseCaraAtasi, basePasangIklan;
+    CardView baseGejala, baseCaraAtasi;
     LinearLayout pasangIklanHolder;
     boolean firstCondition = true;
+    private OnHandlerClickCardBottom onHandlerClickCardBottom = null;
 
     private LinearLayout iklanHolder;
     private SendAdsBReceiver sendAdsBReceiver = null;
@@ -311,6 +312,10 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         this.onClickListener = onClickListener;
     }
 
+    public void setOnHandlerClickCardBottom(OnHandlerClickCardBottom onHandlerClickCardBottom) {
+        this.onHandlerClickCardBottom = onHandlerClickCardBottom;
+    }
+
     private void prepareAndBuildLayout() {
         buildContentLayout();
     }
@@ -363,6 +368,8 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
                     klikBawahText.setText(R.string.actdiagnose_string_klikcaramenanggulangi);
                     countBtn = 0;
                     stopAnimIklan();
+                    if (onHandlerClickCardBottom != null)
+                        onHandlerClickCardBottom.onHandleClick(1);
                 }
                 else {
                     // Do into cara_atasi
@@ -385,6 +392,8 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
                                 public void run() {
                                     klikBawahText.setText(R.string.actdiagnose_string_klikbalikdiagnosa);
                                     dialogShowHelper.stopDialog();
+                                    if (onHandlerClickCardBottom != null)
+                                        onHandlerClickCardBottom.onHandleClick(0);
                                 }
                             }, 1000);
 
@@ -445,6 +454,10 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         activity.unregisterReceiver(sendAdsBReceiver);
     }
 
+    public interface OnHandlerClickCardBottom {
+        // 0 is first, 1 is last
+        public void onHandleClick(int btnCondition);
+    }
     private class DataPath{
         String umum_path;
         String gejala_path;

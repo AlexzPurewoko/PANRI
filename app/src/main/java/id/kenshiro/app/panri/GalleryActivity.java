@@ -32,7 +32,6 @@ import io.fabric.sdk.android.Fabric;
 public class GalleryActivity extends MylexzActivity {
     Toolbar toolbar;
     ImageGridViewAdapter adapterGrid;
-    private boolean doubleBackToExitPressedOnce;
     private SQLiteDatabase sqlDB;
     List<String> dataPathGambar;
     private DialogShowHelper dialogShowHelper;
@@ -95,7 +94,6 @@ public class GalleryActivity extends MylexzActivity {
                                                            @Override
                                                            public void onItemClick(View v, int position) {
 
-                                                               Toast.makeText(GalleryActivity.this, "selected at position = " + position, Toast.LENGTH_SHORT).show();
                                                            }
                                                        }
                     );
@@ -140,20 +138,7 @@ public class GalleryActivity extends MylexzActivity {
 
     @Override
     public void onBackPressed() {
-        if (doubleBackToExitPressedOnce) {
-            SwitchIntoMainActivity.switchToMain(this);
-            return;
-        }
-
-        this.doubleBackToExitPressedOnce = true;
-        TOAST(Toast.LENGTH_SHORT, "Klik lagi untuk kembali");
-        new Handler().postDelayed(new Runnable() {
-
-            @Override
-            public void run() {
-                doubleBackToExitPressedOnce = false;
-            }
-        }, 2000);
+        SwitchIntoMainActivity.switchToMain(this);
     }
 
     @Override

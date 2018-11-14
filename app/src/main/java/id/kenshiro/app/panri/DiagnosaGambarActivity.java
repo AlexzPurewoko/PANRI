@@ -48,7 +48,6 @@ public class DiagnosaGambarActivity extends MylexzActivity {
     Button mTextPetaniDesc;
     private Handler handlerPetani;
     private RelativeLayout relativeLayout;
-    private boolean doubleBackToExitPressedOnce;
     private GifImageView imgPetaniKedipView;
 
     @Override
@@ -145,6 +144,12 @@ public class DiagnosaGambarActivity extends MylexzActivity {
                 tampilDiagnosaGambarHelper.showContentView();
             }
         });
+        showPenyakitDiagnoseHelper.setOnHandlerClickCardBottom(new ShowPenyakitDiagnoseHelper.OnHandlerClickCardBottom() {
+            @Override
+            public void onHandleClick(int btnCondition) {
+                onButtonPetaniClicked(getString(R.string.actdiagnose_string_speechfarmer_img_2));
+            }
+        });
         showPenyakitDiagnoseHelper.build();
         tampilDiagnosaGambarHelper.buildAndShow();
         tampilDiagnosaGambarHelper.showContentView();
@@ -219,21 +224,8 @@ public class DiagnosaGambarActivity extends MylexzActivity {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             if (showPenyakitDiagnoseHelper.getmContentView().getVisibility() == View.GONE) {
                 if (!tampilDiagnosaGambarHelper.isContentViewHidden()) {
-                    if (doubleBackToExitPressedOnce) {
-                        SwitchIntoMainActivity.switchToMain(this);
-                        return true;
-                    }
-
-                    this.doubleBackToExitPressedOnce = true;
-                    TOAST(Toast.LENGTH_SHORT, "Klik lagi untuk kembali");
-                    new Handler().postDelayed(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            doubleBackToExitPressedOnce = false;
-                        }
-                    }, 2000);
-                    return false;
+                    SwitchIntoMainActivity.switchToMain(this);
+                    return true;
                 } else
                     return false;
             } else {

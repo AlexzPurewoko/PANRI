@@ -29,7 +29,7 @@ public class AboutActivity extends MylexzActivity {
     private Toolbar toolbar;
     private static final String[] listsThanksTo = {
             "SMKN 1 Giritontro",
-            "Bu Lian Ratna Sari, S.Pd selaku pembimbing",
+            "Lian Ratna Sari, S.Pd selaku pembimbing",
             "Pak Sitam selaku narasumber",
             "Pak Wahyudi selaku narasumber dari validasi data penyakit",
             "BPP (Balai Penyuluhan Pertanian) 'Harjaning Tani' Giriwoyo",

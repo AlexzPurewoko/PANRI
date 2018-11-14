@@ -60,7 +60,6 @@ public class DiagnoseActivity extends MylexzActivity
 	private SimpleDiskLruCache diskCache;
 	private DialogShowHelper dialogShowHelper;
 	Button mTextPetaniDesc;
-	private boolean doubleBackToExitPressedOnce;
 	private boolean isDiagnosting = true;
 
     private Handler handlerPetani;
@@ -113,31 +112,43 @@ public class DiagnoseActivity extends MylexzActivity
 		mTextPetaniDesc.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.NORMAL);
 	    diagnoseActivityHelper = new DiagnoseActivityHelper(this, this.listNamaPenyakitHashMap, this.listCiriCiriPenyakitHashMap);
 		showPenyakitDiagnoseHelper = new ShowPenyakitDiagnoseHelper(this, sqlDB, (RelativeLayout) this.findViewById(R.id.actdiagnose_id_layoutcontainer));
-        diagnoseActivityHelper.setOnPenyakitHaveSelected(new DiagnoseActivityHelper.OnPenyakitHaveSelected() {
-            @Override
-            public void onPenyakitSelected(RecyclerView a, RelativeLayout b, HashMap<Integer, ListNamaPenyakit> c, int d, double e) {
-                String penyakit = c.get(d).getName();
+		diagnoseActivityHelper.setOnPenyakitHaveSelected(new DiagnoseActivityHelper.OnPenyakitHaveSelected() {
+			@Override
+			public void onPenyakitSelected(RecyclerView a, RelativeLayout b, HashMap<Integer, ListNamaPenyakit> c, int d, double e) {
+				String penyakit = c.get(d).getName();
 				//DiagnoseActivity.this.TOAST(Toast.LENGTH_LONG, "Padi Anda terdiagnosa penyakit %s sebesar %s.", penyakit, String.valueOf(e));
-                //mTextPetaniDesc.setText(String.format(getString(R.string.actdiagnose_string_speechfarmer_3), penyakit, Math.round(e)));
-                onButtonPetaniClicked(String.format(getString(R.string.actdiagnose_string_speechfarmer_3), penyakit, Math.round(e)));
-                a.setVisibility(View.GONE);
-                b.setVisibility(View.GONE);
+				//mTextPetaniDesc.setText(String.format(getString(R.string.actdiagnose_string_speechfarmer_3), penyakit, Math.round(e)));
+				onButtonPetaniClicked(true, String.format(getString(R.string.actdiagnose_string_speechfarmer_3), penyakit, Math.round(e)));
+				a.setVisibility(View.GONE);
+				b.setVisibility(View.GONE);
 				isDiagnosting = false;
-                // switching into the next
-                showPenyakitDiagnoseHelper.show(d);
-            }
+				// switching into the next
+				showPenyakitDiagnoseHelper.show(d);
+			}
 
 			@Override
 			public void onTanyaSection() {
-                //mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_2));
-                onButtonPetaniClicked(getString(R.string.actdiagnose_string_speechfarmer_2));
+				//mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_2));
+				onButtonPetaniClicked(true, getString(R.string.actdiagnose_string_speechfarmer_2));
 			}
 
 			@Override
 			public void onPilihCiriSection() {
-                //mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
-                onButtonPetaniClicked(getString(R.string.actdiagnose_string_speechfarmer_1));
+				//mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
+				onButtonPetaniClicked(true, getString(R.string.actdiagnose_string_speechfarmer_1));
 
+			}
+		});
+		showPenyakitDiagnoseHelper.setOnHandlerClickCardBottom(new ShowPenyakitDiagnoseHelper.OnHandlerClickCardBottom() {
+			@Override
+			public void onHandleClick(int btnCondition) {
+				switch (btnCondition) {
+					case 0:
+						onButtonPetaniClicked(false, null);
+						break;
+					case 1:
+						onButtonPetaniClicked(true, getString(R.string.actdiagnose_string_speechfarmer_1));
+				}
 			}
 		});
 		showPenyakitDiagnoseHelper.build();
@@ -151,12 +162,13 @@ public class DiagnoseActivity extends MylexzActivity
 		});
 	    diagnoseActivityHelper.buildAndShow();
         //mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
-        onButtonPetaniClicked(getString(R.string.actdiagnose_string_speechfarmer_1));
+		onButtonPetaniClicked(true, getString(R.string.actdiagnose_string_speechfarmer_1));
     }
 
-    private void onButtonPetaniClicked(String text) {
+	private void onButtonPetaniClicked(boolean updateText, String text) {
 
-        mTextPetaniDesc.setText(text);
+		if (updateText)
+			mTextPetaniDesc.setText(text);
         imgPetaniKedipView.setImageResource(R.drawable.petani_bicara);
         if (handlerPetani == null) {
             handlerPetani = new Handler();
@@ -212,21 +224,8 @@ public class DiagnoseActivity extends MylexzActivity
 		if (keyCode == KeyEvent.KEYCODE_BACK) {
 			if (isDiagnosting) {
 				if (!diagnoseActivityHelper.setOnPushBackButtonPressed(true)) {
-					if (doubleBackToExitPressedOnce) {
-						SwitchIntoMainActivity.switchToMain(this);
-						return true;
-					}
-
-					this.doubleBackToExitPressedOnce = true;
-					TOAST(Toast.LENGTH_SHORT, "Klik lagi untuk kembali");
-					new Handler().postDelayed(new Runnable() {
-
-						@Override
-						public void run() {
-							doubleBackToExitPressedOnce = false;
-						}
-					}, 2000);
-					return false;
+					SwitchIntoMainActivity.switchToMain(this);
+					return true;
 				}
 			} else {
 				if (showPenyakitDiagnoseHelper.getmContent2().getVisibility() == View.VISIBLE) {
@@ -241,7 +240,7 @@ public class DiagnoseActivity extends MylexzActivity
 					showPenyakitDiagnoseHelper.getmContentView().setVisibility(View.GONE);
 					mTextPetaniDesc.setOnClickListener(null);
                     //mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
-                    onButtonPetaniClicked(getString(R.string.actdiagnose_string_speechfarmer_1));
+					onButtonPetaniClicked(true, getString(R.string.actdiagnose_string_speechfarmer_1));
 					diagnoseActivityHelper.setOnPushBackButtonPressed(true);
 					isDiagnosting = true;
 					return false;

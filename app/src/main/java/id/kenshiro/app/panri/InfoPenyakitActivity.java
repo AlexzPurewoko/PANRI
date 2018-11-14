@@ -45,7 +45,6 @@ public class InfoPenyakitActivity extends MylexzActivity {
     private ShowPenyakitDiagnoseHelper showPenyakitDiagnoseHelper;
     private Handler handlerPetani;
     Button mTextPetaniDesc;
-    private boolean doubleBackToExitPressedOnce;
     private GifImageView imgPetaniKedipView;
 
     @Override
@@ -97,6 +96,18 @@ public class InfoPenyakitActivity extends MylexzActivity {
     private void loadLayoutAndShow() {
         showPenyakitDiagnoseHelper = new ShowPenyakitDiagnoseHelper(this, sqlDB, (RelativeLayout) this.findViewById(R.id.actinfo_id_layoutcontainer));
         showPenyakitDiagnoseHelper.build();
+        showPenyakitDiagnoseHelper.setOnHandlerClickCardBottom(new ShowPenyakitDiagnoseHelper.OnHandlerClickCardBottom() {
+            @Override
+            public void onHandleClick(int btnCondition) {
+                switch (btnCondition) {
+                    case 0:
+                        onButtonPetaniClicked(getText(R.string.actinfo_string_speechfarmer_2));
+                        break;
+                    case 1:
+                        onButtonPetaniClicked(getText(R.string.actinfo_string_speechfarmer_1));
+                }
+            }
+        });
         showPenyakitDiagnoseHelper.setOnHaveFinalRequests(new View.OnClickListener() {
             @Override
             public void onClick(View mContentView) {
@@ -176,21 +187,8 @@ public class InfoPenyakitActivity extends MylexzActivity {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             if (showPenyakitDiagnoseHelper.getmContentView().getVisibility() == View.GONE) {
                 if (!tampil.onBackButtonPressed()) {
-                    if (doubleBackToExitPressedOnce) {
-                        SwitchIntoMainActivity.switchToMain(this);
-                        return true;
-                    }
-
-                    this.doubleBackToExitPressedOnce = true;
-                    TOAST(Toast.LENGTH_SHORT, "Klik lagi untuk kembali");
-                    new Handler().postDelayed(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            doubleBackToExitPressedOnce = false;
-                        }
-                    }, 2000);
-                    return false;
+                    SwitchIntoMainActivity.switchToMain(this);
+                    return true;
                 } else
                     return false;
             } else {

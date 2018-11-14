@@ -344,21 +344,8 @@ public class HowToResolveActivity extends MylexzActivity {
                 onButtonPetaniClicked(getText(R.string.acthowto_string_speechfarmer_1));
             }
             if (!tampil.onBackButtonPressed()) {
-                if (doubleBackToExitPressedOnce) {
-                    SwitchIntoMainActivity.switchToMain(this);
-                    return true;
-                }
-
-                this.doubleBackToExitPressedOnce = true;
-                TOAST(Toast.LENGTH_SHORT, "Klik lagi untuk kembali");
-                new Handler().postDelayed(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        doubleBackToExitPressedOnce = false;
-                    }
-                }, 2000);
-                return false;
+                SwitchIntoMainActivity.switchToMain(this);
+                return true;
             } else {
 
                 return false;
