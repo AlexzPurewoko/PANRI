@@ -118,6 +118,7 @@
         </activity>
 
         <service android:name=".opt.ads.UpdateAdsService" />
+        <service android:name=".opt.checkupdates.CheckDBUpdaterService" />
         <receiver android:name=".opt.ads.SendAdsBReceiver">
             <intent-filter>
                 <action android:name="id.kenshiro.app.panri.SEND_IKLAN_RESULTED" />

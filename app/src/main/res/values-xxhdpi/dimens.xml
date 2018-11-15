@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="actsplash_dimen_img_wh">210dp</dimen>
+    <dimen name="actsplash_dimen_img_wh">230dp</dimen>
     <dimen name="actmain_dimen_viewpager_height">230dp</dimen>
     <dimen name="actsplash_dimen_margintopimg">50dp</dimen>
     <dimen name="acttutor_dimen_btn_mulai_frag4">250dp</dimen>
@@ -17,4 +17,5 @@
     <dimen name="layout_onnotselected_marginleft_20">10dp</dimen>
     <dimen name="layout_onnotselecte_textsize_10sp">12sp</dimen>
     <dimen name="layout_onnotselected_contentpaddingcard">2dp</dimen>
+    <dimen name="dialogshdup_margin_all">26dp</dimen>
 </resources>

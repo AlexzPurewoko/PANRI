@@ -27,6 +27,8 @@ public class KeyListClasses {
     public static final String KEY_IKLAN_VERSION = "data_iklan_version";
     public static final String KEY_APP_VERSION = "app_version";
     public static final String KEY_LIST_VERSION_DB = "DB_LIST_VERSION_EXTRAS";
+    public static final String KEY_VERSION_BOOL_NEW = "is_db_available_new_version";
+    public static final String KEY_VERSION_ON_CLOUD = "db_version_on_cloud";
 
     // for Iklan
     public static final String FOLDER_IKLAN_CLOUD = "iklan";

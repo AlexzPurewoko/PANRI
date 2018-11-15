@@ -30,6 +30,7 @@ import id.kenshiro.app.panri.important.KeyListClasses;
 import id.kenshiro.app.panri.opt.CheckConnection;
 import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
 import id.kenshiro.app.panri.opt.ads.UpdateAdsService;
+import id.kenshiro.app.panri.opt.checkupdates.CheckDBUpdaterService;
 
 public class LoaderTask extends AsyncTask<Void, String, Integer> {
     File fileCache;
@@ -37,7 +38,7 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
     SplashScreenActivity ctx;
     int numOfThreads = 0;
     volatile Integer finishedThreads = 0;
-    volatile String[] dbversion = null;
+    //volatile String[] dbversion = null;
 
     public LoaderTask(SplashScreenActivity ctx) {
         this.ctx = ctx;
@@ -86,6 +87,7 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
                         if (dbleast > dbcurr) {
                             ExtractAndConfigureData.configureStringInShareds(ctx, KeyListClasses.KEY_DATA_LIBRARY_VERSION, db_inapk_version);
                             ctx.db_condition = KeyListClasses.DB_IS_NEWER_VERSION;
+                            publishProgress("up");
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -106,6 +108,7 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
                     }
                     ExtractAndConfigureData.configureData(ctx);
                     createCacheOperation();
+                    publishProgress("up");
                 }
                 break;
                 case KeyListClasses.APP_IS_SAME_VERSION: {
@@ -127,7 +130,7 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
                         boolean ischeckDB = isAllowedToCheckDBOnline();
                         numOfThreads = 1;
                         Crashlytics.log("Check DB and Check Cache in separate thread");
-                        CheckDBCloudThread checkDBCloudThread = null;
+                        //CheckDBCloudThread checkDBCloudThread = null;
                         CheckCacheAndConfThread checkCacheAndConfThread = new CheckCacheAndConfThread(ctx, diskCache);
                         checkCacheAndConfThread.setThreadPerformCallbacks(new ThreadPerformCallbacks() {
                             @Override
@@ -154,8 +157,7 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
                             }
                         });
                         if (ischeckDB) {
-                            numOfThreads = 2;
-                            checkDBCloudThread = new CheckDBCloudThread(ctx, new ThreadPerformCallbacks() {
+                            /*checkDBCloudThread = new CheckDBCloudThread(ctx, new ThreadPerformCallbacks() {
                                 @Override
                                 public void onStarting(@NotNull Runnable runnedThread) {
                                     Crashlytics.log("Check DB in separate thread started!");
@@ -182,13 +184,15 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
                                     finishedThreads++;
                                     dbversion = (String[]) returnedCallbacks;
                                 }
-                            });
+                            });*/
+                            publishProgress("up");
                         }
                         // starts it!
-                        Thread t1 = new Thread(checkCacheAndConfThread), t2 = (checkDBCloudThread == null) ? null : new Thread(checkDBCloudThread);
+                        Thread t1 = new Thread(checkCacheAndConfThread); //t2 = (checkDBCloudThread == null) ? null : new Thread(checkDBCloudThread);
                         t1.start();
-                        if (t2 != null)
-                            t2.start();
+                        /*if (t2 != null)
+                            t2.start();*/
+
                     }
                 }
             }
@@ -308,7 +312,7 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
     @Override
     protected void onPostExecute(Integer aVoid) {
         super.onPostExecute(aVoid);
-        if (dbversion != null) {
+        /*if (dbversion != null) {
             int origVer = Integer.parseInt(dbversion[0]);
             int newVer = Integer.parseInt(dbversion[1]);
             if (newVer > origVer) {
@@ -316,7 +320,7 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
             } else if (newVer == origVer) {
                 ctx.db_condition = KeyListClasses.DB_IS_SAME_VERSION;
             }
-        }
+        }*/
         Intent intentService = new Intent(ctx, UpdateAdsService.class);
         intentService.putExtra(KeyListClasses.GET_ADS_MODE_START_SERVICE, KeyListClasses.IKLAN_MODE_START_SERVICE);
         ctx.startService(intentService);
@@ -327,7 +331,11 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
     @Override
     protected void onProgressUpdate(String... values) {
         super.onProgressUpdate(values);
-        ctx.indicators.setText(values[0]);
+        if (values[0].equals("up")) {
+            Intent service = new Intent(ctx, CheckDBUpdaterService.class);
+            ctx.startService(service);
+        } else
+            ctx.indicators.setText(values[0]);
     }
 
     private void animateAndForward() {
@@ -340,8 +348,8 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
         else {
             Bundle args = new Bundle();
             args.putInt(KeyListClasses.APP_CONDITION_KEY, ctx.app_condition);
-            args.putInt(KeyListClasses.DB_CONDITION_KEY, ctx.db_condition);
-            args.putStringArray(KeyListClasses.KEY_LIST_VERSION_DB, dbversion);
+            //args.putInt(KeyListClasses.DB_CONDITION_KEY, ctx.db_condition);
+            //args.putStringArray(KeyListClasses.KEY_LIST_VERSION_DB, dbversion);
             MylexzActivity activity = ctx;
             activity.finish();
             System.gc();

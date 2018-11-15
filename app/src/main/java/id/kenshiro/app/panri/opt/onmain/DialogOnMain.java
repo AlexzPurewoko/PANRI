@@ -1,7 +1,9 @@
 package id.kenshiro.app.panri.opt.onmain;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -12,6 +14,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -114,6 +118,8 @@ public class DialogOnMain {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
         ));
+        int padding = Math.round(activity.getResources().getDimension(R.dimen.dialogshdup_margin_all));
+        webView.setPadding(padding, padding, padding, padding);
         webView.loadUrl("file:///android_asset/whats_new.html");
         builder.setView(webView);
         builder.setPositiveButton("Okay!", onbtnOk);
@@ -156,6 +162,52 @@ public class DialogOnMain {
             default:
                 return;
         }
+        if (conditionUpdate == KeyListClasses.UPDATE_DB_NOT_AVAILABLE_INTERNET_MISSING || conditionUpdate == KeyListClasses.UPDATE_DB_NOT_AVAILABLE) {
+            build.setPositiveButton("Okay!", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+        } else if (conditionUpdate == KeyListClasses.UPDATE_DB_IS_AVAILABLE) {
+            Object[] v = (Object[]) updateValueIfExists;
+            build.setPositiveButton((String) v[2], (DialogInterface.OnClickListener) v[3]);
+            build.setNegativeButton("Batal", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+        }
+        build.show();
+    }
+
+    public static void showUpdateDBDialogMain(final MylexzActivity activity, int conditionUpdate, Object updateValueIfExists) {
+        AlertDialog.Builder build = new AlertDialog.Builder(activity);
+        build.setTitle("Update Data Aplikasi!");
+        build.setIcon(R.mipmap.ic_launcher);
+        LinearLayout linearLayout = (LinearLayout) LinearLayout.inflate(activity, R.layout.dialog_show_dbupdate, null);
+        TextView textView = linearLayout.findViewById(R.id.dialogshdup_text);
+        final CheckBox checkBox = linearLayout.findViewById(R.id.dialogshdup_check);
+        checkBox.setChecked(false);
+        checkBox.setOnClickListener(new View.OnClickListener() {
+            boolean isChecked = checkBox.isChecked();
+
+            @Override
+            public void onClick(View v) {
+                if (isChecked) {
+                    isChecked = true;
+                } else {
+                    isChecked = false;
+                }
+                SharedPreferences sharedPreferences = activity.getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE);
+                sharedPreferences.edit().putBoolean(KeyListClasses.KEY_AUTOCHECKUPDATE_APPDATA, isChecked).commit();
+            }
+        });
+        Object[] version = (Object[]) updateValueIfExists;
+        textView.setText("Update Data Aplikasi tersedia!\n\nVersi Data Aplikasi : " + version[0] + "\nVersi Data App terkini : " + version[1] + "\n\nApakah anda ingin memperbaharui data aplikasi?");
+        build.setView(linearLayout);
+
         if (conditionUpdate == KeyListClasses.UPDATE_DB_NOT_AVAILABLE_INTERNET_MISSING || conditionUpdate == KeyListClasses.UPDATE_DB_NOT_AVAILABLE) {
             build.setPositiveButton("Okay!", new DialogInterface.OnClickListener() {
                 @Override
