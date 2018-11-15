@@ -20,8 +20,13 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.crashlytics.android.answers.Answers;
+import com.crashlytics.android.answers.CustomEvent;
 import com.mylexz.utils.MylexzActivity;
+import com.mylexz.utils.text.TextSpanFormat;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
@@ -69,61 +74,35 @@ public class DialogOnMain {
         });
         mAlert.show();
     }
-
-    public static void showDialogPasangIklan(final MylexzActivity activity, final Uri uriData, String url) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-        builder.setTitle("Pasang Iklan");
+    public static void showDialogWhatsNew(final MylexzActivity activity, DialogInterface.OnClickListener onbtnOk) {
+        AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(activity);
+        builder.setTitle("Apa yang baru?");
         builder.setIcon(R.mipmap.ic_launcher);
-        WebView webView = new WebView(activity);
-        webView.setLayoutParams(new ViewGroup.LayoutParams(
+        TextView textView = new TextView(activity);
+        textView.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
+                ViewGroup.LayoutParams.WRAP_CONTENT
         ));
-        webView.loadUrl(url);
-        builder.setView(webView);
-        builder.setPositiveButton("Hubungi Kami", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-                Intent i = new Intent(Intent.ACTION_VIEW);
-                i.setData(uriData);
-                PackageManager pm = activity.getPackageManager();
-                PackageInfo info = null;
-                try {
-                    info = pm.getPackageInfo("com.whatsapp", PackageManager.GET_META_DATA);
-                } catch (PackageManager.NameNotFoundException e) {
-                    e.printStackTrace();
-                    info = null;
-                }
-                if (info != null)
-                    i.setPackage("com.whatsapp");
-                activity.startActivity(Intent.createChooser(i, "Hubungi Dengan"));
-            }
-        });
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-            }
-        });
+        textView.setTextColor(Color.BLACK);
+        int padding = Math.round(activity.getResources().getDimension(R.dimen.dialogshdup_margin_all));
+        textView.setPadding(padding, padding, padding, padding);
+        textView.setText(TextSpanFormat.convertStrToSpan(activity, readFromAsset(activity, "whats_new"), 0));
+        builder.setView(textView);
+        builder.setPositiveButton("Okay!", onbtnOk);
         builder.show();
     }
 
-    public static void showDialogWhatsNew(final MylexzActivity activity, DialogInterface.OnClickListener onbtnOk) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-        builder.setTitle("Apa yang baru?");
-        builder.setIcon(R.mipmap.ic_launcher);
-        WebView webView = new WebView(activity);
-        webView.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-        ));
-        int padding = Math.round(activity.getResources().getDimension(R.dimen.dialogshdup_margin_all));
-        webView.setPadding(padding, padding, padding, padding);
-        webView.loadUrl("file:///android_asset/whats_new.html");
-        builder.setView(webView);
-        builder.setPositiveButton("Okay!", onbtnOk);
-        builder.show();
+    private static String readFromAsset(MylexzActivity activity, String pathAssets) {
+        try {
+            InputStream is = activity.getAssets().open(pathAssets);
+            byte[] b = new byte[is.available()];
+            is.read(b);
+            is.close();
+            return new String(b);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     /*
@@ -239,6 +218,8 @@ public class DialogOnMain {
                 desc = views.findViewById(R.id.description_report);
         Button yes = views.findViewById(R.id.actmain_id_dialogexit_btnyes),
                 no = views.findViewById(R.id.actmain_id_dialogexit_btnno);
+        TextView textView = views.findViewById(R.id.description_txtbawahreport);
+        textView.setText(TextSpanFormat.convertStrToSpan(activity, "__*) Anda harus mengaktifkan koneksi internet untuk mengirim masukan!__", 0));
         builder.setView(views);
         final AlertDialog dialog = builder.create();
         yes.setOnClickListener(new View.OnClickListener() {
@@ -255,32 +236,35 @@ public class DialogOnMain {
                 } else if (recDesc == null || recDesc.length() < 1) {
                     desc.setError("field Deskripsi belum diisi!");
                 } else {
-                    String result = String.format("User : %s\nTitle : %s\nDescription : \n%s", recNames, recTitle, recDesc);
-                    String resultEncoder = null;
-                    try {
-                        resultEncoder = URLEncoder.encode(result, "UTF-8");
-                    } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
-                        resultEncoder = null;
-                    }
+                    Answers.getInstance().logCustom(new CustomEvent("Data Masukan User")
+                            .putCustomAttribute("User Names", recNames)
+                            .putCustomAttribute("Judul", recTitle)
+                            .putCustomAttribute("Deskripsi", recDesc)
+                    );
                     dialog.dismiss();
-                    if (resultEncoder != null) {
-                        String url = "https://api.whatsapp.com/send?phone=6285742602872&text=" + resultEncoder;
-                        Intent i = new Intent(Intent.ACTION_VIEW);
-                        i.setData(Uri.parse(url));
-                        PackageManager pm = activity.getPackageManager();
-                        PackageInfo info = null;
-                        try {
-                            info = pm.getPackageInfo("com.whatsapp", PackageManager.GET_META_DATA);
-                        } catch (PackageManager.NameNotFoundException e) {
-                            e.printStackTrace();
-                            info = null;
-                        }
-                        // if WhatsApp is already installed
-                        if (info != null)
-                            i.setPackage("com.whatsapp");
-                        activity.startActivity(Intent.createChooser(i, "Hubungi Dengan"));
-                    }
+                    new AlertDialog.Builder(activity)
+                            .setIcon(R.mipmap.ic_launcher)
+                            .setTitle("Restart Aplikasi")
+                            .setMessage("Restart aplikasi anda untuk mengirim masukan yang anda berikan.")
+                            .setCancelable(false)
+                            .setNegativeButton("Batal", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            })
+                            .setPositiveButton("Restart", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                    Intent i = activity.getPackageManager()
+                                            .getLaunchIntentForPackage(activity.getPackageName());
+                                    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                    activity.startActivity(i);
+                                }
+                            })
+                            .show();
                 }
 
             }
@@ -298,13 +282,16 @@ public class DialogOnMain {
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder.setTitle("Iklan");
         builder.setIcon(R.mipmap.ic_launcher);
-        WebView webView = new WebView(activity);
-        webView.setLayoutParams(new ViewGroup.LayoutParams(
+        TextView textView = new TextView(activity);
+        textView.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
+                ViewGroup.LayoutParams.WRAP_CONTENT
         ));
-        webView.loadData(info_produk, "text/html", "utf-8");
-        builder.setView(webView);
+        textView.setTextColor(Color.BLACK);
+        int padding = Math.round(activity.getResources().getDimension(R.dimen.dialogshdup_margin_all));
+        textView.setPadding(padding, padding, padding, padding);
+        textView.setText(TextSpanFormat.convertStrToSpan(activity, info_produk, 0));
+        builder.setView(textView);
         builder.setPositiveButton("Hubungi Kami", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {

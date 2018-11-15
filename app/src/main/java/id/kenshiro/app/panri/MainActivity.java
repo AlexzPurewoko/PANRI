@@ -37,6 +37,7 @@ import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
 import android.graphics.Typeface;
 import android.view.ViewGroup;
+import android.webkit.WebView;
 import android.widget.LinearLayout;
 
 import java.io.File;
@@ -61,12 +62,14 @@ import id.kenshiro.app.panri.helper.DecodeBitmapHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 import id.kenshiro.app.panri.important.KeyListClasses;
 import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
+import id.kenshiro.app.panri.opt.WebViewDestroy;
 import id.kenshiro.app.panri.opt.ads.DownloadIklanFiles;
 import id.kenshiro.app.panri.opt.ads.GetResultedIklanThr;
 import id.kenshiro.app.panri.opt.ads.SendAdsBReceiver;
 import id.kenshiro.app.panri.opt.ads.UpdateAdsService;
 import id.kenshiro.app.panri.opt.onmain.CheckDBUpdateThread;
 import id.kenshiro.app.panri.opt.onmain.DialogOnMain;
+import id.kenshiro.app.panri.opt.onmain.DialogShowPasangIklan;
 import id.kenshiro.app.panri.opt.onmain.PrepareBitmapViewPager;
 import id.kenshiro.app.panri.opt.onmain.TaskDownloadDBUpdates;
 import io.fabric.sdk.android.Fabric;
@@ -119,7 +122,9 @@ public class MainActivity extends MylexzActivity
     List<CardView> iklanCart = new ArrayList<CardView>();
     private SendAdsBReceiver sendAdsBReceiver = null;
     private LinearLayout adsLayout;
-    List<com.felipecsl.gifimageview.library.GifImageView> gifImageViewListIklan = new ArrayList<>();
+    List<com.felipecsl.gifimageview.library.GifImageView> gifImageViewListIklan;
+
+    private DialogShowPasangIklan dialog;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -145,6 +150,7 @@ public class MainActivity extends MylexzActivity
             NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
             navigationView.setNavigationItemSelectedListener(this);
             checkVersion();
+            gifImageViewListIklan = new ArrayList<>();
             sendAdsBReceiver = new SendAdsBReceiver(this, new SendAdsBReceiver.OnReceiveAds() {
                 @Override
                 public void onReceiveByteAds(GetResultedIklanThr.ByteArray[] ads, DownloadIklanFiles.DBIklanCollection[] information) {
@@ -154,7 +160,7 @@ public class MainActivity extends MylexzActivity
                         for (GetResultedIklanThr.ByteArray byteArr : ads) {
                             byte[] bArr = byteArr.getArray();
                             if (bArr != null && bArr.length > 1) {
-                                gifImageViewListIklan.add(setGifImgView(bArr, information[x]));
+                                //gifImageViewListIklan.add(setGifImgView(bArr, information[x]));
                             }
                             x++;
                             //
@@ -200,6 +206,9 @@ public class MainActivity extends MylexzActivity
             intentService.putExtra(KeyListClasses.GET_ADS_MODE_START_SERVICE, KeyListClasses.IKLAN_MODE_GET_IKLAN);
             intentService.putExtra(KeyListClasses.NUM_REQUEST_IKLAN_MODES, KeyListClasses.ADS_PLACED_ON_MAIN);
             startService(intentService);
+            dialog = new DialogShowPasangIklan(this);
+            dialog.build(Uri.parse("https://api.whatsapp.com/send?phone=6282223518455&text=Hallo%20Admin%20Saya%20Mau%20Pasang%20Iklan"));
+            dialog.load("introduce_ads_main");
         } catch (Throwable e) {
             String keyEx = getClass().getName() + "_onCreate()";
             String resE = String.format("UnHandled Exception Occurs(Throwable) e -> %s", e.toString());
@@ -305,6 +314,7 @@ public class MainActivity extends MylexzActivity
                                 }
                             }
                     });
+                    System.gc();
                 }
             }
             break;
@@ -401,6 +411,7 @@ public class MainActivity extends MylexzActivity
                         gif.startAnimation();
                 }
             }
+            System.gc();
         }
     }
 
@@ -415,6 +426,7 @@ public class MainActivity extends MylexzActivity
                     gif.stopAnimation();
             }
         }
+        System.gc();
         super.onPause();
     }
 
@@ -565,16 +577,20 @@ public class MainActivity extends MylexzActivity
         adsLayout.setOrientation(LinearLayout.VERTICAL);
         mListOp.addView(adsLayout);
         //iklanCart = new ArrayList<>();
+        //dialog.build(Uri.parse("https://api.whatsapp.com/send?phone=6282223518455&text=Hallo%20Admin%20Saya%20Mau%20Pasang%20Iklan"), "file:///android_asset/introduce_ads_main.html");
         for (int x = 0; x < 2; x++) {
             CardView cardView = (CardView) CardView.inflate(this, R.layout.actmain_instadds, null);
             cardView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    DialogOnMain.showDialogPasangIklan(MainActivity.this, Uri.parse("https://api.whatsapp.com/send?phone=6282223518455&text=Hallo%20Admin%20Saya%20Mau%20Pasang%20Iklan"), "file:///android_asset/introduce_ads_main.html");
+                    dialog.show();
+                    System.gc();
+                    //DialogOnMain.showDialogPasangIklan(MainActivity.this, Uri.parse("https://api.whatsapp.com/send?phone=6282223518455&text=Hallo%20Admin%20Saya%20Mau%20Pasang%20Iklan"), "file:///android_asset/introduce_ads_main.html");
                 }
             });
             cardView.setVisibility(View.GONE);
             mListOp.addView(cardView);
+            System.gc();
         }
     }
 
@@ -694,6 +710,7 @@ public class MainActivity extends MylexzActivity
             }
         }
         unregisterReceiver(sendAdsBReceiver);
+        System.gc();
         super.onDestroy();
     }
 }
