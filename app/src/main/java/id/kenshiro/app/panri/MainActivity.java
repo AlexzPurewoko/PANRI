@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -267,7 +268,8 @@ public class MainActivity extends MylexzActivity
     private void checkVersion() {
         Bundle bundle = getIntent().getExtras();
         int app_cond = bundle.getInt(KeyListClasses.APP_CONDITION_KEY);
-        int db_cond = bundle.getInt(KeyListClasses.DB_CONDITION_KEY);
+        //int db_cond = bundle.getInt(KeyListClasses.DB_CONDITION_KEY);
+        int db_cond = getDBCondition();
         String messageIfNeeded = null;
         String dbErrorMesageIfNeeded = null;
         switch (app_cond) {
@@ -287,20 +289,23 @@ public class MainActivity extends MylexzActivity
         }
         switch (db_cond) {
             case KeyListClasses.DB_REQUEST_UPDATE: {
-                final String[] dbVersion = bundle.getStringArray(KeyListClasses.KEY_LIST_VERSION_DB);
-                DialogOnMain.showUpdateDBDialog(this, KeyListClasses.UPDATE_DB_IS_AVAILABLE, new Object[]{
-                        dbVersion[0],
-                        dbVersion[1],
-                        "Update",
-                        new DialogInterface.OnClickListener() {
+                // if not accepted
+                if (isAllowedToCheckDBOnline()) {
+                    final String[] dbVersion = getVersionOnShareds();
+                    DialogOnMain.showUpdateDBDialogMain(this, KeyListClasses.UPDATE_DB_IS_AVAILABLE, new Object[]{
+                            dbVersion[0],
+                            dbVersion[1],
+                            "Update",
+                            new DialogInterface.OnClickListener() {
 
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                                new TaskDownloadDBUpdates(MainActivity.this, dbVersion[1]).execute();
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                    new TaskDownloadDBUpdates(MainActivity.this, dbVersion[1]).execute();
+                                }
                             }
-                        }
-                });
+                    });
+                }
             }
             break;
             case KeyListClasses.DB_IS_FIRST_USAGE:
@@ -314,6 +319,32 @@ public class MainActivity extends MylexzActivity
                 break;
         }
         showDialog(messageIfNeeded, dbErrorMesageIfNeeded);
+    }
+
+    private boolean isAllowedToCheckDBOnline() {
+        SharedPreferences sharedPreferences = getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getBoolean(KeyListClasses.KEY_AUTOCHECKUPDATE_APPDATA, true);
+    }
+
+    private String[] getVersionOnShareds() {
+        SharedPreferences sharedPreferences = getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, MODE_PRIVATE);
+        String cloudVersion = sharedPreferences.getString(KeyListClasses.KEY_VERSION_ON_CLOUD, null);
+        String appDbVersion = sharedPreferences.getString(KeyListClasses.KEY_DATA_LIBRARY_VERSION, null);
+        int apV = Integer.parseInt(appDbVersion);
+        int clV = 0;
+        if (cloudVersion == null || cloudVersion.equals("undefined"))
+            clV = apV;
+        else if (cloudVersion.equals(appDbVersion))
+            clV = apV;
+        else
+            clV = Integer.parseInt(cloudVersion);
+
+        return new String[]{"" + apV, "" + clV};
+    }
+
+    private int getDBCondition() {
+        SharedPreferences sharedPreferences = getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, MODE_PRIVATE);
+        return sharedPreferences.getInt(KeyListClasses.KEY_VERSION_BOOL_NEW, KeyListClasses.DB_IS_SAME_VERSION);
     }
 
     private void showDialog(String messageIfNeeded, final String dbErrorMesageIfNeeded) {

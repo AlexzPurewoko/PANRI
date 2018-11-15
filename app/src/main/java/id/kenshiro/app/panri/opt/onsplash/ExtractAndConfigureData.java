@@ -57,6 +57,11 @@ public class ExtractAndConfigureData {
             shareds.edit().putInt(KeyListClasses.KEY_SHARED_DATA_CURRENT_IMG_NAVHEADER, 0).commit();
         if (!shareds.contains(KeyListClasses.KEY_AUTOCHECKUPDATE_APPDATA))
             shareds.edit().putBoolean(KeyListClasses.KEY_AUTOCHECKUPDATE_APPDATA, true).commit();
+        // is avail new version
+        if (!shareds.contains(KeyListClasses.KEY_VERSION_BOOL_NEW))
+            shareds.edit().putInt(KeyListClasses.KEY_VERSION_BOOL_NEW, KeyListClasses.DB_IS_SAME_VERSION).commit();
+        if (!shareds.contains(KeyListClasses.KEY_VERSION_ON_CLOUD))
+            shareds.edit().putString(KeyListClasses.KEY_VERSION_ON_CLOUD, "undefined").commit();
     }
 
     @NotNull

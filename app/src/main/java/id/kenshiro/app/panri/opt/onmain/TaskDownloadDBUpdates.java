@@ -162,6 +162,8 @@ public class TaskDownloadDBUpdates extends AsyncTask<Void, Object, Integer> {
         fileCache.mkdirs();
         SharedPreferences sharedPreferences = activity.get().getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE);
         sharedPreferences.edit().putString(KeyListClasses.KEY_DATA_LIBRARY_VERSION, newDBVersion).commit();
+        sharedPreferences.edit().putString(KeyListClasses.KEY_VERSION_ON_CLOUD, newDBVersion).commit();
+        sharedPreferences.edit().putInt(KeyListClasses.KEY_VERSION_BOOL_NEW, KeyListClasses.DB_IS_SAME_VERSION).commit();
         return 1;
     }
 
