@@ -52,6 +52,7 @@ import id.kenshiro.app.panri.opt.ads.GetResultedIklanThr;
 import id.kenshiro.app.panri.opt.ads.SendAdsBReceiver;
 import id.kenshiro.app.panri.opt.ads.UpdateAdsService;
 import id.kenshiro.app.panri.opt.onmain.DialogOnMain;
+import id.kenshiro.app.panri.opt.onmain.DialogShowPasangIklan;
 import io.fabric.sdk.android.Fabric;
 import pl.droidsonroids.gif.GifImageView;
 
@@ -76,6 +77,7 @@ public class HowToResolveActivity extends MylexzActivity {
     private LinearLayout iklanHolder, iklanPasang;
     private SendAdsBReceiver sendAdsBReceiver = null;
     List<com.felipecsl.gifimageview.library.GifImageView> gifImageViewListIklan = new ArrayList<>();
+    private DialogShowPasangIklan dialog;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -92,6 +94,9 @@ public class HowToResolveActivity extends MylexzActivity {
             setDB();
             setContent();
             requestIklan();
+            dialog = new DialogShowPasangIklan(this);
+            dialog.build(Uri.parse("https://api.whatsapp.com/send?phone=6282223518455&text=Hallo%20Admin%20Saya%20Mau%20Pasang%20Iklan"));
+            dialog.load("introduce_ads_howto");
         } catch (Throwable e) {
             String keyEx = getClass().getName() + "_onCreate()";
             String resE = String.format("UnHandled Exception Occurs(Throwable) e -> %s", e.toString());
@@ -205,7 +210,7 @@ public class HowToResolveActivity extends MylexzActivity {
             cardView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    DialogOnMain.showDialogPasangIklan(HowToResolveActivity.this, Uri.parse("https://api.whatsapp.com/send?phone=6282223518455&text=Hallo%20Admin%20Saya%20Mau%20Pasang%20Iklan"), "file:///android_asset/introduce_ads_howto.html");
+                    dialog.show();
                 }
             });
             cardView.setVisibility(View.GONE);

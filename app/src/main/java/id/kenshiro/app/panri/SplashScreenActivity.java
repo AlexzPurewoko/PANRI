@@ -13,6 +13,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.crashlytics.android.Crashlytics;
+import com.crashlytics.android.answers.Answers;
 import com.mylexz.utils.MylexzActivity;
 
 import id.kenshiro.app.panri.opt.LogIntoCrashlytics;

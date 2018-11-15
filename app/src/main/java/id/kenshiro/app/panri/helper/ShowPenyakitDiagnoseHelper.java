@@ -44,6 +44,7 @@ import id.kenshiro.app.panri.opt.ads.GetResultedIklanThr;
 import id.kenshiro.app.panri.opt.ads.SendAdsBReceiver;
 import id.kenshiro.app.panri.opt.ads.UpdateAdsService;
 import id.kenshiro.app.panri.opt.onmain.DialogOnMain;
+import id.kenshiro.app.panri.opt.onmain.DialogShowPasangIklan;
 import pl.droidsonroids.gif.GifImageView;
 
 public class ShowPenyakitDiagnoseHelper implements Closeable{
@@ -79,6 +80,7 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
     private LinearLayout iklanHolder;
     private SendAdsBReceiver sendAdsBReceiver = null;
     List<com.felipecsl.gifimageview.library.GifImageView> gifImageViewListIklan = new ArrayList<>();
+    private DialogShowPasangIklan dialog;
 
     // dialog Alert
     public ShowPenyakitDiagnoseHelper(@NonNull MylexzActivity activity, @NonNull SQLiteDatabase sqLiteDatabase, @NonNull RelativeLayout mRootView){
@@ -350,7 +352,8 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
             cardView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    DialogOnMain.showDialogPasangIklan(activity, Uri.parse("https://api.whatsapp.com/send?phone=6282223518455&text=Hallo%20Admin%20Saya%20Mau%20Pasang%20Iklan"), "file:///android_asset/introduce_ads_howto.html");
+                    dialog.show();
+                    //DialogOnMain.showDialogPasangIklan(activity, Uri.parse("https://api.whatsapp.com/send?phone=6282223518455&text=Hallo%20Admin%20Saya%20Mau%20Pasang%20Iklan"), "file:///android_asset/introduce_ads_howto.html");
                 }
             });
             cardView.setVisibility(View.GONE);
@@ -403,6 +406,13 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
                 }
             }
         });
+        dialog = new DialogShowPasangIklan(activity);
+        dialog.build(Uri.parse("https://api.whatsapp.com/send?phone=6282223518455&text=Hallo%20Admin%20Saya%20Mau%20Pasang%20Iklan"));
+        try {
+            dialog.load("introduce_ads_howto");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 

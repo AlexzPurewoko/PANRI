@@ -21,6 +21,7 @@ public class RemoteAdsService implements Runnable {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            System.gc();
         }
         service.stopSelf();
     }

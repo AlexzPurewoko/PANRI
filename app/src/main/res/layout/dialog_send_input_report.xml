@@ -29,6 +29,13 @@
         android:hint="Description"
         android:id="@+id/description_report" />
 
+    <TextView
+        android:layout_margin="15dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/actmain_dimen_opimg_incard_wh"
+        android:id="@+id/description_txtbawahreport" />
+
     <LinearLayout
         android:layout_margin="10dp"
         android:layout_width="match_parent"
