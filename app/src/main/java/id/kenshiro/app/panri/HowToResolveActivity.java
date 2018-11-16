@@ -47,6 +47,7 @@ import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 import id.kenshiro.app.panri.helper.TampilListPenyakitHelper;
 import id.kenshiro.app.panri.important.KeyListClasses;
 import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
+import id.kenshiro.app.panri.opt.WebViewDestroy;
 import id.kenshiro.app.panri.opt.ads.DownloadIklanFiles;
 import id.kenshiro.app.panri.opt.ads.GetResultedIklanThr;
 import id.kenshiro.app.panri.opt.ads.SendAdsBReceiver;
@@ -379,11 +380,8 @@ public class HowToResolveActivity extends MylexzActivity {
         return web;
     }
 
-    private void clearViewOn(View baseLayout, int index) {
-        if (baseLayout instanceof LinearLayout) {
-            ((LinearLayout) baseLayout).removeViewAt(index);
-        } else if (baseLayout instanceof CardView) {
-            ((CardView) baseLayout).removeViewAt(index);
-        }
+    private void clearViewOn(ViewGroup baseLayout, int index) {
+        WebViewDestroy.destroyWebView(baseLayout, (WebView) baseLayout.getChildAt(index));
+        System.gc();
     }
 }

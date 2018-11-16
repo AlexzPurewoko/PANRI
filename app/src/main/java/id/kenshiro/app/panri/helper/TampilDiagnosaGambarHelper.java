@@ -48,6 +48,7 @@ import id.kenshiro.app.panri.adapter.CustomViewPager;
 import id.kenshiro.app.panri.adapter.FadePageViewTransformer;
 import id.kenshiro.app.panri.adapter.ImageFragmentAdapter;
 import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
+import id.kenshiro.app.panri.opt.WebViewDestroy;
 
 public class TampilDiagnosaGambarHelper implements Closeable{
     private RelativeLayout mRootView;
@@ -629,7 +630,9 @@ public class TampilDiagnosaGambarHelper implements Closeable{
 
         @NotNull
         private void cleanWebView(@NotNull LinearLayout base) {
-            base.removeViewAt(2);
+            //base.removeViewAt(2);
+            WebViewDestroy.destroyWebView(base, (WebView) base.getChildAt(2));
+            System.gc();
         }
     }
 }

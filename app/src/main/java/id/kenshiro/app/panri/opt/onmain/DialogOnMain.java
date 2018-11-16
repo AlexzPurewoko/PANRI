@@ -9,6 +9,8 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Process;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.view.ViewGroup;
@@ -59,6 +61,14 @@ public class DialogOnMain {
             public void onClick(View p1) {
                 mAlert.cancel();
                 activity.finish();
+                Handler kill = new Handler();
+                kill.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        android.os.Process.killProcess(Process.myPid());
+                    }
+                }, 2000);
+
             }
 
 

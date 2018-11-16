@@ -188,4 +188,9 @@ public class AboutActivity extends MylexzActivity {
         SwitchIntoMainActivity.switchToMain(this);
         return true;
     }
+
+    @Override
+    public void onBackPressed() {
+        SwitchIntoMainActivity.switchToMain(this);
+    }
 }

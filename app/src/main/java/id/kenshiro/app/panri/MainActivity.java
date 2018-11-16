@@ -123,6 +123,8 @@ public class MainActivity extends MylexzActivity
     private SendAdsBReceiver sendAdsBReceiver = null;
     private LinearLayout adsLayout;
     List<com.felipecsl.gifimageview.library.GifImageView> gifImageViewListIklan;
+    private DrawerLayout drawer;
+    private NavigationView navigationView;
 
     private DialogShowPasangIklan dialog;
     @Override
@@ -141,13 +143,14 @@ public class MainActivity extends MylexzActivity
             setInitialTextInds();
             setInitialSectPetani();
             setInitialSectOpIntent();
-            DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+            drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
             ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                     this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
             drawer.addDrawerListener(toggle);
+
             toggle.syncState();
 
-            NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+            navigationView = (NavigationView) findViewById(R.id.nav_view);
             navigationView.setNavigationItemSelectedListener(this);
             checkVersion();
             gifImageViewListIklan = new ArrayList<>();
@@ -687,7 +690,10 @@ public class MainActivity extends MylexzActivity
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            DialogOnMain.showExitDialog(this);
+            if (drawer.isDrawerOpen(navigationView))
+                drawer.closeDrawer(navigationView, true);
+            else
+                DialogOnMain.showExitDialog(this);
             return true;
         }
         return super.onKeyDown(keyCode, event);

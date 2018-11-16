@@ -81,6 +81,21 @@ public class ImageGridViewAdapter implements Closeable{
     @Override
     public void close() {
         recycleBitmaps();
+        if (rootElement != null)
+            rootElement.removeAllViews();
+        rootElement = null;
+        onItemClickListener = null;
+        ctx = null;
+        listLocationResImages = null;
+        listLocationAssetsImages = null;
+        screenSize = imageItemSize = null;
+        System.gc();
+
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        close();
     }
 
     public void setListLocationFileImages(List<String> listLocationFileImages, String idSuffix) {

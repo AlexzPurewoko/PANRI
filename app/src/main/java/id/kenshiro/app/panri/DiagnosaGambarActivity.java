@@ -168,7 +168,8 @@ public class DiagnosaGambarActivity extends MylexzActivity {
                 public void run() {
                     handlerPetani = null;
                     System.gc();
-                    imgPetaniKedipView.setImageResource(R.drawable.petani_kedip);
+                    if (imgPetaniKedipView != null)
+                        imgPetaniKedipView.setImageResource(R.drawable.petani_kedip);
                 }
             }, 4000);
         }
@@ -199,6 +200,21 @@ public class DiagnosaGambarActivity extends MylexzActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        try {
+            showPenyakitDiagnoseHelper.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (toolbar != null)
+            toolbar.removeAllViews();
+        if (sqlDB != null)
+            sqlDB.close();
+        mTextPetaniDesc = null;
+        handlerPetani = null;
+        if (relativeLayout != null)
+            relativeLayout.removeAllViews();
+        imgPetaniKedipView = null;
+        System.gc();
         super.onDestroy();
     }
 

@@ -134,7 +134,8 @@ public class InfoPenyakitActivity extends MylexzActivity {
                 public void run() {
                     handlerPetani = null;
                     System.gc();
-                    imgPetaniKedipView.setImageResource(R.drawable.petani_kedip);
+                    if (imgPetaniKedipView != null)
+                        imgPetaniKedipView.setImageResource(R.drawable.petani_kedip);
                 }
             }, 4000);
         }
@@ -162,6 +163,22 @@ public class InfoPenyakitActivity extends MylexzActivity {
             LogIntoCrashlytics.logException(keyEx, resE, e);
             LOGE(keyEx, resE);
         }
+        try {
+            showPenyakitDiagnoseHelper.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.gc();
+        if (toolbar != null)
+            toolbar.removeAllViews();
+        tampil = null;
+        sqlDB = null;
+        showPenyakitDiagnoseHelper = null;
+        handlerPetani = null;
+        mTextPetaniDesc = null;
+        imgPetaniKedipView = null;
+        System.gc();
+        System.gc();
         super.onDestroy();
     }
 

@@ -39,6 +39,7 @@ import id.kenshiro.app.panri.R;
 import id.kenshiro.app.panri.adapter.ImageGridViewAdapter;
 import id.kenshiro.app.panri.important.KeyListClasses;
 import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
+import id.kenshiro.app.panri.opt.WebViewDestroy;
 import id.kenshiro.app.panri.opt.ads.DownloadIklanFiles;
 import id.kenshiro.app.panri.opt.ads.GetResultedIklanThr;
 import id.kenshiro.app.panri.opt.ads.SendAdsBReceiver;
@@ -68,7 +69,7 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
     public ScrollView mScrollContent;
     private Button mTextPetaniDesc;
     boolean mTxtPeralihan = false;
-    private final DialogShowHelper dialogShowHelper;
+    private DialogShowHelper dialogShowHelper;
 
     // for item
     LinearLayout baseUmumLayout;
@@ -117,6 +118,7 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
             clearViewOn(baseUmumLayout, baseUmumLayout.getChildCount() - 1);
             clearViewOn(baseGejala, baseGejala.getChildCount() - 1);
             clearViewOn(baseCaraAtasi, baseCaraAtasi.getChildCount() - 1);
+            System.gc();
         } else
             firstCondition = false;
         WebView umum = setWebView(baseUmumLayout);
@@ -449,12 +451,11 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         return web;
     }
 
-    private void clearViewOn(View baseLayout, int index) {
-        if (baseLayout instanceof LinearLayout) {
-            ((LinearLayout) baseLayout).removeViewAt(index);
-        } else if (baseLayout instanceof CardView) {
-            ((CardView) baseLayout).removeViewAt(index);
-        }
+    // usages only for webview
+    private void clearViewOn(ViewGroup baseLayout, int index) {
+        if (baseLayout.getChildAt(index) instanceof WebView)
+            WebViewDestroy.destroyWebView(baseLayout, (WebView) baseLayout.getChildAt(index));
+        System.gc();
     }
     @Override
     public void close() throws IOException {
@@ -462,6 +463,75 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
             imageViewPenyakit.close();
         stopAnimIklan();
         activity.unregisterReceiver(sendAdsBReceiver);
+        // release the webview
+        clearViewOn(baseUmumLayout, baseUmumLayout.getChildCount() - 1);
+        clearViewOn(baseGejala, baseGejala.getChildCount() - 1);
+        clearViewOn(baseCaraAtasi, baseCaraAtasi.getChildCount() - 1);
+        activity = null;
+        if (sqLiteDatabase != null && sqLiteDatabase.isOpen())
+            sqLiteDatabase.close();
+        sqLiteDatabase = null;
+        path_to_file = image_default_dirs = null;
+        if (mRootView != null) {
+            mRootView.removeAllViews();
+            mRootView = null;
+        }
+
+        if (mContentView != null) {
+            mContentView.removeAllViews();
+            mContentView = null;
+        }
+        judul = latin = null;
+        if (klikBawah != null) {
+            klikBawah.removeAllViews();
+            klikBawah = null;
+        }
+        klikBawahText = null;
+        if (mContent1 != null) {
+            mContent1.removeAllViews();
+            mContent1 = null;
+        }
+        if (mContent2 != null) {
+            mContent2.removeAllViews();
+            mContent2 = null;
+        }
+        imageViewPenyakit = null;
+        dataPath = null;
+        onClickListener = null;
+        if (mScrollContent != null) {
+            mScrollContent.removeAllViews();
+            mScrollContent = null;
+        }
+        mTextPetaniDesc = null;
+        dialogShowHelper = null;
+        if (baseUmumLayout != null) {
+            baseUmumLayout.removeAllViews();
+            baseUmumLayout = null;
+        }
+        if (baseGejala != null) {
+            baseGejala.removeAllViews();
+            baseGejala = null;
+        }
+        if (baseCaraAtasi != null) {
+            baseCaraAtasi.removeAllViews();
+            baseCaraAtasi = null;
+        }
+        if (pasangIklanHolder != null) {
+            pasangIklanHolder.removeAllViews();
+            pasangIklanHolder = null;
+        }
+        onHandlerClickCardBottom = null;
+        if (iklanHolder != null) {
+            iklanHolder.removeAllViews();
+            iklanHolder = null;
+        }
+        sendAdsBReceiver = null;
+        if (gifImageViewListIklan != null) {
+            gifImageViewListIklan.clear();
+            gifImageViewListIklan = null;
+        }
+        dialog = null;
+        System.gc();
     }
 
     public interface OnHandlerClickCardBottom {

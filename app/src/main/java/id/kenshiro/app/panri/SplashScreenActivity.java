@@ -6,6 +6,8 @@ import android.graphics.Point;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Process;
 import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.Button;
@@ -93,4 +95,15 @@ public class SplashScreenActivity extends MylexzActivity {
         indicators.setText("Mempersiapkan data...");
     }
 
+    @Override
+    protected void onDestroy() {
+        Handler postClose = new Handler();
+        postClose.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Process.killProcess(Process.myPid());
+            }
+        }, 3000);
+        super.onDestroy();
+    }
 }

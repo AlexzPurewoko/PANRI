@@ -32,5 +32,6 @@ public class WebViewDestroy {
 
         // Null out the reference so that you don't end up re-using it.
         content = null;
+        System.gc();
     }
 }
