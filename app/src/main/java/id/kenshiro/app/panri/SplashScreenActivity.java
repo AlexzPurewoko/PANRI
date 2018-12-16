@@ -22,6 +22,7 @@ import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
 import io.fabric.sdk.android.Fabric;
 import id.kenshiro.app.panri.important.KeyListClasses;
 import id.kenshiro.app.panri.opt.onsplash.LoaderTask;
+import pl.droidsonroids.gif.GifDrawable;
 import pl.droidsonroids.gif.GifImageView;
 
 public class SplashScreenActivity extends MylexzActivity {
@@ -97,13 +98,16 @@ public class SplashScreenActivity extends MylexzActivity {
 
     @Override
     protected void onDestroy() {
+        //get my pid
+        final int pid = Process.myPid();
+        GifDrawable b;
         Handler postClose = new Handler();
         postClose.postDelayed(new Runnable() {
             @Override
             public void run() {
-                Process.killProcess(Process.myPid());
+                Process.killProcess(pid);
             }
-        }, 3000);
+        }, 2500);
         super.onDestroy();
     }
 }
