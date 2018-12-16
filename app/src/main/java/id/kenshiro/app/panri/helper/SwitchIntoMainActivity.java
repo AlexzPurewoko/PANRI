@@ -24,11 +24,12 @@ public class SwitchIntoMainActivity {
         activity.startActivity(a);
         activity.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         activity.finish();
+        final int myPid = Process.myPid();
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                Process.killProcess(Process.myPid());
+                Process.killProcess(myPid);
             }
         }, 3000);
 

@@ -100,7 +100,6 @@ public class SplashScreenActivity extends MylexzActivity {
     protected void onDestroy() {
         //get my pid
         final int pid = Process.myPid();
-        GifDrawable b;
         Handler postClose = new Handler();
         postClose.postDelayed(new Runnable() {
             @Override

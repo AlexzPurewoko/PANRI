@@ -3,6 +3,7 @@ package id.kenshiro.app.panri.opt.ads;
 import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.util.Log;
 
 import java.util.List;
 
@@ -31,6 +32,7 @@ public class RemoteAdsService implements Runnable {
         List<ActivityManager.RunningTaskInfo> runningTaskInfo = manager.getRunningTasks(10);
         for (ActivityManager.RunningTaskInfo componentInfo : runningTaskInfo) {
             ComponentName info = componentInfo.topActivity;
+            Log.d("ServiceRemotes", "COmponent info Top Activity : " + info.getPackageName());
             if (info.getPackageName().equals(service.getPackageName()))
                 return true;
         }

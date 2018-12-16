@@ -89,7 +89,7 @@ import android.view.KeyEvent;
 public class MainActivity extends MylexzActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     private static final long TIME_BETWEEN_IMAGE = 10000;
-    private static final long TIME_AUTO_UPDATE_TEXT_MILLIS = 5000; // 5s
+    private static final long TIME_AUTO_UPDATE_TEXT_MILLIS = 6000; // 5s
     Toolbar toolbar;
     // for view image pager
     public LinearLayout indicators;
@@ -632,11 +632,13 @@ public class MainActivity extends MylexzActivity
                     public void run() {
                         handlerPetani = null;
                         System.gc();
-                        mImagePetani.get(0).stop();
-                        gifNpcView.setImageDrawable(mImagePetani.get(1));
-                        mImagePetani.get(1).start();
+                        if (mImagePetani != null && mImagePetani.size() != 0 && !mImagePetani.get(0).isRecycled()) {
+                            mImagePetani.get(0).stop();
+                            gifNpcView.setImageDrawable(mImagePetani.get(1));
+                            mImagePetani.get(1).start();
+                        }
                     }
-                }, 4000);
+                }, 3500);
             }
             System.gc();
         } else {
@@ -652,11 +654,13 @@ public class MainActivity extends MylexzActivity
                     public void run() {
                         handlerPetani = null;
                         System.gc();
-                        mImagePetani.get(0).stop();
-                        gifNpcView.setImageDrawable(mImagePetani.get(1));
-                        mImagePetani.get(1).start();
+                        if (mImagePetani != null && mImagePetani.size() != 0 && mImagePetani.get(0).isRecycled()) {
+                            mImagePetani.get(0).stop();
+                            gifNpcView.setImageDrawable(mImagePetani.get(1));
+                            mImagePetani.get(1).start();
+                        }
                     }
-                }, 4000);
+                }, 3000);
             }
             System.gc();
         }

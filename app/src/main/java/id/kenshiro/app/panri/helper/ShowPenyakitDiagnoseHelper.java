@@ -9,6 +9,7 @@ import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.v4.util.LruCache;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.view.Gravity;
@@ -17,6 +18,7 @@ import android.view.ViewGroup;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
@@ -35,6 +37,7 @@ import org.jetbrains.annotations.NotNull;
 
 import id.kenshiro.app.panri.DiagnoseActivity;
 import id.kenshiro.app.panri.HowToResolveActivity;
+import id.kenshiro.app.panri.MainActivity;
 import id.kenshiro.app.panri.R;
 import id.kenshiro.app.panri.adapter.ImageGridViewAdapter;
 import id.kenshiro.app.panri.important.KeyListClasses;
@@ -46,6 +49,7 @@ import id.kenshiro.app.panri.opt.ads.SendAdsBReceiver;
 import id.kenshiro.app.panri.opt.ads.UpdateAdsService;
 import id.kenshiro.app.panri.opt.onmain.DialogOnMain;
 import id.kenshiro.app.panri.opt.onmain.DialogShowPasangIklan;
+import pl.droidsonroids.gif.GifDrawable;
 import pl.droidsonroids.gif.GifImageView;
 
 public class ShowPenyakitDiagnoseHelper implements Closeable{
@@ -80,7 +84,8 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
 
     private LinearLayout iklanHolder;
     private SendAdsBReceiver sendAdsBReceiver = null;
-    List<com.felipecsl.gifimageview.library.GifImageView> gifImageViewListIklan = new ArrayList<>();
+    public LruCache<Integer, GifDrawable> mImageProducts;
+    //List<com.felipecsl.gifimageview.library.GifImageView> gifImageViewListIklan = new ArrayList<>();
     private DialogShowPasangIklan dialog;
 
     // dialog Alert
@@ -209,7 +214,7 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         imageViewPenyakit.setColumnCount(2);
         imageViewPenyakit.setListLocationFileImages(mListResImage, "show_diagnose");
         int dimen = Math.round(activity.getResources().getDimension(R.dimen.margin_img_penyakit));
-        imageViewPenyakit.setMargin(0, dimen, dimen, dimen, dimen);
+        imageViewPenyakit.setMargin(0, dimen, dimen, dimen, dimen, Math.round(activity.getResources().getDimension(R.dimen.content_imggrid_padding)) + 2);
         imageViewPenyakit.buildAndShow();
     }
 
@@ -234,22 +239,57 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
         sendAdsBReceiver = new SendAdsBReceiver(activity, new SendAdsBReceiver.OnReceiveAds() {
             @Override
             public void onReceiveByteAds(GetResultedIklanThr.ByteArray[] ads, DownloadIklanFiles.DBIklanCollection[] information) {
-                if (iklanHolder != null && ads != null && ads.length > 0) {
+                if (activity != null && iklanHolder != null && ads != null && ads.length > 0) {
                     //List<com.felipecsl.gifimageview.library.GifImageView> gifImageViewListIklan = new ArrayList<>();
                     int x = 0;
+                    int size_counter = 0;
                     for (GetResultedIklanThr.ByteArray byteArr : ads) {
                         byte[] bArr = byteArr.getArray();
                         if (bArr != null && bArr.length > 1) {
-                            gifImageViewListIklan.add(setGifImgView(bArr, information[x]));
+                            //gifImageViewListIklan.add(setGifImgView(bArr, information[x]));
+                            size_counter += bArr.length;
+                        }
+                        x++;
+                        //
+                    }
+                    mImageProducts = new LruCache<>(size_counter * 2);
+                    x = 0;
+                    for (GetResultedIklanThr.ByteArray byteArr : ads) {
+                        byte[] bArr = byteArr.getArray();
+                        if (bArr != null && bArr.length > 1) {
+                            try {
+                                mImageProducts.put(x, new GifDrawable(bArr));
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            if (mImageProducts.get(x) != null) {
+                                mImageProducts.get(x).stop();
+                                ImageView v = new ImageView(activity);
+                                v.setLayoutParams(new LinearLayout.LayoutParams(
+                                        ViewGroup.LayoutParams.MATCH_PARENT,
+                                        ViewGroup.LayoutParams.WRAP_CONTENT
+                                ));
+                                v.setImageDrawable(mImageProducts.get(x));
+                                final DownloadIklanFiles.DBIklanCollection foo = information[x];
+                                v.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        String url = foo.getUrl();
+                                        String info_produk = foo.getInfo_produk();
+                                        int methodPost = foo.getTipe_url();
+                                        DialogOnMain.showOnClickedIklanViews(activity, url, info_produk, methodPost);
+                                    }
+                                });
+                                iklanHolder.addView(v);
+                                mImageProducts.get(x).start();
+                            }
+
                         }
                         x++;
                         //
                     }
                     // add its views
-                    for (com.felipecsl.gifimageview.library.GifImageView a : gifImageViewListIklan) {
-                        iklanHolder.addView(a);
-                    }
-                    for (int y = gifImageViewListIklan.size(); y < 2; y++) {
+                    for (int y = mImageProducts.size(); y < 2; y++) {
                         pasangIklanHolder.getChildAt(pasangIklanHolder.getChildCount() - (y + 1)).setVisibility(View.VISIBLE);
                     }
                 } else if (ads == null) {
@@ -260,24 +300,6 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
                 //
             }
 
-            private com.felipecsl.gifimageview.library.GifImageView setGifImgView(byte[] bArr, final DownloadIklanFiles.DBIklanCollection info) {
-                com.felipecsl.gifimageview.library.GifImageView gifView = new com.felipecsl.gifimageview.library.GifImageView(activity);
-                gifView.setLayoutParams(new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT
-                ));
-                gifView.setBytes(bArr);
-                gifView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        String url = info.getUrl();
-                        String info_produk = info.getInfo_produk();
-                        int methodPost = info.getTipe_url();
-                        DialogOnMain.showOnClickedIklanViews(activity, url, info_produk, methodPost);
-                    }
-                });
-                return gifView;
-            }
         });
         activity.registerReceiver(sendAdsBReceiver, new IntentFilter(KeyListClasses.INTENT_BROADCAST_SEND_IKLAN));
         Intent intentService = new Intent(activity, UpdateAdsService.class);
@@ -386,12 +408,7 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
                             mContent1.setVisibility(View.GONE);
                             mContent2.setVisibility(View.VISIBLE);
                             mScrollContent.pageScroll(1);
-                            if (gifImageViewListIklan != null && gifImageViewListIklan.size() >= 1) {
-                                for (com.felipecsl.gifimageview.library.GifImageView gif : gifImageViewListIklan) {
-                                    if (!gif.isAnimating())
-                                        gif.startAnimation();
-                                }
-                            }
+                            startAnimIklan();
                             klikBawahText.postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
@@ -419,19 +436,19 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
     }
 
     public void stopAnimIklan() {
-        if (gifImageViewListIklan != null && gifImageViewListIklan.size() >= 1) {
-            for (com.felipecsl.gifimageview.library.GifImageView gif : gifImageViewListIklan) {
-                if (gif.isAnimating())
-                    gif.stopAnimation();
+        if (mImageProducts != null && mImageProducts.size() >= 1) {
+            for (int x = 0; x < mImageProducts.size(); x++) {
+                if (mImageProducts.get(x).isRunning())
+                    mImageProducts.get(x).stop();
             }
         }
     }
 
     public void startAnimIklan() {
-        if (gifImageViewListIklan != null && gifImageViewListIklan.size() >= 1) {
-            for (com.felipecsl.gifimageview.library.GifImageView gif : gifImageViewListIklan) {
-                if (!gif.isAnimating())
-                    gif.startAnimation();
+        if (mImageProducts != null && mImageProducts.size() >= 1) {
+            for (int x = 0; x < mImageProducts.size(); x++) {
+                if (!mImageProducts.get(x).isRunning())
+                    mImageProducts.get(x).start();
             }
         }
     }
@@ -463,6 +480,12 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
             imageViewPenyakit.close();
         stopAnimIklan();
         activity.unregisterReceiver(sendAdsBReceiver);
+        if (mImageProducts != null && mImageProducts.size() >= 1) {
+            for (int x = 0; x < mImageProducts.size(); x++) {
+                mImageProducts.get(x).recycle();
+            }
+            mImageProducts.evictAll();
+        }
         // release the webview
         clearViewOn(baseUmumLayout, baseUmumLayout.getChildCount() - 1);
         clearViewOn(baseGejala, baseGejala.getChildCount() - 1);
@@ -526,10 +549,10 @@ public class ShowPenyakitDiagnoseHelper implements Closeable{
             iklanHolder = null;
         }
         sendAdsBReceiver = null;
-        if (gifImageViewListIklan != null) {
+        /*if (gifImageViewListIklan != null) {
             gifImageViewListIklan.clear();
             gifImageViewListIklan = null;
-        }
+        }*/
         dialog = null;
         System.gc();
     }

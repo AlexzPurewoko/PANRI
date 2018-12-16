@@ -9,7 +9,9 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.Nullable;
+import android.support.v4.util.LruCache;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -28,6 +30,9 @@ import com.mylexz.utils.MylexzActivity;
 import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import id.kenshiro.app.panri.adapter.AdapterRecycler;
 import id.kenshiro.app.panri.helper.DiagnoseActivityHelper;
@@ -36,6 +41,7 @@ import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 import id.kenshiro.app.panri.helper.TampilListPenyakitHelper;
 import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
 import io.fabric.sdk.android.Fabric;
+import pl.droidsonroids.gif.GifDrawable;
 import pl.droidsonroids.gif.GifImageView;
 
 public class InfoPenyakitActivity extends MylexzActivity {
@@ -45,7 +51,9 @@ public class InfoPenyakitActivity extends MylexzActivity {
     private ShowPenyakitDiagnoseHelper showPenyakitDiagnoseHelper;
     private Handler handlerPetani;
     Button mTextPetaniDesc;
-    private GifImageView imgPetaniKedipView;
+    public LruCache<Integer, GifDrawable> mImagePetani;
+    private ImageView gifNpcView;
+    //private GifImageView imgPetaniKedipView;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -76,21 +84,76 @@ public class InfoPenyakitActivity extends MylexzActivity {
 
     private void setContent() {
         loadLayoutAndShow();
-        mTextPetaniDesc = (Button) findViewById(R.id.actmain_id_section_petani_btn);
-        imgPetaniKedipView = findViewById(R.id.actsplash_id_gifpetanikedip);
+        mTextPetaniDesc = (Button) findViewById(R.id.actall_id_section_petani_btn);
+        gifNpcView = findViewById(R.id.actall_id_gifpetanikedip);
         mTextPetaniDesc.setTextColor(Color.BLACK);
         mTextPetaniDesc.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.NORMAL);
-        tampil = new TampilListPenyakitHelper(this, sqlDB, (RelativeLayout) findViewById(R.id.actinfo_id_layoutcontainer));
-        tampil.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
             @Override
-            public void onClick(View view, int position) {
-                view.setVisibility(View.GONE);
-                showPenyakitDiagnoseHelper.show(position + 1);
-                onButtonPetaniClicked(getText(R.string.actinfo_string_speechfarmer_2));
+            public void run() {
+                try {
+                    setPetaniHolders();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return;
+                }
+                if (mImagePetani != null) {
+                    gifNpcView.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            gifNpcView.setVisibility(View.VISIBLE);
+                            gifNpcView.setImageDrawable(mImagePetani.get(1));
+                            mImagePetani.get(1).start();
+                            tampil = new TampilListPenyakitHelper(InfoPenyakitActivity.this, sqlDB, (RelativeLayout) findViewById(R.id.actinfo_id_layoutcontainer));
+                            tampil.setOnItemClickListener(new AdapterRecycler.OnItemClickListener() {
+                                @Override
+                                public void onClick(View view, int position) {
+                                    view.setVisibility(View.GONE);
+                                    showPenyakitDiagnoseHelper.show(position + 1);
+                                    onButtonPetaniClicked(getText(R.string.actinfo_string_speechfarmer_2));
+                                }
+                            });
+                            tampil.buildAndShow();
+                            onButtonPetaniClicked(getText(R.string.actinfo_string_speechfarmer_1));
+                        }
+                    });
+                }
+
             }
         });
-        tampil.buildAndShow();
-        onButtonPetaniClicked(getText(R.string.actinfo_string_speechfarmer_1));
+    }
+
+    private void setPetaniHolders() throws IOException {
+        int[] res_gif_npc = {
+                R.raw.petani_bicara,
+                R.raw.petani_kedip
+        };
+        List<byte[]> listOfByte = new ArrayList<>();
+        int counter = 0;
+        for (int x = 0; x < res_gif_npc.length; x++) {
+            InputStream inputStream = getResources().openRawResource(res_gif_npc[x]);
+            listOfByte.add(new byte[inputStream.available()]);
+            counter += inputStream.available();
+            inputStream.read(listOfByte.get(x));
+            inputStream.close();
+        }
+        mImagePetani = new LruCache<>(counter * 2);
+        for (int x = 0; x < res_gif_npc.length; x++) {
+            mImagePetani.put(x, new GifDrawable(listOfByte.get(x)));
+            mImagePetani.get(x).stop();
+        }
+        listOfByte.clear();
+        listOfByte = null;
+        System.gc();
+    }
+
+    private void releaseGifNpc() {
+        for (int x = 0; x < mImagePetani.size(); x++) {
+            mImagePetani.get(x).stop();
+            mImagePetani.get(x).recycle();
+        }
+        mImagePetani.evictAll();
     }
 
     private void loadLayoutAndShow() {
@@ -126,7 +189,11 @@ public class InfoPenyakitActivity extends MylexzActivity {
     private void onButtonPetaniClicked(CharSequence text) {
 
         mTextPetaniDesc.setText(text);
-        imgPetaniKedipView.setImageResource(R.drawable.petani_bicara);
+        //imgPetaniKedipView.setImageResource(R.drawable.petani_bicara);
+        mImagePetani.get(1).stop();
+        gifNpcView.setImageDrawable(mImagePetani.get(0));
+        mImagePetani.get(0).start();
+
         if (handlerPetani == null) {
             handlerPetani = new Handler();
             handlerPetani.postDelayed(new Runnable() {
@@ -134,8 +201,13 @@ public class InfoPenyakitActivity extends MylexzActivity {
                 public void run() {
                     handlerPetani = null;
                     System.gc();
-                    if (imgPetaniKedipView != null)
-                        imgPetaniKedipView.setImageResource(R.drawable.petani_kedip);
+                    /*if (imgPetaniKedipView != null)
+                        imgPetaniKedipView.setImageResource(R.drawable.petani_kedip);*/
+                    if (mImagePetani != null && mImagePetani.size() != 0 && !mImagePetani.get(0).isRecycled()) {
+                        mImagePetani.get(0).stop();
+                        gifNpcView.setImageDrawable(mImagePetani.get(1));
+                        mImagePetani.get(1).start();
+                    }
                 }
             }, 4000);
         }
@@ -168,6 +240,7 @@ public class InfoPenyakitActivity extends MylexzActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        releaseGifNpc();
         System.gc();
         if (toolbar != null)
             toolbar.removeAllViews();
@@ -176,7 +249,7 @@ public class InfoPenyakitActivity extends MylexzActivity {
         showPenyakitDiagnoseHelper = null;
         handlerPetani = null;
         mTextPetaniDesc = null;
-        imgPetaniKedipView = null;
+        //imgPetaniKedipView = null;
         System.gc();
         System.gc();
         super.onDestroy();
