@@ -124,12 +124,7 @@ public class CheckAdsUpdates implements Runnable {
     }
 
     private boolean cekKoneksi() {
-        try {
-            return CheckConnection.isConnected(service, 1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            return false;
-        }
+        return CheckConnection.isConnected(service, 1000);
     }
 
     private int getCurrentAdsVersion() {

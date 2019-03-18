@@ -10,7 +10,6 @@ import android.support.annotation.Nullable;
 import com.mylexz.utils.MylexzActivity;
 
 import id.kenshiro.app.panri.MainActivity;
-import id.kenshiro.app.panri.SplashScreenActivity;
 import id.kenshiro.app.panri.important.KeyListClasses;
 
 public class SwitchIntoMainActivity {
@@ -31,7 +30,7 @@ public class SwitchIntoMainActivity {
             public void run() {
                 Process.killProcess(myPid);
             }
-        }, 3000);
+        }, 500);
 
     }
 

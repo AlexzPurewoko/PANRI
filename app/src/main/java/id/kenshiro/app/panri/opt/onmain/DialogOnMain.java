@@ -18,6 +18,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.crashlytics.android.answers.Answers;
@@ -94,6 +95,36 @@ public class DialogOnMain {
         textView.setText(TextSpanFormat.convertStrToSpan(activity, readFromAsset(activity, "whats_new"), 0));
         builder.setView(textView);
         builder.setPositiveButton("Okay!", onbtnOk);
+        builder.show();
+    }
+
+    public static void showDialogAboutSKPP(final MylexzActivity activity, String path, String title) {
+        AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(activity);
+        builder.setTitle(title);
+        builder.setIcon(R.mipmap.ic_launcher);
+
+        TextView textView = new TextView(activity);
+        textView.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+        textView.setTextColor(Color.BLACK);
+        ScrollView scrollView = new ScrollView(activity);
+        scrollView.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+        scrollView.addView(textView);
+        int padding = Math.round(activity.getResources().getDimension(R.dimen.dialogshdup_margin_all));
+        scrollView.setPadding(padding, padding, padding, padding);
+        textView.setText(TextSpanFormat.convertStrToSpan(activity, readFromAsset(activity, path), 0));
+        builder.setView(scrollView);
+        builder.setPositiveButton("Okay!", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
         builder.show();
     }
 
