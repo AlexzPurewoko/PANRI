@@ -14,10 +14,8 @@ import android.os.Process;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -29,10 +27,7 @@ import com.mylexz.utils.text.TextSpanFormat;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 
-import id.kenshiro.app.panri.MainActivity;
 import id.kenshiro.app.panri.R;
 import id.kenshiro.app.panri.important.KeyListClasses;
 
@@ -41,9 +36,9 @@ public class DialogOnMain {
     public static void showExitDialog(final MylexzActivity activity) {
         AlertDialog.Builder build = new AlertDialog.Builder(activity);
         LinearLayout layoutDialog = (LinearLayout) LinearLayout.inflate(activity, R.layout.actmain_dialog_on_exit, null);
-        TextView text = (TextView) layoutDialog.findViewById(R.id.actmain_id_dialogexit_content);
-        Button btnyes = (Button) layoutDialog.findViewById(R.id.actmain_id_dialogexit_btnyes);
-        Button btnno = (Button) layoutDialog.findViewById(R.id.actmain_id_dialogexit_btnno);
+        TextView text = layoutDialog.findViewById(R.id.actmain_id_dialogexit_content);
+        Button btnyes = layoutDialog.findViewById(R.id.actmain_id_dialogexit_btnyes);
+        Button btnno = layoutDialog.findViewById(R.id.actmain_id_dialogexit_btnno);
         text.setTextColor(Color.BLACK);
         text.setTypeface(Typeface.createFromAsset(activity.getAssets(), "Comic_Sans_MS3.ttf"), Typeface.BOLD);
         text.setText(R.string.actmain_string_dialogexit_desc);
@@ -184,11 +179,7 @@ public class DialogOnMain {
 
             @Override
             public void onClick(View v) {
-                if (isChecked) {
-                    isChecked = true;
-                } else {
-                    isChecked = false;
-                }
+                isChecked = isChecked;
                 SharedPreferences sharedPreferences = activity.getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE);
                 sharedPreferences.edit().putBoolean(KeyListClasses.KEY_AUTOCHECKUPDATE_APPDATA, isChecked).commit();
             }

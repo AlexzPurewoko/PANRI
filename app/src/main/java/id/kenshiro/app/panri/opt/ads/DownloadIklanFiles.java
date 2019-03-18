@@ -1,9 +1,7 @@
 package id.kenshiro.app.panri.opt.ads;
 
-import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.IBinder;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;

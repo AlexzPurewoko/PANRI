@@ -1,23 +1,17 @@
 package id.kenshiro.app.panri;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.preference.CheckBoxPreference;
 import android.preference.Preference;
-import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 import com.mylexz.utils.MylexzActivity;
@@ -31,7 +25,7 @@ import io.fabric.sdk.android.Fabric;
 public class PanriSettingActivity extends MylexzActivity {
     Toolbar toolbar;
     SharedPreferences pref;
-    private boolean doubleBackToExitPressedOnce;
+    //private boolean doubleBackToExitPressedOnce;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -55,7 +49,7 @@ public class PanriSettingActivity extends MylexzActivity {
     }
 
     private void setMyActionBar() {
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
             SpannableString strTitle = new SpannableString(getTitle());
             Typeface tTitle = Typeface.createFromAsset(getAssets(), "Gecko_PersonalUseOnly.ttf");

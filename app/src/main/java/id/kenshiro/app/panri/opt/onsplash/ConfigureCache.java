@@ -98,9 +98,7 @@ public class ConfigureCache {
         File fileCache = new File(ctx.getCacheDir(), "cache");
         fileCache.mkdir();
         String[] fileList = fileCache.list();
-        if (fileList.length == 0)
-            return true;
-        return false;
+        return fileList.length == 0;
     }
 
 

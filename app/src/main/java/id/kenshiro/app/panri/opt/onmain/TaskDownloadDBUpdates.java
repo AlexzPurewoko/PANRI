@@ -173,12 +173,12 @@ public class TaskDownloadDBUpdates extends AsyncTask<Void, Object, Integer> {
         Object[] vals = values;
         switch ((int) vals[0]) {
             case STATE_UPDATE_PROGRESS_DOWNLOADING_ZIP: {
-                textProgress.setText("Downloading... (" + ((double) vals[1]) + "%)");
+                textProgress.setText("Downloading... (" + vals[1] + "%)");
                 progressBar.setProgress((int) ((double) (vals[1])));
             }
             break;
             case STATE_EXTRACTING_ZIP: {
-                textProgress.setText("Extracting... (" + ((double) vals[1]) + "%)");
+                textProgress.setText("Extracting... (" + vals[1] + "%)");
                 progressBar.setProgress((int) ((double) (vals[1])));
             }
         }
@@ -225,7 +225,7 @@ public class TaskDownloadDBUpdates extends AsyncTask<Void, Object, Integer> {
         public void run() {
             if (threadPerformCallbacks != null)
                 threadPerformCallbacks.onStarting(this);
-            firebaseStorage = firebaseStorage.getInstance();
+            firebaseStorage = FirebaseStorage.getInstance();
             StorageReference storageReference = firebaseStorage.getReference();
             StorageReference pathReference = storageReference.child("data_panri.zip");
             try {

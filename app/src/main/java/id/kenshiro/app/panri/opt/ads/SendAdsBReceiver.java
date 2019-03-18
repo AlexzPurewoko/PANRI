@@ -5,11 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.google.firebase.storage.FirebaseStorage;
 import com.mylexz.utils.MylexzActivity;
 
 import java.lang.ref.WeakReference;
-import java.util.List;
 
 import id.kenshiro.app.panri.important.KeyListClasses;
 
