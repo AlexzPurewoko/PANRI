@@ -50,6 +50,7 @@ public class ImageGridViewAdapter implements Closeable{
     private int mode = 0;
     private int finished_mode = 0;
     private String idSuffix = null;
+    private int content_padding = 0;
 
     public ImageGridViewAdapter(MylexzActivity ctx, Point screenSize, @IdRes int resRootLayout){
         this.ctx = ctx;
@@ -61,12 +62,14 @@ public class ImageGridViewAdapter implements Closeable{
     public void setColumnCount(int columnCount){
         this.columnCount = columnCount;
     }
-    public void setMargin(@Px int marginTop, @Px int marginBottom, @Px int marginLeft, @Px int marginRight, @Px int marginCenter){
+
+    public void setMargin(@Px int marginTop, @Px int marginBottom, @Px int marginLeft, @Px int marginRight, @Px int marginCenter, @Px int content_padding) {
         this.marginBottom = marginBottom;
         this.marginTop = marginTop;
         this.marginLeft = marginLeft;
         this.marginRight = marginRight;
         this.marginCenter = marginCenter;
+        this.content_padding = content_padding;
     }
     private void recycleBitmaps(){
         if(mImagecache != null) {
@@ -81,6 +84,21 @@ public class ImageGridViewAdapter implements Closeable{
     @Override
     public void close() {
         recycleBitmaps();
+        if (rootElement != null)
+            rootElement.removeAllViews();
+        rootElement = null;
+        onItemClickListener = null;
+        ctx = null;
+        listLocationResImages = null;
+        listLocationAssetsImages = null;
+        screenSize = imageItemSize = null;
+        System.gc();
+
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        close();
     }
 
     public void setListLocationFileImages(List<String> listLocationFileImages, String idSuffix) {
@@ -305,7 +323,7 @@ public class ImageGridViewAdapter implements Closeable{
             int screenWidth  = ctxCls.get().screenSize.x;
             ///// section width
             //int imageWidth = screenWidth / ctxCls.get().columnCount - (ctxCls.get().columnCount * ctxCls.get().marginLeft + ctxCls.get().columnCount * ctxCls.get().marginRight);
-            int imageWidth = screenWidth / ctxCls.get().columnCount - (ctxCls.get().marginLeft + ctxCls.get().marginRight / ctxCls.get().columnCount);
+            int imageWidth = screenWidth / ctxCls.get().columnCount - (ctxCls.get().marginLeft + ctxCls.get().marginRight / ctxCls.get().columnCount) - ctxCls.get().content_padding;
             ctxCls.get().imageItemSize.x = imageWidth;
             ///// section height
             if(ctxCls.get().imageItemSize.y == 0){

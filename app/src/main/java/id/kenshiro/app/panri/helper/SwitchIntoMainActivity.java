@@ -2,13 +2,14 @@ package id.kenshiro.app.panri.helper;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Process;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.mylexz.utils.MylexzActivity;
 
 import id.kenshiro.app.panri.MainActivity;
-import id.kenshiro.app.panri.SplashScreenActivity;
 import id.kenshiro.app.panri.important.KeyListClasses;
 
 public class SwitchIntoMainActivity {
@@ -18,8 +19,19 @@ public class SwitchIntoMainActivity {
         Intent a = new Intent(activity, cls);
         if (args != null)
             a.putExtras(args);
+        a.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         activity.startActivity(a);
         activity.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        activity.finish();
+        final int myPid = Process.myPid();
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Process.killProcess(myPid);
+            }
+        }, 500);
+
     }
 
     public static void switchToMain(@NonNull MylexzActivity activity) {

@@ -141,6 +141,25 @@ public class TampilListPenyakitHelper implements Closeable{
     @Override
     public void close() throws IOException {
         recycleBitmaps();
+        activity = null;
+        if (sqlDB != null)
+            sqlDB.close();
+        if (rootView != null)
+            rootView.removeAllViews();
+        onItemClickListener = null;
+        dataPenyakitList = null;
+        if (mContentView != null)
+            mContentView.removeAllViews();
+        if (childView != null)
+            childView.removeAllViews();
+        sqlDB = null;
+        rootView = null;
+        try {
+            finalize();
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
+        }
+        System.gc();
     }
 
     private static class PrepareTask implements Runnable {

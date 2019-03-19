@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.v4.util.LruCache;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
@@ -19,6 +20,7 @@ import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -32,7 +34,9 @@ import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -43,9 +47,11 @@ import id.kenshiro.app.panri.helper.ListCiriCiriPenyakit;
 import id.kenshiro.app.panri.helper.ListNamaPenyakit;
 import id.kenshiro.app.panri.helper.ShowPenyakitDiagnoseHelper;
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
+import id.kenshiro.app.panri.helper.TampilListPenyakitHelper;
 import id.kenshiro.app.panri.important.KeyListClasses;
 import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
 import io.fabric.sdk.android.Fabric;
+import pl.droidsonroids.gif.GifDrawable;
 import pl.droidsonroids.gif.GifImageView;
 
 public class DiagnoseActivity extends MylexzActivity
@@ -63,7 +69,9 @@ public class DiagnoseActivity extends MylexzActivity
 	private boolean isDiagnosting = true;
 
     private Handler handlerPetani;
-    private GifImageView imgPetaniKedipView;
+    public LruCache<Integer, GifDrawable> mImagePetani;
+    private ImageView gifNpcView;
+    //private GifImageView imgPetaniKedipView;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -106,70 +114,132 @@ public class DiagnoseActivity extends MylexzActivity
 	}
 
 	private void loadLayoutAndShow() {
-		mTextPetaniDesc = (Button) findViewById(R.id.actmain_id_section_petani_btn);
-        imgPetaniKedipView = findViewById(R.id.actsplash_id_gifpetanikedip);
+        mTextPetaniDesc = (Button) findViewById(R.id.actall_id_section_petani_btn);
+        gifNpcView = findViewById(R.id.actall_id_gifpetanikedip);
 		mTextPetaniDesc.setTextColor(Color.BLACK);
 		mTextPetaniDesc.setTypeface(Typeface.createFromAsset(getAssets(), "Comic_Sans_MS3.ttf"), Typeface.NORMAL);
-	    diagnoseActivityHelper = new DiagnoseActivityHelper(this, this.listNamaPenyakitHashMap, this.listCiriCiriPenyakitHashMap);
-		showPenyakitDiagnoseHelper = new ShowPenyakitDiagnoseHelper(this, sqlDB, (RelativeLayout) this.findViewById(R.id.actdiagnose_id_layoutcontainer));
-		diagnoseActivityHelper.setOnPenyakitHaveSelected(new DiagnoseActivityHelper.OnPenyakitHaveSelected() {
-			@Override
-			public void onPenyakitSelected(RecyclerView a, RelativeLayout b, HashMap<Integer, ListNamaPenyakit> c, int d, double e) {
-				String penyakit = c.get(d).getName();
-				//DiagnoseActivity.this.TOAST(Toast.LENGTH_LONG, "Padi Anda terdiagnosa penyakit %s sebesar %s.", penyakit, String.valueOf(e));
-				//mTextPetaniDesc.setText(String.format(getString(R.string.actdiagnose_string_speechfarmer_3), penyakit, Math.round(e)));
-				onButtonPetaniClicked(true, String.format(getString(R.string.actdiagnose_string_speechfarmer_3), penyakit, Math.round(e)));
-				a.setVisibility(View.GONE);
-				b.setVisibility(View.GONE);
-				isDiagnosting = false;
-				// switching into the next
-				showPenyakitDiagnoseHelper.show(d);
-			}
 
-			@Override
-			public void onTanyaSection() {
-				//mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_2));
-				onButtonPetaniClicked(true, getString(R.string.actdiagnose_string_speechfarmer_2));
-			}
-
-			@Override
-			public void onPilihCiriSection() {
-				//mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
-				onButtonPetaniClicked(true, getString(R.string.actdiagnose_string_speechfarmer_1));
-
-			}
-		});
-		showPenyakitDiagnoseHelper.setOnHandlerClickCardBottom(new ShowPenyakitDiagnoseHelper.OnHandlerClickCardBottom() {
-			@Override
-			public void onHandleClick(int btnCondition) {
-				switch (btnCondition) {
-					case 0:
-						onButtonPetaniClicked(false, null);
-						break;
-					case 1:
-						onButtonPetaniClicked(true, getString(R.string.actdiagnose_string_speechfarmer_1));
-				}
-			}
-		});
-		showPenyakitDiagnoseHelper.build();
-        showPenyakitDiagnoseHelper.setOnHaveFinalRequests(new View.OnClickListener() {
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
             @Override
-            public void onClick(View mContentView) {
-                mContentView.setVisibility(View.GONE);
-                // back into begin diagnostics
-                diagnoseActivityHelper.showAgain();
+            public void run() {
+                try {
+                    setPetaniHolders();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return;
+                }
+                if (mImagePetani != null) {
+                    gifNpcView.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            gifNpcView.setVisibility(View.VISIBLE);
+                            gifNpcView.setImageDrawable(mImagePetani.get(1));
+                            mImagePetani.get(1).start();
+
+                            diagnoseActivityHelper = new DiagnoseActivityHelper(DiagnoseActivity.this, listNamaPenyakitHashMap, listCiriCiriPenyakitHashMap);
+                            showPenyakitDiagnoseHelper = new ShowPenyakitDiagnoseHelper(DiagnoseActivity.this, sqlDB, (RelativeLayout) findViewById(R.id.actdiagnose_id_layoutcontainer));
+                            diagnoseActivityHelper.setOnPenyakitHaveSelected(new DiagnoseActivityHelper.OnPenyakitHaveSelected() {
+                                @Override
+                                public void onPenyakitSelected(RecyclerView a, RelativeLayout b, HashMap<Integer, ListNamaPenyakit> c, int d, double e) {
+                                    String penyakit = c.get(d).getName();
+                                    //DiagnoseActivity.this.TOAST(Toast.LENGTH_LONG, "Padi Anda terdiagnosa penyakit %s sebesar %s.", penyakit, String.valueOf(e));
+                                    //mTextPetaniDesc.setText(String.format(getString(R.string.actdiagnose_string_speechfarmer_3), penyakit, Math.round(e)));
+                                    onButtonPetaniClicked(true, String.format(getString(R.string.actdiagnose_string_speechfarmer_3), penyakit, Math.round(e)));
+                                    a.setVisibility(View.GONE);
+                                    b.setVisibility(View.GONE);
+                                    isDiagnosting = false;
+                                    // switching into the next
+                                    showPenyakitDiagnoseHelper.show(d);
+                                }
+
+                                @Override
+                                public void onTanyaSection() {
+                                    //mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_2));
+                                    onButtonPetaniClicked(true, getString(R.string.actdiagnose_string_speechfarmer_2));
+                                }
+
+                                @Override
+                                public void onPilihCiriSection() {
+                                    //mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
+                                    onButtonPetaniClicked(true, getString(R.string.actdiagnose_string_speechfarmer_1));
+
+                                }
+                            });
+                            showPenyakitDiagnoseHelper.setOnHandlerClickCardBottom(new ShowPenyakitDiagnoseHelper.OnHandlerClickCardBottom() {
+                                @Override
+                                public void onHandleClick(int btnCondition) {
+                                    switch (btnCondition) {
+                                        case 0:
+                                            onButtonPetaniClicked(false, null);
+                                            break;
+                                        case 1:
+                                            onButtonPetaniClicked(true, getString(R.string.actdiagnose_string_speechfarmer_1));
+                                    }
+                                }
+                            });
+                            showPenyakitDiagnoseHelper.build();
+                            showPenyakitDiagnoseHelper.setOnHaveFinalRequests(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View mContentView) {
+                                    mContentView.setVisibility(View.GONE);
+                                    // back into begin diagnostics
+                                    diagnoseActivityHelper.showAgain();
+                                }
+                            });
+                            diagnoseActivityHelper.buildAndShow();
+                            //mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
+                            onButtonPetaniClicked(true, getString(R.string.actdiagnose_string_speechfarmer_1));
+                        }
+                    });
+                }
+
             }
-		});
-	    diagnoseActivityHelper.buildAndShow();
-        //mTextPetaniDesc.setText(getString(R.string.actdiagnose_string_speechfarmer_1));
-		onButtonPetaniClicked(true, getString(R.string.actdiagnose_string_speechfarmer_1));
+        });
+
+
+    }
+
+    private void setPetaniHolders() throws IOException {
+        int[] res_gif_npc = {
+                R.raw.petani_bicara,
+                R.raw.petani_kedip
+        };
+        List<byte[]> listOfByte = new ArrayList<>();
+        int counter = 0;
+        for (int x = 0; x < res_gif_npc.length; x++) {
+            InputStream inputStream = getResources().openRawResource(res_gif_npc[x]);
+            listOfByte.add(new byte[inputStream.available()]);
+            counter += inputStream.available();
+            inputStream.read(listOfByte.get(x));
+            inputStream.close();
+        }
+        mImagePetani = new LruCache<>(counter * 2);
+        for (int x = 0; x < res_gif_npc.length; x++) {
+            mImagePetani.put(x, new GifDrawable(listOfByte.get(x)));
+            mImagePetani.get(x).stop();
+        }
+        listOfByte.clear();
+        listOfByte = null;
+        System.gc();
+    }
+
+    private void releaseGifNpc() {
+        for (int x = 0; x < mImagePetani.size(); x++) {
+            mImagePetani.get(x).stop();
+            mImagePetani.get(x).recycle();
+        }
+        mImagePetani.evictAll();
     }
 
 	private void onButtonPetaniClicked(boolean updateText, String text) {
 
 		if (updateText)
 			mTextPetaniDesc.setText(text);
-        imgPetaniKedipView.setImageResource(R.drawable.petani_bicara);
+        //imgPetaniKedipView.setImageResource(R.drawable.petani_bicara);
+        mImagePetani.get(1).stop();
+        gifNpcView.setImageDrawable(mImagePetani.get(0));
+        mImagePetani.get(0).start();
         if (handlerPetani == null) {
             handlerPetani = new Handler();
             handlerPetani.postDelayed(new Runnable() {
@@ -177,7 +247,12 @@ public class DiagnoseActivity extends MylexzActivity
                 public void run() {
                     handlerPetani = null;
                     System.gc();
-                    imgPetaniKedipView.setImageResource(R.drawable.petani_kedip);
+                    //imgPetaniKedipView.setImageResource(R.drawable.petani_kedip);
+                    if (mImagePetani != null && mImagePetani.size() != 0 && !mImagePetani.get(0).isRecycled()) {
+                        mImagePetani.get(0).stop();
+                        gifNpcView.setImageDrawable(mImagePetani.get(1));
+                        mImagePetani.get(1).start();
+                    }
                 }
             }, 4000);
         }
@@ -256,6 +331,7 @@ public class DiagnoseActivity extends MylexzActivity
 	protected void onDestroy() {
 		System.gc();
 		sqlDB.close();
+        releaseGifNpc();
 		try {
 			diskCache.close();
 			showPenyakitDiagnoseHelper.close();

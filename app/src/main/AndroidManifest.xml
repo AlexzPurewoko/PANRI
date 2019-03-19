@@ -2,6 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="id.kenshiro.app.panri" >
 
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.GET_TASKS" />
+    <!--
+    <uses-permission android:name="android.permission.GET_TOP_ACTIVITY_INFO" />-->
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -12,7 +19,8 @@
 		android:resizeableActivity = "true">
         <activity
             android:name="id.kenshiro.app.panri.MainActivity"
-            android:label="@string/app_name" 
+            android:label="@string/app_name"
+            android:process="id.kenshiro.app.panri.MainActivity"
 			android:theme="@style/AppTheme.NoActionBar">
 
             <intent-filter>
@@ -24,9 +32,11 @@
         <activity
             android:name="id.kenshiro.app.panri.SplashScreenActivity"
             android:label="@string/app_name"
+            android:process="id.kenshiro.app.panri.SplashScreenActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
             <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -35,6 +45,7 @@
         <activity
             android:name="id.kenshiro.app.panri.TutorialFirstUseActivity"
             android:label="@string/app_name"
+            android:process="id.kenshiro.app.panri.TutorialFirstUseActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
             <intent-filter>
@@ -46,6 +57,7 @@
 		<activity
 			android:name="id.kenshiro.app.panri.DiagnoseActivity"
 			android:label="@string/diagnose_name"
+            android:process="id.kenshiro.app.panri.DiagnoseActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -56,6 +68,7 @@
         <activity
             android:name="id.kenshiro.app.panri.AboutActivity"
             android:label="@string/about_name"
+            android:process="id.kenshiro.app.panri.AboutActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -66,6 +79,7 @@
         <activity
             android:name="id.kenshiro.app.panri.HowToResolveActivity"
             android:label="@string/acthowto_string_title"
+            android:process="id.kenshiro.app.panri.HowToResolveActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -77,6 +91,7 @@
         <activity
             android:name="id.kenshiro.app.panri.InfoPenyakitActivity"
             android:label="@string/actinfo_string_title"
+            android:process="id.kenshiro.app.panri.InfoPenyakitActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -88,6 +103,7 @@
         <activity
             android:name="id.kenshiro.app.panri.DiagnosaGambarActivity"
             android:label="@string/actimgdiagnose_string_title"
+            android:process="id.kenshiro.app.panri.DiagnosaGambarActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -99,6 +115,7 @@
         <activity
             android:name="id.kenshiro.app.panri.GalleryActivity"
             android:label="Gallery"
+            android:process="id.kenshiro.app.panri.GalleryActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -109,6 +126,7 @@
         <activity
             android:name="id.kenshiro.app.panri.PanriSettingActivity"
             android:label="Settings"
+            android:process="id.kenshiro.app.panri.PanriSettingActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -128,10 +146,5 @@
             android:name="io.fabric.ApiKey"
             android:value="628cef0928b29d99c11c1666aeb5d0161e2910e8" />
     </application>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.GET_TASKS" /><!--
-    <uses-permission android:name="android.permission.GET_TOP_ACTIVITY_INFO" />-->
+
 </manifest>

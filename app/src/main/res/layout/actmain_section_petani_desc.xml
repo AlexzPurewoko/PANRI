@@ -6,13 +6,13 @@
     android:layout_margin="10dp"
     android:background="@android:color/white"
     android:orientation="horizontal">
-    <pl.droidsonroids.gif.GifImageView
-        android:id="@+id/actsplash_id_gifpetanikedip"
+
+    <ImageView
+        android:id="@+id/actall_id_gifpetanikedip"
         android:layout_width="@dimen/actmain_dimen_petani_wh"
-        android:layout_height="@dimen/actmain_dimen_petani_wh"
-        android:src="@drawable/petani_kedip" />
+        android:layout_height="@dimen/actmain_dimen_petani_wh" />
     <Button
-        android:id="@+id/actmain_id_section_petani_btn"
+        android:id="@+id/actall_id_section_petani_btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"

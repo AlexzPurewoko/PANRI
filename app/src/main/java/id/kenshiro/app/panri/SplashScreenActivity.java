@@ -6,6 +6,8 @@ import android.graphics.Point;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Process;
 import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.Button;
@@ -20,6 +22,7 @@ import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
 import io.fabric.sdk.android.Fabric;
 import id.kenshiro.app.panri.important.KeyListClasses;
 import id.kenshiro.app.panri.opt.onsplash.LoaderTask;
+import pl.droidsonroids.gif.GifDrawable;
 import pl.droidsonroids.gif.GifImageView;
 
 public class SplashScreenActivity extends MylexzActivity {
@@ -93,4 +96,17 @@ public class SplashScreenActivity extends MylexzActivity {
         indicators.setText("Mempersiapkan data...");
     }
 
+    @Override
+    protected void onDestroy() {
+        //get my pid
+        final int pid = Process.myPid();
+        Handler postClose = new Handler();
+        postClose.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Process.killProcess(pid);
+            }
+        }, 2500);
+        super.onDestroy();
+    }
 }

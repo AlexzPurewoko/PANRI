@@ -89,7 +89,7 @@ public class GalleryActivity extends MylexzActivity {
                     adapterGrid = new ImageGridViewAdapter(GalleryActivity.this, p, R.id.actgallery_id_gridimage);
                     adapterGrid.setColumnCount(2);
                     adapterGrid.setListLocationFileImages(dataPathGambar, "gallery_act");
-                    adapterGrid.setMargin(dimen, dimen, dimen, dimen, dimen);
+                    adapterGrid.setMargin(dimen, dimen, dimen, dimen, dimen, 0);
                     adapterGrid.setOnItemClickListener(new ImageGridViewAdapter.OnItemClickListener() {
                                                            @Override
                                                            public void onItemClick(View v, int position) {

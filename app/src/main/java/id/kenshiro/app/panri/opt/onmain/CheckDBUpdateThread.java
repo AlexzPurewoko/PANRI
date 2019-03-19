@@ -38,13 +38,7 @@ public class CheckDBUpdateThread extends AsyncTask<Void, Integer, Integer> {
 
     @Override
     protected Integer doInBackground(Void... voids) {
-        boolean isConnected = false;
-        try {
-            isConnected = CheckConnection.isConnected(actReference.get(), 1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            isConnected = false;
-        }
+        boolean isConnected = CheckConnection.isConnected(actReference.get(), 1000);
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {

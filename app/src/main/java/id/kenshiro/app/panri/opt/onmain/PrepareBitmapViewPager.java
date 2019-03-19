@@ -110,7 +110,7 @@ public class PrepareBitmapViewPager implements Runnable {
     private void postExecute(final Bitmap bitmapResult) {
 
         // sets the image for nav header
-        final ImageView img = (ImageView) mainActivity.get().findViewById(R.id.actmain_id_navheadermain_layoutimg);
+        final ImageView img = mainActivity.get().findViewById(R.id.actmain_id_navheadermain_layoutimg);
         if (img != null)
             synchronized (img) {
                 if (bitmapResult != null) {

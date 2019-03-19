@@ -9,15 +9,16 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Process;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.crashlytics.android.answers.Answers;
@@ -27,10 +28,7 @@ import com.mylexz.utils.text.TextSpanFormat;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 
-import id.kenshiro.app.panri.MainActivity;
 import id.kenshiro.app.panri.R;
 import id.kenshiro.app.panri.important.KeyListClasses;
 
@@ -39,9 +37,9 @@ public class DialogOnMain {
     public static void showExitDialog(final MylexzActivity activity) {
         AlertDialog.Builder build = new AlertDialog.Builder(activity);
         LinearLayout layoutDialog = (LinearLayout) LinearLayout.inflate(activity, R.layout.actmain_dialog_on_exit, null);
-        TextView text = (TextView) layoutDialog.findViewById(R.id.actmain_id_dialogexit_content);
-        Button btnyes = (Button) layoutDialog.findViewById(R.id.actmain_id_dialogexit_btnyes);
-        Button btnno = (Button) layoutDialog.findViewById(R.id.actmain_id_dialogexit_btnno);
+        TextView text = layoutDialog.findViewById(R.id.actmain_id_dialogexit_content);
+        Button btnyes = layoutDialog.findViewById(R.id.actmain_id_dialogexit_btnyes);
+        Button btnno = layoutDialog.findViewById(R.id.actmain_id_dialogexit_btnno);
         text.setTextColor(Color.BLACK);
         text.setTypeface(Typeface.createFromAsset(activity.getAssets(), "Comic_Sans_MS3.ttf"), Typeface.BOLD);
         text.setText(R.string.actmain_string_dialogexit_desc);
@@ -59,6 +57,14 @@ public class DialogOnMain {
             public void onClick(View p1) {
                 mAlert.cancel();
                 activity.finish();
+                Handler kill = new Handler();
+                kill.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        android.os.Process.killProcess(Process.myPid());
+                    }
+                }, 2000);
+
             }
 
 
@@ -89,6 +95,36 @@ public class DialogOnMain {
         textView.setText(TextSpanFormat.convertStrToSpan(activity, readFromAsset(activity, "whats_new"), 0));
         builder.setView(textView);
         builder.setPositiveButton("Okay!", onbtnOk);
+        builder.show();
+    }
+
+    public static void showDialogAboutSKPP(final MylexzActivity activity, String path, String title) {
+        AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(activity);
+        builder.setTitle(title);
+        builder.setIcon(R.mipmap.ic_launcher);
+
+        TextView textView = new TextView(activity);
+        textView.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+        textView.setTextColor(Color.BLACK);
+        ScrollView scrollView = new ScrollView(activity);
+        scrollView.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+        scrollView.addView(textView);
+        int padding = Math.round(activity.getResources().getDimension(R.dimen.dialogshdup_margin_all));
+        scrollView.setPadding(padding, padding, padding, padding);
+        textView.setText(TextSpanFormat.convertStrToSpan(activity, readFromAsset(activity, path), 0));
+        builder.setView(scrollView);
+        builder.setPositiveButton("Okay!", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
         builder.show();
     }
 
@@ -174,11 +210,7 @@ public class DialogOnMain {
 
             @Override
             public void onClick(View v) {
-                if (isChecked) {
-                    isChecked = true;
-                } else {
-                    isChecked = false;
-                }
+                isChecked = isChecked;
                 SharedPreferences sharedPreferences = activity.getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE);
                 sharedPreferences.edit().putBoolean(KeyListClasses.KEY_AUTOCHECKUPDATE_APPDATA, isChecked).commit();
             }

@@ -23,4 +23,5 @@
     <dimen name="layout_onnotselecte_textsize_10sp">10sp</dimen>
     <dimen name="layout_onnotselected_contentpaddingcard">2dp</dimen>
     <dimen name="dialogshdup_margin_all">25dp</dimen>
+    <dimen name="content_imggrid_padding">10dp</dimen>
 </resources>

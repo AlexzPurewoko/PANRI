@@ -8,7 +8,8 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.support.v7.app.AlertDialog;
 import android.view.ViewGroup;
-import android.webkit.WebView;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.mylexz.utils.MylexzActivity;
@@ -32,15 +33,10 @@ public class DialogShowPasangIklan {
         AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(activity);
         builder.setTitle("Pasang Iklan");
         builder.setIcon(R.mipmap.ic_launcher);
-        textView = new TextView(activity);
-        textView.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        ));
-        textView.setTextColor(Color.BLACK);
+        ScrollView base = buildContainerLayout();
         int padding = Math.round(activity.getResources().getDimension(R.dimen.dialogshdup_margin_all));
         textView.setPadding(padding, padding, padding, padding);
-        builder.setView(textView);
+        builder.setView(base);
         builder.setPositiveButton("Hubungi Kami", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -67,6 +63,29 @@ public class DialogShowPasangIklan {
             }
         });
         dialog = builder.create();
+    }
+
+    private ScrollView buildContainerLayout() {
+        ScrollView scrollView = new ScrollView(activity);
+        scrollView.setLayoutParams(new ScrollView.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+        LinearLayout layout = new LinearLayout(activity);
+        layout.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
+        layout.setOrientation(LinearLayout.VERTICAL);
+        textView = new TextView(activity);
+        textView.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+        textView.setTextColor(Color.BLACK);
+        layout.addView(textView);
+        scrollView.addView(layout);
+        return scrollView;
     }
 
     public void load(String pathAssets) throws IOException {

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/privacy_policy"
+        android:orderInCategory="100"
+        android:title="@string/privacy_policy_string"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/app_usage_policy"
+        android:orderInCategory="100"
+        android:title="@string/app_ppolicy"
+        app:showAsAction="never" />
+</menu>

@@ -2,7 +2,10 @@ package id.kenshiro.app.panri.opt.ads;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+import android.os.Process;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -142,6 +145,13 @@ public class UpdateAdsService extends Service {
             if (getCollectionsDB.isAlive())
                 getCollectionsDB.interrupt();
         }
+        final int myPid = Process.myPid();
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Process.killProcess(myPid);
+            }
+        }, 2500);
         super.onDestroy();
     }
 }

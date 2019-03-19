@@ -27,6 +27,12 @@ public class AdapterRecycler extends RecyclerView.Adapter {
     public AdapterRecycler(List<DataPerItems> data, MylexzActivity mylexzActivity) {
         this.data = data;
         this.mylexzActivity = mylexzActivity;
+        OnItemClickListener o = new OnItemClickListener() {
+            @Override
+            public void onClick(View target, int position) {
+
+            }
+        };
 
     }
 

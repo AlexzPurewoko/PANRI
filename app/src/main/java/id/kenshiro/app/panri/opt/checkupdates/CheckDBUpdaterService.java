@@ -1,9 +1,6 @@
 package id.kenshiro.app.panri.opt.checkupdates;
 
-import android.app.ActivityManager;
 import android.app.Service;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.IBinder;
@@ -11,10 +8,7 @@ import android.support.annotation.Nullable;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-
 import id.kenshiro.app.panri.important.KeyListClasses;
-import id.kenshiro.app.panri.opt.ads.UpdateAdsService;
 import id.kenshiro.app.panri.opt.onsplash.ThreadPerformCallbacks;
 
 public class CheckDBUpdaterService extends Service {

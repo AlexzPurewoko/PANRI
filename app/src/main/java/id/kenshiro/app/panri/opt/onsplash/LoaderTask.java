@@ -20,7 +20,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 
 import id.kenshiro.app.panri.BuildConfig;
 import id.kenshiro.app.panri.MainActivity;
@@ -54,15 +53,10 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
     @Override
     protected Integer doInBackground(Void... voids) {
         publishProgress("First checking...");
-        try {
             // if is firstUsage then execute command below
             checkAndSaveAppVersion();
             Crashlytics.setString("IOExceptionCheckAppVers", "Success");
             //updateDBIfItsNewVersion();
-        } catch (IOException e) {
-            LogIntoCrashlytics.logException("IOExceptionCheckAppVers", String.format("IOException occured when executing checkAndSaveAppVersion() e -> %s", e.toString()), e);
-            ctx.LOGE("Task.background()", "IOException occured when executing checkAndSaveAppVersion() & updateDBIfItsNewVersion();", e);
-        }
         // creates cache directory if not exists
         try {
             diskCache = SimpleDiskLruCache.getsInstance(fileCache);
@@ -112,13 +106,7 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
                 }
                 break;
                 case KeyListClasses.APP_IS_SAME_VERSION: {
-                    boolean isConnected = false;
-                    try {
-                        isConnected = CheckConnection.isConnected(ctx, 1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                        isConnected = false;
-                    }
+                    boolean isConnected = CheckConnection.isConnected(ctx, 1000);
                     if (!isConnected) {
                         boolean status_cache_dirs = validateCacheDirs();
                         if (status_cache_dirs) {
@@ -281,9 +269,7 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
 
     private boolean validateCacheDirs() {
         String[] fileList = fileCache.list();
-        if (fileList.length == 0)
-            return true;
-        return false;
+        return fileList.length == 0;
     }
 
     private void cleanCache() {
@@ -291,7 +277,7 @@ public class LoaderTask extends AsyncTask<Void, String, Integer> {
         fileCache.mkdir();
     }
 
-    private void checkAndSaveAppVersion() throws IOException {
+    private void checkAndSaveAppVersion() {
         int version = BuildConfig.VERSION_CODE;
         SharedPreferences sharedPreferences = ctx.getSharedPreferences(KeyListClasses.SHARED_PREF_NAME, Context.MODE_PRIVATE);
         if (!sharedPreferences.contains(KeyListClasses.KEY_APP_VERSION))

@@ -8,6 +8,8 @@ import android.support.annotation.Nullable;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.webkit.WebView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -19,6 +21,7 @@ import com.mylexz.utils.text.style.CustomTypefaceSpan;
 
 import id.kenshiro.app.panri.helper.SwitchIntoMainActivity;
 import id.kenshiro.app.panri.opt.LogIntoCrashlytics;
+import id.kenshiro.app.panri.opt.onmain.DialogOnMain;
 import io.fabric.sdk.android.Fabric;
 
 public class AboutActivity extends MylexzActivity {
@@ -169,7 +172,7 @@ public class AboutActivity extends MylexzActivity {
     }
 
     private void setMyActionBar() {
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
             SpannableString strTitle = new SpannableString(getTitle());
             Typeface tTitle = Typeface.createFromAsset(getAssets(), "Gecko_PersonalUseOnly.ttf");
@@ -184,8 +187,32 @@ public class AboutActivity extends MylexzActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.about_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.privacy_policy:
+                DialogOnMain.showDialogAboutSKPP(this, "kp.spanf", "Kebijakan Privasi");
+                return true;
+            case R.id.app_usage_policy:
+                DialogOnMain.showDialogAboutSKPP(this, "sk.spanf", "Syarat & Ketentuan");
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     public boolean onSupportNavigateUp() {
         SwitchIntoMainActivity.switchToMain(this);
         return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        SwitchIntoMainActivity.switchToMain(this);
     }
 }
